@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Esteira de Aprovação de Crédito - Kanban</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- SortableJS para Drag and Drop -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <!-- vuedraggable (wrapper do SortableJS para Vue) -->
+    <script src="https://unpkg.com/vuedraggable@4.1.0/dist/vuedraggable.umd.min.js"></script>
+    <!-- Font Awesome para ícones -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+    <style>
+      /* Estilos personalizados para o novo tema escuro */
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #1c1c1c; /* Cor de fundo principal da imagem */
+        color: #d1d5db; /* gray-300 */
+      }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      /* Scrollbar customizada para o tema escuro */
+      .kanban-board::-webkit-scrollbar {
+        height: 8px;
+      }
+      .kanban-board::-webkit-scrollbar-track {
+        background: #2d2d2d;
+        border-radius: 10px;
+      }
+      .kanban-board::-webkit-scrollbar-thumb {
+        background: #f66802;
+        border-radius: 10px;
+      }
+      .kanban-board::-webkit-scrollbar-thumb:hover {
+        background: #fb923c;
+      }
+
+      /* Estilo para o item sendo arrastado */
+      .sortable-ghost {
+        opacity: 0.4;
+        background: #4a4a4a;
+      }
+      .sortable-drag {
+        opacity: 1 !important;
+      }
+
+      /* Estilo para inputs no tema escuro */
+      .form-input,
+      .form-select,
+      .form-textarea {
+        background-color: #3e3e3e;
+        color: #d1d5db;
+        border-color: #4a4a4a;
+      }
+      .form-input:focus,
+      .form-select:focus,
+      .form-textarea:focus {
+        border-color: #f97316;
+        --tw-ring-color: #f97316;
+      }
+      .form-input:disabled {
+        background-color: #2d2d2d;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="p-4 sm:p-6 lg:p-8">
+      <!-- Cabeçalho da Aplicação -->
+      <header
+        class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6"
+      >
+        <div>
+          <h1 class="text-3xl font-bold text-slate-100">Esteira de Crédito</h1>
+          <p class="text-slate-400 mt-1">
+            Visão geral das propostas em andamento.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 mt-4 sm:mt-0 flex-wrap">
+          <!-- Seletor de Visão -->
+          <div class="bg-[#2D2D2D] p-1 rounded-lg flex items-center">
+            <button
+              @click="viewMode = 'kanban'"
+              :class="viewMode === 'kanban' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:bg-[#3E3E3E]'"
+              class="px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
+            >
+              <i class="fa-solid fa-grip-vertical mr-2"></i>Kanban
+            </button>
+            <button
+              @click="viewMode = 'list'"
+              :class="viewMode === 'list' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:bg-[#3E3E3E]'"
+              class="px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"
+            >
+              <i class="fa-solid fa-list mr-2"></i>Lista
+            </button>
+          </div>
+          <!-- Botões de Ação -->
+          <button
+            @click="showFilters = !showFilters"
+            class="bg-[#2D2D2D] text-slate-300 hover:bg-[#3E3E3E] w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+          >
+            <i class="fa-solid fa-filter"></i>
+          </button>
+          <button
+            @click="openNewProposalModal"
+            class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors flex items-center gap-2"
+          >
+            <i class="fa-solid fa-plus"></i>
+            <span class="hidden sm:inline">Nova Proposta</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Painel de Filtros -->
+      <div
+        v-if="showFilters"
+        class="bg-[#2D2D2D] p-4 rounded-lg mb-6 flex items-center gap-4 flex-wrap"
+      >
+        <div class="flex-grow min-w-[200px]">
+          <label class="text-sm font-medium text-slate-300"
+            >Filtrar por nome</label
+          >
+          <input
+            type="text"
+            v-model="filterText"
+            placeholder="Digite o nome do cliente..."
+            class="form-input w-full mt-1 rounded-md text-sm"
+          />
+        </div>
+        <div class="flex-grow min-w-[150px]">
+          <label class="text-sm font-medium text-slate-300"
+            >Filtrar por status</label
+          >
+          <select
+            v-model="filterStatus"
+            class="form-select w-full mt-1 rounded-md text-sm"
+          >
+            <option value="">Todos</option>
+            <option
+              v-for="(color, status) in statusColors"
+              :key="status"
+              :value="status"
+            >
+              {{ status }}
+            </option>
+          </select>
+        </div>
+        <div v-if="viewMode === 'list'" class="flex items-end h-full pt-5">
+          <div class="flex items-center">
+            <input
+              type="checkbox"
+              v-model="showArchived"
+              id="show-archived"
+              class="h-4 w-4 rounded border-gray-500 text-orange-600 focus:ring-orange-500"
+            />
+            <label
+              for="show-archived"
+              class="ml-2 text-sm font-medium text-slate-300"
+              >Mostrar arquivados</label
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Renderização Condicional da Visão -->
+      <kanban-view
+        v-if="viewMode === 'kanban'"
+        :stages="stages"
+        :proposals="filteredProposals"
+        @proposal-moved="handleProposalMove"
+        @card-click="openProposalModal"
+      ></kanban-view>
+      <list-view
+        v-else
+        :stages="stages"
+        :proposals="filteredProposals"
+        @card-click="openProposalModal"
+      ></list-view>
+
+      <!-- Componente do Modal Principal -->
+      <proposal-modal
+        v-if="isModalOpen"
+        :proposal="selectedProposal"
+        :stages="stages"
+        @close="closeModal"
+        @save="saveProposal"
+      ></proposal-modal>
+
+      <!-- Componente do Modal de Confirmação/Alerta -->
+      <alert-modal
+        v-if="isAlertModalOpen"
+        :title="alertModalContent.title"
+        :message="alertModalContent.message"
+        :type="alertModalContent.type"
+        @confirm="alertModalContent.onConfirm"
+        @cancel="closeAlertModal"
+      ></alert-modal>
+    </div>
+
+    <script type="module">
+      const { createApp, ref, computed, watch } = Vue;
+
+      // --- Dados de Exemplo com data de entrada na fase, histórico e dados de formulário ---
+      const today = new Date();
+      const getDate = (daysAgo) =>
+        new Date(today.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+
+      const initialProposals = [
+        {
+          id: 1,
+          name: "Ana Clara Souza",
+          cpf: "111.222.333-44",
+          amount: 75000,
+          stageId: "credito",
+          status: "Em Análise",
+          isArchived: false,
+          stageEnteredAt: getDate(1),
+          history: [
+            {
+              stageId: "dados_basicos",
+              status: "Aprovado",
+              user: "Sistema",
+              timestamp: getDate(3),
+            },
+            {
+              stageId: "documentacao",
+              status: "Aprovado",
+              user: "Sistema",
+              timestamp: getDate(2),
+            },
+            {
+              stageId: "credito",
+              status: "Em Análise",
+              user: "Sistema",
+              timestamp: getDate(1),
+            },
+          ],
+          data: {
+            dados_basicos: {
+              nome: "Ana Clara Souza",
+              cpf: "111.222.333-44",
+              cep: "01001-000",
+              endereco: "Praça da Sé",
+              bairro: "Sé",
+              cidade: "São Paulo",
+              estado: "SP",
+              administradora: "XPTO Bank",
+              objetivo_credito: "Compra de imóvel",
+              data_inicio: "2025-08-15",
+              valor_desejado: 75000,
+              valor_garantia: 150000,
+            },
+            documentacao: {
+              uniao_estavel: "Não",
+              estado_civil: "Solteiro(a)",
+              profissao: "Desenvolvedora",
+              comprovacao_renda: "Holerite",
+            },
+            credito: {
+              liberacao_credito: 0,
+              limite_parcela: 0,
+              renda_declarada: 0,
+              parcela_aprovada: 0,
+              resumo_analise: "",
+              status: "Em Análise",
+              observacoes: "",
+            },
+            solicitacao_vistoria: {},
+            avaliacao_final: {},
+            avaliacao_diretoria: {},
+            fundo: {},
+            faturamento: {},
+          },
+        },
+        {
+          id: 2,
+          name: "Bruno Martins",
+          cpf: "222.333.444-55",
+          amount: 120000,
+          stageId: "documentacao",
+          status: "Pendente",
+          isArchived: false,
+          stageEnteredAt: getDate(4),
+          history: [
+            {
+              stageId: "dados_basicos",
+              status: "Aprovado",
+              user: "Sistema",
+              timestamp: getDate(5),
+            },
+            {
+              stageId: "documentacao",
+              status: "Pendente",
+              user: "Sistema",
+              timestamp: getDate(4),
+            },
+          ],
+          data: {
+            dados_basicos: { nome: "Bruno Martins", cpf: "222.333.444-55" },
+            documentacao: {},
+            credito: {},
+          },
+        },
+      ];
+
+      // --- Configuração das Etapas com SLA e Status Padrão ---
+      const STAGES = [
+        {
+          id: "dados_basicos",
+          title: "Dados Básicos",
+          slaDays: 2,
+          status: "Pendente",
+        },
+        {
+          id: "documentacao",
+          title: "Documentação",
+          slaDays: 5,
+          status: "Pendente",
+        },
+        { id: "credito", title: "Crédito", slaDays: 7, status: "Em Análise" },
+        {
+          id: "solicitacao_vistoria",
+          title: "Solicitação Vistoria",
+          slaDays: 3,
+          status: "Aguardando",
+        },
+        {
+          id: "avaliacao_final",
+          title: "Avaliação Final",
+          slaDays: 5,
+          status: "Em Análise",
+        },
+        {
+          id: "avaliacao_diretoria",
+          title: "Avaliação Diretoria",
+          slaDays: 4,
+          status: "Em Análise",
+        },
+        { id: "fundo", title: "Fundo", slaDays: 2, status: "Aguardando" },
+        {
+          id: "faturamento",
+          title: "Faturamento",
+          slaDays: 3,
+          status: "Em Processamento",
+        },
+        {
+          id: "finalizado",
+          title: "Finalizado",
+          slaDays: 0,
+          status: "Finalizado",
+        },
+      ];
+
+      // --- Paleta de Cores para Status ---
+      const statusColors = {
+        Pendente:
+          "bg-amber-900/50 text-amber-300 ring-1 ring-inset ring-amber-500/20",
+        "Em Análise":
+          "bg-blue-900/50 text-blue-300 ring-1 ring-inset ring-blue-500/20",
+        Aprovado:
+          "bg-green-900/50 text-green-300 ring-1 ring-inset ring-green-500/20",
+        Reprovado:
+          "bg-red-900/50 text-red-300 ring-1 ring-inset ring-red-500/20",
+        Aguardando:
+          "bg-slate-700 text-slate-300 ring-1 ring-inset ring-slate-500/20",
+        "Em Processamento":
+          "bg-purple-900/50 text-purple-300 ring-1 ring-inset ring-purple-500/20",
+        Finalizado:
+          "bg-orange-900/50 text-orange-300 ring-1 ring-inset ring-orange-500/20",
+        Arquivado:
+          "bg-gray-800 text-gray-400 ring-1 ring-inset ring-gray-600/20",
+      };
+
+      // --- Lógica Comum para Alerta de Tempo ---
+      function useSlaStatus(proposal, stages) {
+        const currentStage = computed(() =>
+          stages.value.find((s) => s.id === proposal.value.stageId)
+        );
+        const daysInStage = computed(() => {
+          if (!proposal.value.stageEnteredAt) return 0;
+          const diffTime = Math.abs(
+            new Date() - new Date(proposal.value.stageEnteredAt)
+          );
+          return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        });
+        const slaStatus = computed(() => {
+          if (!currentStage.value || currentStage.value.slaDays === 0)
+            return { status: "ok", color: "text-slate-500", message: "N/A" };
+          const sla = currentStage.value.slaDays;
+          const warningThreshold = Math.floor(sla * 0.8);
+          if (daysInStage.value > sla)
+            return {
+              status: "overdue",
+              color: "text-red-500",
+              message: `Atrasado. Na fase há ${daysInStage.value} dias (SLA: ${sla} dias).`,
+            };
+          if (daysInStage.value > warningThreshold && sla > 1)
+            return {
+              status: "warning",
+              color: "text-yellow-500",
+              message: `Atenção. Na fase há ${daysInStage.value} dias (SLA: ${sla} dias).`,
+            };
+          return {
+            status: "ok",
+            color: "text-slate-500",
+            message: `Na fase há ${daysInStage.value} dias (SLA: ${sla} dias).`,
+          };
+        });
+        return { slaStatus, daysInStage };
+      }
+
+      // --- Componente de Upload de Arquivo Genérico ---
+      const FileUploader = {
+        props: ["label"],
+        template: `
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">{{ label }}</label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-md">
+                    <div class="space-y-1 text-center">
+                        <i class="fa-solid fa-cloud-arrow-up mx-auto h-12 w-12 text-gray-500"></i>
+                        <div class="flex text-sm text-gray-400">
+                            <label for="file-upload" class="relative cursor-pointer bg-gray-800 rounded-md font-medium text-orange-500 hover:text-orange-400 focus-within:outline-none">
+                                <span>Escolher arquivo(s)</span>
+                                <input id="file-upload" name="file-upload" type="file" class="sr-only" multiple>
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500">PNG, JPG, PDF até 10MB</p>
+                    </div>
+                </div>
+            </div>
+        `,
+      };
+
+      // --- Componentes dos Formulários de Etapas (Restaurados) ---
+      const createFormStep = (config) => ({
+        props: ["modelValue"],
+        emits: ["update:modelValue"],
+        components: { FileUploader },
+        setup(props, { emit }) {
+          const localData = ref(props.modelValue);
+          watch(
+            localData,
+            (newData) => {
+              emit("update:modelValue", newData);
+            },
+            { deep: true }
+          );
+
+          if (config.id === "StepDadosBasicos") {
+            const fetchAddress = async () => {
+              const cep = localData.value.cep?.replace(/\D/g, "");
+              if (cep && cep.length === 8) {
+                try {
+                  const response = await fetch(
+                    `https://viacep.com.br/ws/${cep}/json/`
+                  );
+                  const data = await response.json();
+                  if (!data.erro) {
+                    localData.value.endereco = data.logradouro;
+                    localData.value.bairro = data.bairro;
+                    localData.value.cidade = data.localidade;
+                    localData.value.estado = data.uf;
+                  }
+                } catch (error) {
+                  console.error("Erro ao buscar CEP:", error);
+                }
+              }
+            };
+            const administradoras = ref([
+              "XPTO Bank",
+              "Crédito Fácil S.A.",
+              "Financeira Alfa",
+            ]);
+            return { localData, fetchAddress, administradoras };
+          }
+          return { localData };
+        },
+        template: config.template,
+      });
+
+      const StepDadosBasicos = createFormStep({
+        id: "StepDadosBasicos",
+        template: `
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium text-slate-300">Nome</label><input type="text" v-model="localData.nome" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">CPF</label><input type="text" v-model="localData.cpf" class="form-input mt-1 block w-full rounded-md"></div>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-200 border-b border-gray-700 pb-2 pt-2">Endereço</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label class="block text-sm font-medium text-slate-300">CEP</label><input type="text" v-model="localData.cep" @blur="fetchAddress" placeholder="00000-000" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-300">Endereço</label><input type="text" v-model="localData.endereco" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Bairro</label><input type="text" v-model="localData.bairro" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Cidade</label><input type="text" v-model="localData.cidade" class="form-input mt-1 block w-full rounded-md" disabled></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Estado (UF)</label><input type="text" v-model="localData.estado" class="form-input mt-1 block w-full rounded-md" disabled></div>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-200 border-b border-gray-700 pb-2 pt-4">Dados da Operação</h3>
+                <div><label class="block text-sm font-medium text-slate-300">Administradora</label>
+                    <select v-model="localData.administradora" class="form-select mt-1 block w-full rounded-md">
+                        <option disabled value="">Selecione uma opção</option>
+                        <option v-for="admin in administradoras" :key="admin" :value="admin">{{ admin }}</option>
+                    </select>
+                </div>
+                <div><label class="block text-sm font-medium text-slate-300">Resumo do Objetivo</label><textarea v-model="localData.objetivo_credito" rows="3" class="form-textarea mt-1 block w-full rounded-md"></textarea></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label class="block text-sm font-medium text-slate-300">Valor Desejado</label><input type="number" v-model="localData.valor_desejado" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Valor da Garantia</label><input type="number" v-model="localData.valor_garantia" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Data de Início</label><input type="date" v-model="localData.data_inicio" class="form-input mt-1 block w-full rounded-md"></div>
+                </div>
+            </div>`,
+      });
+      const StepDocumentacao = createFormStep({
+        template: `
+            <div class="space-y-6">
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label class="block text-sm font-medium text-slate-300">Estado Civil</label><input type="text" v-model="localData.estado_civil" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Profissão</label><input type="text" v-model="localData.profissao" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Comprovação de Renda</label><input type="text" v-model="localData.comprovacao_renda" class="form-input mt-1 block w-full rounded-md"></div>
+                </div>
+                <div class="flex items-center gap-4"><label class="text-sm font-medium text-slate-300">Possui união estável?</label><input type="radio" v-model="localData.uniao_estavel" value="Sim"> Sim <input type="radio" v-model="localData.uniao_estavel" value="Não"> Não</div>
+                <file-uploader label="RG, CPF ou CNH"/>
+                <file-uploader label="Comprovante de Residência"/>
+            </div>
+        `,
+      });
+      const StepCredito = createFormStep({
+        template: `
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div><label class="block text-sm font-medium text-slate-300">Liberação de Crédito</label><input type="number" v-model="localData.liberacao_credito" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Limite da Parcela</label><input type="number" v-model="localData.limite_parcela" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Renda Declarada</label><input type="number" v-model="localData.renda_declarada" class="form-input mt-1 block w-full rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-slate-300">Parcela Aprovada</label><input type="number" v-model="localData.parcela_aprovada" class="form-input mt-1 block w-full rounded-md"></div>
+                </div>
+                <div><label class="block text-sm font-medium text-slate-300">Resumo da Análise</label><textarea v-model="localData.resumo_analise" rows="3" class="form-textarea mt-1 block w-full rounded-md"></textarea></div>
+                <div><label class="block text-sm font-medium text-slate-300">Observações</label><textarea v-model="localData.observacoes" rows="3" class="form-textarea mt-1 block w-full rounded-md"></textarea></div>
+                <file-uploader label="Anexar Arquivo"/>
+            </div>
+        `,
+      });
+      const createPlaceholderStep = (name) =>
+        createFormStep({
+          template: `<div class="text-slate-400 p-8 text-center bg-[#2D2D2D]/50 rounded-lg">Formulário para ${name}</div>`,
+        });
+
+      // --- Componentes da Aplicação Principal ---
+      const KanbanCard = {
+        props: ["proposal", "stages"],
+        emits: ["click"],
+        setup(props) {
+          const proposalRef = ref(props.proposal);
+          const stagesRef = ref(props.stages);
+          const { slaStatus, daysInStage } = useSlaStatus(
+            proposalRef,
+            stagesRef
+          );
+          const currentStageIndex = computed(() =>
+            props.stages.findIndex((s) => s.id === props.proposal.stageId)
+          );
+          const progressPercentage = computed(
+            () => ((currentStageIndex.value + 1) / props.stages.length) * 100
+          );
+          const statusColorClass = computed(
+            () =>
+              statusColors[props.proposal.status] || "bg-gray-700 text-gray-300"
+          );
+          return {
+            progressPercentage,
+            statusColorClass,
+            currentStageIndex,
+            slaStatus,
+            daysInStage,
+          };
+        },
+        template: `<div @click="$emit('click', proposal)" class="bg-[#2D2D2D] p-3 rounded-lg shadow-sm border-l-4 border-orange-500 cursor-pointer hover:bg-[#3E3E3E] transition-colors"> <div class="flex justify-between items-start"> <h4 class="font-semibold text-sm text-slate-100 pr-2">{{ proposal.name }}</h4> <span :class="statusColorClass" class="text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">{{ proposal.status }}</span> </div> <p class="text-xs text-slate-400 mt-1.5">CPF: {{ proposal.cpf }}</p> <p class="text-xs text-slate-300 font-medium mt-1">R$ {{ (proposal.amount || 0).toLocaleString('pt-BR') }}</p> <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-700/50"> <div :title="slaStatus.message" class="flex items-center gap-1.5"> <i class="fa-solid fa-clock" :class="slaStatus.color"></i> <span class="text-xs font-medium" :class="slaStatus.color">{{ daysInStage }}d</span> </div> <div class="flex items-center gap-2"> <div class="w-16 bg-gray-600 rounded-full h-1.5"> <div class="bg-orange-500 h-1.5 rounded-full" :style="{ width: progressPercentage + '%' }"></div> </div> <span class="text-xs font-medium text-slate-400">{{ currentStageIndex + 1 }}/{{ stages.length }}</span> </div> </div> </div>`,
+      };
+      const KanbanColumn = {
+        components: { KanbanCard, draggable: vuedraggable },
+        props: ["stage", "proposals", "stages"],
+        emits: ["card-click", "update:proposals"],
+        template: `<div class="w-full md:w-72 flex-shrink-0 bg-[#2D2D2D]/40 rounded-xl p-3 flex flex-col"> <div class="flex justify-between items-center mb-4 px-1"> <h3 class="font-bold text-slate-300">{{ stage.title }}</h3> <span class="bg-[#2D2D2D] text-slate-300 font-bold text-sm w-6 h-6 flex items-center justify-center rounded-full">{{ proposals.length }}</span> </div> <draggable class="space-y-3 h-full min-h-[100px]" :list="proposals" group="proposals" item-key="id" @change="$emit('update:proposals', $event)" :data-stage-id="stage.id"> <template #item="{element}"> <kanban-card :proposal="element" :stages="stages" @click="$emit('card-click', element)"></kanban-card> </template> </draggable> </div>`,
+      };
+      const KanbanView = {
+        components: { KanbanColumn },
+        props: ["stages", "proposals"],
+        emits: ["proposal-moved", "card-click"],
+        setup(props, { emit }) {
+          const getProposalsForStage = (stageId) =>
+            props.proposals.filter((p) => p.stageId === stageId);
+          const handleUpdate = (event, stageId) => {
+            if (event.added)
+              emit("proposal-moved", {
+                proposal: event.added.element,
+                newStageId: stageId,
+              });
+          };
+          return { getProposalsForStage, handleUpdate };
+        },
+        template: `<main class="kanban-board grid grid-cols-1 gap-y-6 md:flex md:gap-x-6 md:pb-4 md:overflow-x-auto"> <kanban-column v-for="stage in stages" :key="stage.id" :stage="stage" :proposals="getProposalsForStage(stage.id)" :stages="stages" @update:proposals="handleUpdate($event, stage.id)" @card-click="$emit('card-click', $event)"></kanban-column> </main>`,
+      };
+      const ListView = {
+        props: ["stages", "proposals"],
+        emits: ["card-click"],
+        setup(props, { emit }) {
+          const sortKey = ref("");
+          const sortOrder = ref("asc");
+          const sortedProposals = computed(() => {
+            const key = sortKey.value;
+            if (!key) return props.proposals;
+            return [...props.proposals].sort((a, b) => {
+              let valA = a[key],
+                valB = b[key];
+              if (key === "stageId") {
+                valA = props.stages.find((s) => s.id === valA)?.title || "";
+                valB = props.stages.find((s) => s.id === valB)?.title || "";
+              }
+              if (valA < valB) return sortOrder.value === "asc" ? -1 : 1;
+              if (valA > valB) return sortOrder.value === "asc" ? 1 : -1;
+              return 0;
+            });
+          });
+          function sortBy(key) {
+            if (sortKey.value === key) {
+              sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+            } else {
+              sortKey.value = key;
+              sortOrder.value = "asc";
+            }
+          }
+          const getSlaForProposal = (proposal) =>
+            useSlaStatus(ref(proposal), ref(props.stages));
+          return {
+            sortedProposals,
+            sortBy,
+            sortKey,
+            sortOrder,
+            getSlaForProposal,
+            statusColors,
+          };
+        },
+        template: `<div class="bg-[#2D2D2D]/40 rounded-xl overflow-x-auto"> <table class="w-full text-sm text-left"> <thead class="bg-[#2D2D2D]/60 text-xs text-slate-300 uppercase"> <tr> <th @click="sortBy('name')" class="px-6 py-3 cursor-pointer">Cliente <i class="fa-solid fa-sort ml-1"></i></th> <th @click="sortBy('stageId')" class="px-6 py-3 cursor-pointer">Etapa <i class="fa-solid fa-sort ml-1"></i></th> <th @click="sortBy('status')" class="px-6 py-3 cursor-pointer">Status <i class="fa-solid fa-sort ml-1"></i></th> <th @click="sortBy('amount')" class="px-6 py-3 cursor-pointer">Valor <i class="fa-solid fa-sort ml-1"></i></th> <th class="px-6 py-3">Tempo na Fase</th> </tr> </thead> <tbody> <tr v-for="proposal in sortedProposals" :key="proposal.id" @click="$emit('card-click', proposal)" class="border-b border-[#3E3E3E] hover:bg-[#3E3E3E]/50 cursor-pointer" :class="{'bg-[#252525] opacity-70': proposal.isArchived}"> <td class="px-6 py-4 font-medium text-slate-100 whitespace-nowrap"><i v-if="proposal.isArchived" class="fa-solid fa-archive text-slate-500 mr-2" title="Arquivado"></i>{{ proposal.name }}</td> <td class="px-6 py-4">{{ stages.find(s => s.id === proposal.stageId)?.title }}</td> <td class="px-6 py-4"> <span :class="statusColors[proposal.status]" class="text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap">{{ proposal.status }}</span> </td> <td class="px-6 py-4">R$ {{ (proposal.amount || 0).toLocaleString('pt-BR') }}</td> <td class="px-6 py-4"> <div :title="getSlaForProposal(proposal).slaStatus.value.message" class="flex items-center gap-2"> <i class="fa-solid fa-clock" :class="getSlaForProposal(proposal).slaStatus.value.color"></i> <span class="font-medium" :class="getSlaForProposal(proposal).slaStatus.value.color">{{ getSlaForProposal(proposal).daysInStage.value }}d</span> </div> </td> </tr> </tbody> </table> </div>`,
+      };
+
+      const ProposalHistory = {
+        props: ["history", "stages"],
+        setup(props) {
+          const getStageTitle = (stageId) => {
+            return props.stages.find((s) => s.id === stageId)?.title || stageId;
+          };
+          const formatTimestamp = (ts) => {
+            return new Date(ts).toLocaleString("pt-BR");
+          };
+          return { getStageTitle, formatTimestamp, statusColors };
+        },
+        template: `
+            <div class="space-y-4">
+                <div v-for="(entry, index) in history" :key="index" class="relative pl-8">
+                    <div class="absolute left-0 top-1.5 w-3 h-3 rounded-full" :class="statusColors[entry.status] ? statusColors[entry.status].split(' ')[0] : 'bg-gray-500'"></div>
+                    <div class="absolute left-[5px] top-4 h-full w-0.5 bg-gray-700" v-if="index < history.length - 1"></div>
+                    <p class="font-semibold text-slate-200">
+                        Movido para "{{ getStageTitle(entry.stageId) }}"
+                    </p>
+                    <div class="flex items-center gap-4 text-sm text-slate-400 flex-wrap">
+                        <span :class="statusColors[entry.status]" class="text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">{{ entry.status }}</span>
+                        <span><i class="fa-solid fa-user mr-1.5"></i>{{ entry.user }}</span>
+                        <span><i class="fa-solid fa-calendar-alt mr-1.5"></i>{{ formatTimestamp(entry.timestamp) }}</span>
+                    </div>
+                </div>
+            </div>
+        `,
+      };
+
+      const ProposalModal = {
+        props: ["proposal", "stages"],
+        emits: ["close", "save"],
+        components: {
+          ProposalHistory,
+          StepDadosBasicos,
+          StepDocumentacao,
+          StepCredito,
+          StepSolicitacaoVistoria: createPlaceholderStep(
+            "Solicitação Vistoria"
+          ),
+          StepAvaliacaoFinal: createPlaceholderStep("Avaliação Final"),
+          StepAvaliacaoDiretoria: createPlaceholderStep("Avaliação Diretoria"),
+          StepFundo: createPlaceholderStep("Fundo"),
+          StepFaturamento: createPlaceholderStep("Faturamento"),
+          StepFinalizado: createPlaceholderStep("Finalizado"),
+        },
+        setup(props, { emit }) {
+          const editableProposal = ref(
+            JSON.parse(JSON.stringify(props.proposal))
+          );
+          const activeTab = ref("form");
+
+          const stageComponentMap = {
+            dados_basicos: "StepDadosBasicos",
+            documentacao: "StepDocumentacao",
+            credito: "StepCredito",
+            solicitacao_vistoria: "StepSolicitacaoVistoria",
+            avaliacao_final: "StepAvaliacaoFinal",
+            avaliacao_diretoria: "StepAvaliacaoDiretoria",
+            fundo: "StepFundo",
+            faturamento: "StepFaturamento",
+            finalizado: "StepFinalizado",
+          };
+          const currentComponent = computed(
+            () => stageComponentMap[editableProposal.value.stageId]
+          );
+          const currentStageTitle = computed(
+            () =>
+              props.stages.find((s) => s.id === editableProposal.value.stageId)
+                ?.title || "Etapa"
+          );
+
+          function close() {
+            emit("close");
+          }
+          function save() {
+            emit("save", editableProposal.value);
+          }
+          function archive() {
+            editableProposal.value.isArchived = true;
+            emit("save", editableProposal.value);
+          }
+
+          return {
+            editableProposal,
+            activeTab,
+            currentComponent,
+            currentStageTitle,
+            close,
+            save,
+            archive,
+            statusColors,
+          };
+        },
+        template: `<div class="fixed inset-0 bg-black/70 z-50 flex justify-center items-center p-4" @click.self="close"> <div class="bg-[#2D2D2D] rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-[#3E3E3E]"> <header class="p-6 border-b border-[#3E3E3E] flex justify-between items-start"> <div> <h2 class="text-xl font-bold text-slate-100">{{ currentStageTitle }}</h2> <p class="text-sm text-slate-400">Proposta: {{ proposal.name }}</p> </div> <div class="flex items-center gap-2"> <div class="bg-[#1c1c1c] p-1 rounded-lg flex items-center"> <button @click="activeTab = 'form'" :class="activeTab === 'form' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:bg-[#3E3E3E]'" class="px-3 py-1 rounded-md text-sm font-semibold transition-colors">Formulário</button> <button @click="activeTab = 'history'" :class="activeTab === 'history' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:bg-[#3E3E3E]'" class="px-3 py-1 rounded-md text-sm font-semibold transition-colors">Histórico</button> </div> <button @click="close" class="text-slate-500 hover:text-slate-300 transition-colors ml-4"><i class="fa-solid fa-xmark fa-2x"></i></button> </div> </header> <main class="p-6 overflow-y-auto flex-grow bg-[#1C1C1C]"> <div v-show="activeTab === 'form'"> <component :is="currentComponent" v-model="editableProposal.data[editableProposal.stageId]" /> </div> <div v-show="activeTab === 'history'"> <proposal-history :history="proposal.history" :stages="stages" /> </div> </main> <footer class="p-4 sm:p-6 bg-[#2D2D2D]/80 border-t border-[#3E3E3E] flex flex-wrap justify-between items-center gap-3 rounded-b-xl"> <div class="flex items-center gap-2"> <label for="stage-select" class="text-sm font-medium text-slate-400">Mover para:</label> <select id="stage-select" v-model="editableProposal.stageId" class="bg-[#3E3E3E] text-slate-200 rounded-md border-[#4a4a4a] shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"> <option v-for="stage in stages" :key="stage.id" :value="stage.id">{{ stage.title }}</option> </select> </div> <div class="flex items-center gap-2"> <label for="status-select" class="text-sm font-medium text-slate-400">Status:</label> <select id="status-select" v-model="editableProposal.status" class="bg-[#3E3E3E] text-slate-200 rounded-md border-[#4a4a4a] shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"> <option v-for="(color, status) in statusColors" :key="status">{{ status }}</option> </select> </div> <div class="flex items-center gap-3"> <template v-if="editableProposal.stageId === 'finalizado' && !editableProposal.isArchived"> <button @click="archive" class="bg-sky-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md hover:bg-sky-700 transition-colors flex items-center gap-2"><i class="fa-solid fa-archive"></i> Arquivar</button> </template> <template v-else-if="!editableProposal.isArchived"> <button @click="close" class="bg-[#3E3E3E] text-slate-200 font-semibold py-2 px-4 rounded-lg border border-[#4a4a4a] hover:bg-[#4a4a4a] transition-colors">Cancelar</button> <button @click="save" class="bg-orange-500 text-white font-semibold py-2 px-5 rounded-lg shadow-md hover:bg-orange-600 transition-colors flex items-center gap-2"><i class="fa-solid fa-check"></i> Salvar</button> </template> <template v-else> <span class="text-slate-400 font-semibold italic"><i class="fa-solid fa-archive mr-2"></i>Proposta Arquivada</span> </template> </div> </footer> </div> </div>`,
+      };
+
+      const AlertModal = {
+        props: ["title", "message", "type"],
+        emits: ["confirm", "cancel"],
+        template: `
+            <div class="fixed inset-0 bg-black/70 z-50 flex justify-center items-center p-4">
+                <div class="bg-[#2D2D2D] rounded-xl shadow-2xl w-full max-w-md border border-[#3E3E3E]">
+                    <div class="p-6">
+                        <div class="flex items-start gap-4">
+                             <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fa-solid fa-triangle-exclamation text-red-400"></i>
+                            </div>
+                            <div class="mt-0 text-left">
+                                <h3 class="text-lg leading-6 font-bold text-slate-100">{{ title }}</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-slate-400">{{ message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-[#2D2D2D]/80 px-6 py-4 flex flex-row-reverse gap-3 rounded-b-xl">
+                        <button v-if="type === 'confirm'" @click="$emit('confirm')" type="button" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:text-sm">Confirmar</button>
+                        <button @click="$emit('cancel')" type="button" class="inline-flex justify-center rounded-md border border-gray-500 shadow-sm px-4 py-2 bg-[#3E3E3E] text-base font-medium text-slate-200 hover:bg-[#4a4a4a] sm:text-sm">
+                          {{ type === 'confirm' ? 'Cancelar' : 'OK' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `,
+      };
+
+      const app = createApp({
+        components: { KanbanView, ListView, ProposalModal, AlertModal },
+        setup() {
+          const proposals = ref(initialProposals);
+          const stages = ref(STAGES);
+          const isModalOpen = ref(false);
+          const selectedProposal = ref(null);
+          const viewMode = ref("kanban");
+          const showFilters = ref(false);
+          const filterText = ref("");
+          const filterStatus = ref("");
+          const isAlertModalOpen = ref(false);
+          const alertModalContent = ref({});
+          const showArchived = ref(false);
+
+          const filteredProposals = computed(() => {
+            let proposalsToFilter = proposals.value;
+            if (viewMode.value === "kanban") {
+              proposalsToFilter = proposalsToFilter.filter(
+                (p) => !p.isArchived
+              );
+            } else {
+              if (!showArchived.value) {
+                proposalsToFilter = proposalsToFilter.filter(
+                  (p) => !p.isArchived
+                );
+              }
+            }
+            return proposalsToFilter.filter((p) => {
+              const nameMatch = p.name
+                .toLowerCase()
+                .includes(filterText.value.toLowerCase());
+              const statusMatch =
+                !filterStatus.value || p.status === filterStatus.value;
+              return nameMatch && statusMatch;
+            });
+          });
+
+          function addHistoryEntry(proposal, stageId, status) {
+            if (!proposal.history) proposal.history = [];
+            proposal.history.push({
+              stageId: stageId,
+              status: status,
+              user: "Usuário",
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          const openProposalModal = (proposal) => {
+            selectedProposal.value = JSON.parse(JSON.stringify(proposal));
+            if (!selectedProposal.value.data) selectedProposal.value.data = {};
+            stages.value.forEach((stage) => {
+              if (!selectedProposal.value.data[stage.id]) {
+                selectedProposal.value.data[stage.id] = {};
+              }
+            });
+            isModalOpen.value = true;
+          };
+
+          const openNewProposalModal = () => {
+            const newProposal = {
+              id: null,
+              name: "",
+              cpf: "",
+              amount: 0,
+              stageId: "dados_basicos",
+              status: "Pendente",
+              isArchived: false,
+              stageEnteredAt: new Date().toISOString(),
+              history: [],
+              data: {},
+            };
+            openProposalModal(newProposal);
+          };
+
+          const closeModal = () => {
+            isModalOpen.value = false;
+            selectedProposal.value = null;
+          };
+
+          const openAlertModal = (config) => {
+            alertModalContent.value = config;
+            isAlertModalOpen.value = true;
+          };
+
+          const closeAlertModal = () => {
+            isAlertModalOpen.value = false;
+          };
+
+          const saveProposal = (updatedProposal) => {
+            if (updatedProposal.id === null) {
+              updatedProposal.id = Date.now();
+              updatedProposal.name =
+                updatedProposal.data.dados_basicos?.nome || "Nova Proposta";
+              updatedProposal.amount =
+                updatedProposal.data.dados_basicos?.valor_desejado || 0;
+              addHistoryEntry(
+                updatedProposal,
+                updatedProposal.stageId,
+                updatedProposal.status
+              );
+              proposals.value.unshift(updatedProposal);
+              closeModal();
+              return;
+            }
+
+            const originalProposal = proposals.value.find(
+              (p) => p.id === updatedProposal.id
+            );
+            const hasStageChanged =
+              originalProposal.stageId !== updatedProposal.stageId;
+
+            const performUpdate = () => {
+              const index = proposals.value.findIndex(
+                (p) => p.id === updatedProposal.id
+              );
+              if (index !== -1) {
+                const originalStatus = proposals.value[index].status;
+                const justArchived =
+                  updatedProposal.isArchived && !originalProposal.isArchived;
+
+                if (hasStageChanged) {
+                  updatedProposal.stageEnteredAt = new Date().toISOString();
+                  const newStage = stages.value.find(
+                    (s) => s.id === updatedProposal.stageId
+                  );
+                  if (newStage) updatedProposal.status = newStage.status;
+                }
+
+                if (
+                  hasStageChanged ||
+                  originalStatus !== updatedProposal.status ||
+                  justArchived
+                ) {
+                  addHistoryEntry(
+                    updatedProposal,
+                    updatedProposal.stageId,
+                    justArchived ? "Arquivado" : updatedProposal.status
+                  );
+                }
+                proposals.value[index] = updatedProposal;
+              }
+              closeModal();
+            };
+
+            if (hasStageChanged) {
+              checkAndConfirmMove(
+                originalProposal,
+                updatedProposal.stageId,
+                performUpdate
+              );
+            } else {
+              performUpdate();
+            }
+          };
+
+          const handleProposalMove = ({ proposal, newStageId }) => {
+            const movedProposal = proposals.value.find(
+              (p) => p.id === proposal.id
+            );
+            if (!movedProposal || movedProposal.stageId === newStageId) return;
+
+            const performMove = () => {
+              const newStage = stages.value.find((s) => s.id === newStageId);
+              if (newStage) {
+                movedProposal.stageId = newStageId;
+                movedProposal.status = newStage.status;
+                movedProposal.stageEnteredAt = new Date().toISOString();
+                addHistoryEntry(movedProposal, newStageId, newStage.status);
+              }
+            };
+
+            checkAndConfirmMove(movedProposal, newStageId, performMove);
+          };
+
+          function checkAndConfirmMove(proposal, newStageId, onConfirm) {
+            const currentStageIndex = stages.value.findIndex(
+              (s) => s.id === proposal.stageId
+            );
+            const newStageIndex = stages.value.findIndex(
+              (s) => s.id === newStageId
+            );
+
+            if (newStageIndex > currentStageIndex) {
+              if (proposal.status !== "Aprovado") {
+                openAlertModal({
+                  type: "alert",
+                  title: "Movimentação Bloqueada",
+                  message: `Para avançar a proposta, o status da etapa atual ("${stages.value[currentStageIndex].title}") deve ser "Aprovado".`,
+                  onConfirm: () => {},
+                });
+                const originalProposals = JSON.parse(
+                  JSON.stringify(proposals.value)
+                );
+                proposals.value = [];
+                setTimeout(() => {
+                  proposals.value = originalProposals;
+                }, 0);
+                return;
+              }
+            }
+
+            const lastVisit = [...proposal.history]
+              .reverse()
+              .find((h) => h.stageId === newStageId);
+            if (
+              lastVisit &&
+              ["Aprovado", "Finalizado"].includes(lastVisit.status)
+            ) {
+              openAlertModal({
+                type: "confirm",
+                title: "Retornar para Etapa Concluída?",
+                message: `A etapa "${stages.value[newStageIndex].title}" já foi concluída com o status "${lastVisit.status}". Deseja realmente retornar a proposta?`,
+                onConfirm: () => {
+                  closeAlertModal();
+                  onConfirm();
+                },
+              });
+              return;
+            }
+            onConfirm();
+          }
+
+          return {
+            proposals,
+            stages,
+            isModalOpen,
+            selectedProposal,
+            viewMode,
+            openProposalModal,
+            closeModal,
+            saveProposal,
+            handleProposalMove,
+            showFilters,
+            filterText,
+            filterStatus,
+            filteredProposals,
+            statusColors,
+            openNewProposalModal,
+            isAlertModalOpen,
+            alertModalContent,
+            closeAlertModal,
+            showArchived,
+          };
+        },
+      });
+      app.component("draggable", vuedraggable);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

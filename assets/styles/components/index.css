@@ -1,0 +1,6 @@
+/* Importações de estilos de componentes */
+@import './buttons.css';
+@import './forms.css';
+@import './cards.css';
+@import './modals.css';
+@import './navigation.css';

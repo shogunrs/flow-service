@@ -1,0 +1,470 @@
+/* Modal Components Styles */
+
+/* Modal Overlay */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
+  @apply transition-opacity duration-300 ease-in-out;
+}
+
+.modal-overlay.entering {
+  @apply opacity-0;
+}
+
+.modal-overlay.entered {
+  @apply opacity-100;
+}
+
+.modal-overlay.exiting {
+  @apply opacity-0;
+}
+
+/* Modal Container */
+.modal-container {
+  @apply bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden;
+  @apply transform transition-all duration-300 ease-in-out;
+}
+
+.modal-overlay.entering .modal-container {
+  @apply scale-95 opacity-0;
+}
+
+.modal-overlay.entered .modal-container {
+  @apply scale-100 opacity-100;
+}
+
+.modal-overlay.exiting .modal-container {
+  @apply scale-95 opacity-0;
+}
+
+/* Modal Sizes */
+.modal-container.modal-sm {
+  @apply max-w-md;
+}
+
+.modal-container.modal-md {
+  @apply max-w-2xl;
+}
+
+.modal-container.modal-lg {
+  @apply max-w-4xl;
+}
+
+.modal-container.modal-xl {
+  @apply max-w-6xl;
+}
+
+.modal-container.modal-full {
+  @apply max-w-none w-[95vw] h-[95vh];
+}
+
+/* Modal Header */
+.modal-header {
+  @apply flex items-center justify-between p-6 border-b border-gray-700;
+}
+
+.modal-title {
+  @apply text-xl font-semibold text-white;
+}
+
+.modal-close {
+  @apply text-gray-400 hover:text-white transition-colors duration-200 cursor-pointer;
+  @apply w-6 h-6 flex items-center justify-center;
+}
+
+.modal-close:hover {
+  @apply bg-gray-700 rounded;
+}
+
+/* Modal Body */
+.modal-body {
+  @apply p-6 overflow-y-auto;
+  max-height: calc(90vh - 140px); /* Account for header and footer */
+}
+
+.modal-body.no-padding {
+  @apply p-0;
+}
+
+.modal-body.scrollable {
+  @apply overflow-y-auto;
+}
+
+/* Modal Footer */
+.modal-footer {
+  @apply flex items-center justify-end space-x-3 p-6 border-t border-gray-700 bg-gray-850;
+}
+
+.modal-footer.centered {
+  @apply justify-center;
+}
+
+.modal-footer.start {
+  @apply justify-start;
+}
+
+.modal-footer.between {
+  @apply justify-between;
+}
+
+/* Modal Tabs */
+.modal-tabs {
+  @apply flex border-b border-gray-700;
+}
+
+.modal-tab {
+  @apply px-6 py-3 text-sm font-medium text-gray-400 cursor-pointer transition-colors duration-200;
+  @apply hover:text-white border-b-2 border-transparent;
+}
+
+.modal-tab.active {
+  @apply text-orange-400 border-orange-400;
+}
+
+.modal-tab:hover:not(.active) {
+  @apply text-gray-300 border-gray-600;
+}
+
+/* Modal Tab Content */
+.modal-tab-content {
+  @apply p-6;
+}
+
+.modal-tab-pane {
+  @apply hidden;
+}
+
+.modal-tab-pane.active {
+  @apply block;
+}
+
+/* Alert Modal */
+.alert-modal {
+  @apply text-center;
+}
+
+.alert-modal-icon {
+  @apply mx-auto mb-4 w-12 h-12 flex items-center justify-center rounded-full;
+}
+
+.alert-modal-icon.success {
+  @apply bg-green-100 text-green-600;
+}
+
+.alert-modal-icon.error {
+  @apply bg-red-100 text-red-600;
+}
+
+.alert-modal-icon.warning {
+  @apply bg-yellow-100 text-yellow-600;
+}
+
+.alert-modal-icon.info {
+  @apply bg-blue-100 text-blue-600;
+}
+
+.alert-modal-title {
+  @apply text-lg font-semibold text-white mb-2;
+}
+
+.alert-modal-message {
+  @apply text-gray-300 mb-6;
+}
+
+/* Confirmation Modal */
+.confirmation-modal {
+  @apply text-center;
+}
+
+.confirmation-modal-icon {
+  @apply mx-auto mb-4 w-12 h-12 flex items-center justify-center rounded-full bg-red-100 text-red-600;
+}
+
+.confirmation-modal-title {
+  @apply text-lg font-semibold text-white mb-2;
+}
+
+.confirmation-modal-message {
+  @apply text-gray-300 mb-6;
+}
+
+.confirmation-modal-actions {
+  @apply flex items-center justify-center space-x-3;
+}
+
+/* Loading Modal */
+.loading-modal {
+  @apply text-center py-8;
+}
+
+.loading-modal-spinner {
+  @apply mx-auto mb-4 w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin;
+}
+
+.loading-modal-message {
+  @apply text-gray-300;
+}
+
+/* Modal Backdrop Click */
+.modal-backdrop {
+  @apply absolute inset-0;
+}
+
+/* Modal Content Wrapper */
+.modal-content {
+  @apply relative z-10;
+}
+
+/* Modal Animations */
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes modalScaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Animation Classes */
+.modal-slide-in {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-slide-out {
+  animation: modalSlideOut 0.3s ease-in;
+}
+
+.modal-fade-in {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-fade-out {
+  animation: modalFadeOut 0.3s ease-in;
+}
+
+.modal-scale-in {
+  animation: modalScaleIn 0.3s ease-out;
+}
+
+.modal-scale-out {
+  animation: modalScaleOut 0.3s ease-in;
+}
+
+/* Modal Scrollbar */
+.modal-body::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Modal States */
+.modal-loading .modal-body {
+  @apply relative;
+}
+
+.modal-loading .modal-body::after {
+  content: '';
+  @apply absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center;
+}
+
+.modal-loading .modal-body::before {
+  content: '';
+  @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin z-10;
+}
+
+/* Modal Error State */
+.modal-error {
+  @apply border-l-4 border-red-500;
+}
+
+.modal-error .modal-header {
+  @apply bg-red-900 bg-opacity-20;
+}
+
+/* Modal Success State */
+.modal-success {
+  @apply border-l-4 border-green-500;
+}
+
+.modal-success .modal-header {
+  @apply bg-green-900 bg-opacity-20;
+}
+
+/* Modal Warning State */
+.modal-warning {
+  @apply border-l-4 border-yellow-500;
+}
+
+.modal-warning .modal-header {
+  @apply bg-yellow-900 bg-opacity-20;
+}
+
+/* Nested Modals */
+.modal-overlay.nested {
+  @apply z-60;
+}
+
+.modal-overlay.nested .modal-container {
+  @apply shadow-2xl;
+}
+
+/* Modal Responsive Design */
+@media (max-width: 640px) {
+  .modal-container {
+    @apply mx-2 max-w-none w-auto;
+  }
+  
+  .modal-container.modal-full {
+    @apply w-full h-full max-h-none rounded-none;
+  }
+  
+  .modal-header {
+    @apply p-4;
+  }
+  
+  .modal-body {
+    @apply p-4;
+    max-height: calc(100vh - 120px);
+  }
+  
+  .modal-footer {
+    @apply p-4 flex-col space-x-0 space-y-3;
+  }
+  
+  .modal-footer button {
+    @apply w-full;
+  }
+  
+  .modal-tabs {
+    @apply overflow-x-auto;
+  }
+  
+  .modal-tab {
+    @apply whitespace-nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    @apply p-2;
+  }
+  
+  .modal-title {
+    @apply text-lg;
+  }
+  
+  .modal-header {
+    @apply p-3;
+  }
+  
+  .modal-body {
+    @apply p-3;
+  }
+  
+  .modal-footer {
+    @apply p-3;
+  }
+}
+
+/* Dark Mode Adjustments */
+@media (prefers-color-scheme: dark) {
+  /* Already optimized for dark mode */
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .modal-container {
+    @apply border-2 border-white;
+  }
+  
+  .modal-header,
+  .modal-footer {
+    @apply border-2;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-container {
+    @apply transition-none;
+  }
+  
+  .modal-slide-in,
+  .modal-slide-out,
+  .modal-fade-in,
+  .modal-fade-out,
+  .modal-scale-in,
+  .modal-scale-out {
+    animation: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .modal-overlay {
+    @apply hidden;
+  }
+}
