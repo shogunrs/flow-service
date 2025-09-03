@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome para ícones -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .backdrop-blur-strong {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      class="relative min-h-screen w-full bg-slate-900 flex items-center justify-center p-4"
+    >
+      <!-- Imagem de Fundo -->
+      <div
+        class="absolute inset-0 bg-cover bg-center z-0"
+        style="
+          background-image: url('https://images.unsplash.com/photo-1677442135703-1787eea5ce01?q=80&w=2574&auto=format&fit=crop');
+        "
+      >
+        <!-- Overlay escuro -->
+        <div class="absolute inset-0 bg-black/80"></div>
+      </div>
+
+      <!-- Formulário de Login -->
+      <div
+        class="relative z-10 w-full max-w-md bg-white/10 backdrop-blur-strong rounded-2xl border border-white/20 shadow-2xl p-8 text-white"
+      >
+        <div class="text-center mb-8">
+          <h1 class="text-3xl font-bold">Bem-vindo de volta</h1>
+          <p class="text-slate-300 mt-2">Faça login para acessar sua conta.</p>
+        </div>
+
+        <form action="#" method="POST" class="space-y-6">
+          <div>
+            <label for="email" class="block text-sm font-medium text-slate-300"
+              >E-mail</label
+            >
+            <div class="mt-1 relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                <i class="fa-solid fa-envelope text-slate-400"></i>
+              </span>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                required
+                class="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-10 pr-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                placeholder="voce@exemplo.com"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              for="password"
+              class="block text-sm font-medium text-slate-300"
+              >Senha</label
+            >
+            <div class="mt-1 relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                <i class="fa-solid fa-lock text-slate-400"></i>
+              </span>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                class="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-10 pr-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                placeholder="Sua senha"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                class="h-4 w-4 bg-white/20 border-white/30 text-orange-500 focus:ring-orange-500 rounded"
+              />
+              <label for="remember-me" class="ml-2 block text-sm text-slate-300"
+                >Lembrar-me</label
+              >
+            </div>
+
+            <div class="text-sm">
+              <a
+                href="#"
+                class="font-medium text-orange-400 hover:text-orange-300"
+                >Esqueceu sua senha?</a
+              >
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-orange-500 transition-transform transform hover:scale-105"
+            >
+              Entrar
+            </button>
+          </div>
+        </form>
+
+        <p class="mt-8 text-center text-sm text-slate-400">
+          Não tem uma conta?
+          <a href="#" class="font-medium text-orange-400 hover:text-orange-300"
+            >Cadastre-se</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
