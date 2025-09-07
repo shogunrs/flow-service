@@ -12,8 +12,24 @@ export async function presignUpload(filename: string, contentType: string, prefi
 
 export async function uploadFileViaPresign(file: File, prefix?: string): Promise<UploadedObject> {
   if (!isApiEnabled()) throw new Error('API disabled')
-  const { url, objectKey } = await presignUpload(file.name, file.type || 'application/octet-stream', prefix)
-  await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type || 'application/octet-stream' } })
-  return { objectKey, name: file.name, type: file.type, size: file.size }
+  
+  try {
+    const { url, objectKey } = await presignUpload(file.name, file.type || 'application/octet-stream', prefix)
+    
+    const response = await fetch(url, { 
+      method: 'PUT', 
+      body: file, 
+      headers: { 'Content-Type': file.type || 'application/octet-stream' } 
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}`)
+    }
+    
+    return { objectKey, name: file.name, type: file.type, size: file.size }
+  } catch (error) {
+    console.error('Upload error:', error)
+    throw error
+  }
 }
 
