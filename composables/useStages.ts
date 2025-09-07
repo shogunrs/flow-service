@@ -7,13 +7,12 @@ export async function fetchStagesApi(processKey: string): Promise<any[]> {
   } catch { return [] }
 }
 
-export async function saveStagesApi(processKey: string, stages: any[]): Promise<void> {
-  if (!isApiEnabled()) return
+export async function saveStagesApi(processKey: string, stages: any[]): Promise<any[]> {
+  if (!isApiEnabled()) return []
   try {
-    await apiFetch<void>(`/api/v1/processes/${encodeURIComponent(processKey)}/stages`, {
+    return await apiFetch<any[]>(`/api/v1/processes/${encodeURIComponent(processKey)}/stages`, {
       method: 'PUT',
       body: stages || []
     })
-  } catch {}
+  } catch { return [] }
 }
-

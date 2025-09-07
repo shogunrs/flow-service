@@ -64,3 +64,215 @@ paths:
       responses:
         '204': { description: No Content }
 
+  /api/v1/processes/{key}/stages:
+    get:
+      summary: List stages for process
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Replace stages for process
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  title: { type: string }
+                  slaDays: { type: integer }
+                  color: { type: string }
+                  order: { type: integer }
+      responses:
+        '200': { description: OK }
+
+  /api/v1/stages/{stageId}/fields:
+    get:
+      summary: List fields for a stage
+      parameters:
+        - in: path
+          name: stageId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Replace fields for a stage
+      parameters:
+        - in: path
+          name: stageId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  label: { type: string }
+                  type: { type: string }
+                  required: { type: boolean }
+                  placeholder: { type: string }
+                  options:
+                    type: array
+                    items: { type: string }
+                  order: { type: integer }
+      responses:
+        '200': { description: OK }
+
+  /api/v1/processes/{key}/proposals:
+    get:
+      summary: List proposals by process
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create proposal
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, stageId]
+              properties:
+                name: { type: string }
+                amount: { type: number }
+                stageId: { type: string }
+                status: { type: string }
+                details: { type: object }
+      responses:
+        '201': { description: Created }
+
+  /api/v1/processes/{key}/proposals/{id}:
+    put:
+      summary: Update proposal (move stage, status, name, amount)
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stageId: { type: string }
+                status: { type: string }
+                name: { type: string }
+                amount: { type: number }
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete proposal
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: No Content }
+
+  /api/v1/processes/{key}/proposals/{id}/forms:
+    get:
+      summary: Get all stage forms of proposal
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+
+  /api/v1/processes/{key}/proposals/{id}/forms/{stageId}:
+    put:
+      summary: Save stage form values for a proposal
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: stageId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                values: { type: object }
+      responses:
+        '200': { description: OK }
+
+  /api/v1/files/presign-upload:
+    post:
+      summary: Presign upload URL for S3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename: { type: string }
+                contentType: { type: string }
+                prefix: { type: string }
+      responses:
+        '200': { description: OK }
+
+  /api/v1/files/presign-download:
+    get:
+      summary: Presign download URL for S3 objectKey
+      parameters:
+        - in: query
+          name: key
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }

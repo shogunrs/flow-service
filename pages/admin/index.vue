@@ -179,6 +179,7 @@ import { fetchStagesApi, saveStagesApi } from '~/composables/useStages'
 import { isApiEnabled } from '~/utils/api/index'
 import { useProcessSubmenu } from '~/composables/useProcessMenu'
 import { useToast } from '~/composables/useToast'
+import { fetchStageFieldsApi, saveStageFieldsApi } from '~/composables/useStageFields'
 
 useHead({ title: 'Admin' })
 definePageMeta({ layout: 'default' })
@@ -293,7 +294,37 @@ async function savePipelineModal() {
       processes.value = processes.value.map(p => p.key === currentProcessKey.value ? { ...p, name: newName } : p)
     }
     try {
-      await saveStagesApi(currentProcessKey.value, pipelineStages.value)
+      // snapshot antes de salvar para migrar IDs de campos
+      const prevStages = (pipelineStages.value || []).map(s => ({ id: s.id, title: s.title }))
+      const saved = await saveStagesApi(currentProcessKey.value, pipelineStages.value)
+      if (Array.isArray(saved) && saved.length) {
+        // Atualiza local com IDs reais do backend
+        const asClient = saved.map((s) => ({ id: s.id, title: s.title, slaDays: s.slaDays, color: s.color }))
+        pipelineStages.value = asClient
+
+        // Migra mapa de forms local dos IDs antigos para os novos e persiste no backend
+        try {
+          const storageKey = `pipeline_stage_forms__${currentProcessKey.value}`
+          const raw = localStorage.getItem(storageKey)
+          const map = raw ? JSON.parse(raw) || {} : {}
+          const nextMap = { ...map }
+          for (let i = 0; i < asClient.length; i++) {
+            const oldId = prevStages[i]?.id
+            const newId = asClient[i]?.id
+            if (!oldId || !newId || oldId === newId) continue
+            if (map[oldId]) {
+              nextMap[newId] = map[oldId]
+              delete nextMap[oldId]
+              // também envia para o backend, preservando ordem
+              if (isApiEnabled() && /^[a-fA-F0-9]{24}$/.test(newId)) {
+                const ordered = (nextMap[newId] || []).map((f, idx) => ({ ...f, order: idx }))
+                try { await saveStageFieldsApi(newId, ordered) } catch (e) {}
+              }
+            }
+          }
+          localStorage.setItem(storageKey, JSON.stringify(nextMap))
+        } catch (_) {}
+      }
       if (okName) toastSuccess('Esteira salva')
       else toastInfo('Etapas salvas; falha ao renomear o processo')
       showPipelineModal.value = false
@@ -322,6 +353,7 @@ onMounted(async () => {
   if (!currentProcessKey.value) return
   const loaded = await fetchStagesApi(currentProcessKey.value)
   pipelineStages.value = Array.isArray(loaded) ? loaded.map((s) => ({ id: s.id, title: s.title, slaDays: s.slaDays, color: s.color })) : []
+  await prefetchStageFields()
 })
 
 watch(currentProcessKey, async (k) => {
@@ -331,6 +363,7 @@ watch(currentProcessKey, async (k) => {
   setLastKey(k)
   const p = processes.value.find(x => x.key === k)
   processName.value = p?.name || k
+  await prefetchStageFields()
 })
 
 // Persistiremos as etapas somente ao salvar no modal
@@ -346,7 +379,37 @@ async function editProcess(p) {
   pipelineStages.value = Array.isArray(loaded) ? loaded.map((s) => ({ id: s.id, title: s.title, slaDays: s.slaDays, color: s.color })) : []
   setLastKey(p.key)
   processName.value = p.name || p.key
+  await prefetchStageFields()
   openPipelineModal()
+}
+
+// Busca os fields do backend por etapa (para mostrar contagem e já aquecer o builder)
+async function prefetchStageFields() {
+  if (!isApiEnabled()) return
+  try {
+    const storageKey = `pipeline_stage_forms__${currentProcessKey.value}`
+    const raw = localStorage.getItem(storageKey)
+    const map = raw ? JSON.parse(raw) || {} : {}
+    const nextMap = { ...map }
+    for (const st of pipelineStages.value || []) {
+      const sid = st?.id
+      if (!sid || !/^[a-fA-F0-9]{24}$/.test(sid)) continue
+      try {
+        const arr = await fetchStageFieldsApi(sid)
+        if (Array.isArray(arr)) {
+          nextMap[sid] = arr.map(r => ({
+            id: r.id || String(Date.now()),
+            label: r.label,
+            type: r.type,
+            required: !!r.required,
+            placeholder: r.placeholder || '',
+            options: Array.isArray(r.options) ? r.options : [],
+          }))
+        }
+      } catch (_) {}
+    }
+    localStorage.setItem(storageKey, JSON.stringify(nextMap))
+  } catch (_) {}
 }
 
 // Delete modal state/handlers

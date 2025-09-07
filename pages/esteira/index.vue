@@ -52,7 +52,7 @@
             class="bg-orange-500 hover:bg-orange-600 text-white font-medium px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 text-xs"
           >
             <i class="fa-solid fa-plus text-[10px]"></i>
-            <span class="hidden sm:inline">Nova Proposta</span>
+            <span class="hidden sm:inline">Novo Registro</span>
           </button>
         </div>
       </div>
@@ -127,6 +127,7 @@
                 ]"
                 :draggable="!isTouch"
                 @dragstart="onDragStart($event, p)"
+                @click="openCardForm(p)"
                 @dragend="onDragEnd"
               >
                 <div class="flex items-start justify-between">
@@ -218,6 +219,7 @@
                 <th class="px-3 sm:px-6 py-2 sm:py-3">Valor</th>
                 <th class="px-3 sm:px-6 py-2 sm:py-3">Etapa</th>
                 <th class="px-3 sm:px-6 py-2 sm:py-3">Status</th>
+                <th class="px-3 sm:px-6 py-2 sm:py-3 text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -241,6 +243,19 @@
                     {{ p.status }}
                   </span>
                 </td>
+                <td class="px-3 sm:px-6 py-2 sm:py-3">
+                  <div class="flex items-center gap-2 justify-end text-slate-300">
+                    <button class="hover:text-white" title="Ver/Editar" @click="openCardForm(p)">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                    <button class="hover:text-white" title="Mover" @click="openMoveModal(p)">
+                      <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </button>
+                    <button class="text-red-400 hover:text-red-300" title="Excluir" @click="openDeleteProposal(p)">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -251,13 +266,60 @@
     <!-- New Proposal Modal using BaseModal -->
     <BaseModal
       v-model="showNewModal"
-      title="Nova Proposta"
+      title="Novo Registro"
       size="md"
       :body-class="'new-proposal-modal'"
     >
       <div class="space-y-2">
+        <!-- Genérico: Etapa + Campos dinâmicos do processo -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <BaseSelect
+            v-model="newProposal.stageId"
+            label="Etapa"
+            size="xs"
+            :options="stages.map((s) => ({ label: s.title, value: s.id }))"
+          />
+        </div>
+        <div class="space-y-2">
+          <h4 class="text-xs font-semibold text-slate-200">Campos do processo</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <template v-for="f in stageDynamicFields" :key="f.id">
+              <div>
+                <BaseInput
+                  v-if="f.type === 'text' || f.type === 'number'"
+                  v-model="extraFieldValues[f.id]"
+                  :type="f.type === 'number' ? 'text' : 'text'"
+                  :numeric="f.type === 'number'"
+                  :label="f.label"
+                  size="xs"
+                  :placeholder="f.placeholder || ''"
+                />
+                <BaseInput
+                  v-else-if="f.type === 'date'"
+                  v-model="extraFieldValues[f.id]"
+                  type="date"
+                  :label="f.label"
+                  size="xs"
+                />
+                <BaseSelect
+                  v-else-if="f.type === 'select'"
+                  v-model="extraFieldValues[f.id]"
+                  :label="f.label"
+                  size="xs"
+                  :options="(f.options || []).map(o => ({ label: o, value: o }))"
+                />
+                <div v-else-if="f.type === 'file'">
+                  <FormField :label="f.label" :dense="true">
+                    <FileDrop @files="(files) => onExtraFile(f.id, files)" />
+                  </FormField>
+                </div>
+                <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
+              </div>
+            </template>
+          </div>
+        </div>
         <!-- Linha 1: Nome, CPF, CEP (abaixo do Nome), Administradora (abaixo do CPF) -->
-        <div class="grid grid-cols-12 gap-2">
+        <div v-if="false" class="grid grid-cols-12 gap-2">
           <div class="col-span-12 md:col-span-6">
             <BaseInput
               v-model="newProposal.name"
@@ -299,7 +361,7 @@
         </div>
 
         <!-- Linha 2: Cidade, Estado, Banco de Cotas, Fundo -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-if="false" class="grid grid-cols-1 md:grid-cols-2 gap-2">
           <BaseInput
             v-model="newProposal.city"
             label="Cidade"
@@ -327,7 +389,7 @@
         </div>
 
         <!-- Toggle de detalhes -->
-        <div class="flex items-center justify-end">
+        <div v-if="false" class="flex items-center justify-end">
           <button
             type="button"
             class="text-[11px] text-slate-300 hover:text-white inline-flex items-center gap-1"
@@ -346,11 +408,11 @@
           </button>
         </div>
 
-        <div v-if="showAdvanced" class="space-y-2">
+        <div v-if="false && showAdvanced" class="space-y-2">
           <!-- Campos da Etapa (dinâmicos) -->
           <div v-if="stageDynamicFields.length" class="space-y-2">
             <h4 class="text-xs font-semibold text-slate-200">
-              Campos da etapa
+              Campos do processo
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
               <template v-for="f in stageDynamicFields" :key="f.id">
@@ -489,14 +551,7 @@
             />
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <BaseSelect
-            v-model="newProposal.stageId"
-            label="Etapa inicial"
-            size="xs"
-            :options="stages.map((s) => ({ label: s.title, value: s.id }))"
-          />
-        </div>
+        <div v-if="false" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
       </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2">
@@ -512,6 +567,45 @@
           >
             <i class="fa-solid fa-check mr-1"></i>Salvar
           </button>
+        </div>
+      </template>
+    </BaseModal>
+
+    <!-- Delete Proposal Modal -->
+    <BaseModal v-model="showDeleteProposalModal" title="Excluir Registro" size="sm" :z-index="80">
+      <p class="text-sm text-slate-200">Tem certeza que deseja excluir este registro?</p>
+      <template #footer>
+        <div class="flex items-center justify-end gap-2">
+          <button class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs" @click="cancelDeleteProposal">Cancelar</button>
+          <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-xs" @click="confirmDeleteProposal">Excluir</button>
+        </div>
+      </template>
+    </BaseModal>
+
+    <!-- Stage Form Modal (per card) -->
+    <BaseModal v-model="showStageFormModal" title="Formulário da Etapa" size="md" :z-index="70">
+      <div class="space-y-2">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div class="text-[12px] text-slate-300">Etapa atual</div>
+          <div class="text-[12px] text-slate-100">{{ stageTitle(selectedProposal?.stageId) }}</div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <template v-for="f in stageFormFields" :key="f.id">
+            <div>
+              <BaseInput v-if="f.type === 'text' || f.type === 'number'" v-model="stageFormValues[f.id]" :type="f.type === 'number' ? 'text' : 'text'" :numeric="f.type === 'number'" :label="f.label" size="xs" :placeholder="f.placeholder || ''" />
+              <BaseInput v-else-if="f.type === 'date'" v-model="stageFormValues[f.id]" type="date" :label="f.label" size="xs" />
+              <BaseSelect v-else-if="f.type === 'select'" v-model="stageFormValues[f.id]" :label="f.label" size="xs" :options="(f.options || []).map(o => ({ label: o, value: o }))" />
+              <div v-else-if="f.type === 'file'">
+                <FormField :label="f.label" :dense="true"><FileDrop @files="(files) => onStageFormFile(f.id, files)" /></FormField>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex items-center justify-end gap-2">
+          <button class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs" @click="showStageFormModal = false">Fechar</button>
+          <button class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-md text-xs" @click="saveStageForm">Salvar</button>
         </div>
       </template>
     </BaseModal>
@@ -538,8 +632,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
-import { loadProposals, saveProposals } from "~/composables/useProposals";
+import { ref, computed, watch, onMounted, onBeforeUnmount, onActivated } from "vue";
+import { loadProposals, saveProposals, fetchProposalsApi, createProposalApi, fetchProposalFormsApi, saveProposalStageFormApi, updateProposalApi } from "~/composables/useProposals";
 import Sidebar from "~/components/ui/Sidebar.vue";
 import { useProcessSubmenu } from "~/composables/useProcessMenu";
 import ChatModal from "~/components/ui/ChatModal.vue";
@@ -552,6 +646,8 @@ import FormField from "~/components/ui/FormField.vue";
 import { isApiEnabled } from '~/utils/api/index'
 import { saveStagesApi } from '~/composables/useStages'
 import { useToast } from '~/composables/useToast'
+import { fetchStageFieldsApi } from '~/composables/useStageFields'
+import { uploadFileViaPresign } from '~/composables/useFiles'
 
 useHead({ title: "Esteira" });
 definePageMeta({ layout: "default" });
@@ -664,13 +760,30 @@ async function loadPipelineConfig() {
   ensureStagesCoverProposals();
 }
 
-onMounted(loadPipelineConfig);
+async function syncProposalsFromApi() {
+  if (!isApiEnabled()) return
+  try {
+    const arr = await fetchProposalsApi(pipelineKey.value)
+    if (Array.isArray(arr)) proposals.value = arr
+  } catch {}
+}
+
+onMounted(() => {
+  loadPipelineConfig()
+  syncProposalsFromApi()
+  try { window.addEventListener('focus', syncProposalsFromApi) } catch {}
+});
+onBeforeUnmount(() => { try { window.removeEventListener('focus', syncProposalsFromApi) } catch {} })
+onActivated(() => { syncProposalsFromApi() })
 watch(
   () => pipelineKey.value,
   () => {
     loadPipelineConfig();
     loadStageForms();
     initStageFields();
+    if (isApiEnabled()) {
+      fetchProposalsApi(pipelineKey.value).then(arr => { if (Array.isArray(arr)) proposals.value = arr }).catch(() => {})
+    }
   }
 );
 
@@ -681,6 +794,9 @@ watch(
   (k) => {
     const loaded = loadProposals(k);
     proposals.value = Array.isArray(loaded) ? loaded : [];
+    if (isApiEnabled()) {
+      fetchProposalsApi(k).then(arr => { if (Array.isArray(arr)) proposals.value = arr }).catch(() => {})
+    }
   }
 );
 const persistProposals = () => {
@@ -746,6 +862,70 @@ const filteredProposals = computed(() => {
     return nameMatch && statusMatch && archivedMatch;
   });
 });
+
+async function openCardForm(p) {
+  selectedProposal.value = p
+  // load fields for current stage
+  try { stageFormFields.value = await fetchStageFieldsApi(String(p.stageId)) } catch { stageFormFields.value = [] }
+  // load saved values from backend
+  stageFormValues.value = {}
+  if (isApiEnabled()) {
+    try {
+      const all = await fetchProposalFormsApi(pipelineKey.value, String(p.id))
+      stageFormValues.value = (all && all[String(p.stageId)]) ? { ...all[String(p.stageId)] } : {}
+    } catch {}
+  }
+  showStageFormModal.value = true
+}
+
+async function saveStageForm() {
+  const p = selectedProposal.value
+  if (!p) { showStageFormModal.value = false; return }
+  try {
+    if (isApiEnabled()) {
+      await saveProposalStageFormApi(pipelineKey.value, String(p.id), String(p.stageId), stageFormValues.value)
+    }
+  } catch {}
+  showStageFormModal.value = false
+}
+
+function openDeleteProposal(p) {
+  deleteProposalTarget.value = p
+  showDeleteProposalModal.value = true
+}
+function cancelDeleteProposal() {
+  showDeleteProposalModal.value = false
+  deleteProposalTarget.value = null
+}
+async function confirmDeleteProposal() {
+  const p = deleteProposalTarget.value
+  if (!p) return cancelDeleteProposal()
+  // optimistic UI update
+  const prev = proposals.value.slice()
+  proposals.value = proposals.value.filter(x => x.id !== p.id)
+  try {
+    if (isApiEnabled()) {
+      const ok = await deleteProposalApi(pipelineKey.value, String(p.id))
+      if (!ok) proposals.value = prev
+    } else {
+      persistProposals()
+    }
+  } catch { proposals.value = prev }
+  cancelDeleteProposal()
+}
+
+function openMoveModal(p) {
+  // For now open the stage form as edit; future: implement a quick move popup
+  openCardForm(p)
+}
+
+// Stage form modal state
+const showStageFormModal = ref(false)
+const selectedProposal = ref(null)
+const stageFormFields = ref([])
+const stageFormValues = ref({})
+const showDeleteProposalModal = ref(false)
+const deleteProposalTarget = ref(null)
 
 const filteredByStage = (stageId) =>
   filteredProposals.value.filter((p) => p.stageId === stageId);
@@ -983,7 +1163,19 @@ const onDrop = (stageId) => {
   const next = proposals.value.slice();
   next[idx] = updated;
   proposals.value = next;
-  persistProposals();
+  if (isApiEnabled()) {
+    const pid = String(updated.id)
+    const prev = proposals.value[idx]
+    updateProposalApi(pipelineKey.value, pid, { stageId: stageId, status: stage.status })
+      .catch(() => {
+        // rollback on failure
+        const arr = proposals.value.slice();
+        arr[idx] = { ...prev }
+        proposals.value = arr
+      })
+  } else {
+    persistProposals();
+  }
 
   onDragEnd();
 };
@@ -1014,8 +1206,20 @@ function persistStages() {
   if (isApiEnabled()) {
     const { success, error } = useToast()
     saveStagesApi(pipelineKey.value, stages.value)
-      .then(() => {
-        const now = Date.now()
+      .then((saved) => {
+        if (Array.isArray(saved) && saved.length) {
+          // preserva status por título quando possível
+          const statusByTitle = {}
+          try { stages.value.forEach((s) => { statusByTitle[s.title] = s.status || 'Pendente' }) } catch {}
+          stages.value = saved.map((s) => ({
+            id: s.id,
+            title: s.title,
+            slaDays: s.slaDays,
+            color: s.color,
+            status: statusByTitle[s.title] || 'Pendente'
+          }))
+        }
+      const now = Date.now()
         if (now - lastStagesSaveAt.value > 1500) {
           success('Colunas atualizadas')
           lastStagesSaveAt.value = now
@@ -1162,24 +1366,9 @@ const closeNewProposalModal = () => {
 };
 
 const validateNewProposal = () => {
+  // Validação agora é totalmente guiada pelos campos dinâmicos
   formErrors.value = { name: "", cpf: "", amountDesired: "" };
-  let ok = true;
-  if (!newProposal.value.name.trim()) {
-    formErrors.value.name = "Obrigatório";
-    ok = false;
-  }
-  if (!newProposal.value.cpf.trim()) {
-    formErrors.value.cpf = "Obrigatório";
-    ok = false;
-  }
-  if (
-    !newProposal.value.amountDesired ||
-    Number(newProposal.value.amountDesired) <= 0
-  ) {
-    formErrors.value.amountDesired = "Valor inválido";
-    ok = false;
-  }
-  return ok;
+  return true;
 };
 
 const saveNewProposal = () => {
@@ -1212,23 +1401,67 @@ const saveNewProposal = () => {
   const parseCurrency = (s) => {
     const str = String(s || "").trim();
     if (!str) return 0;
-    // Remove thousand separators and convert decimal comma to dot
     const normalized = str.replace(/\./g, "").replace(/,/g, ".");
     const n = Number(normalized);
     return isNaN(n) ? 0 : n;
   };
-  const id = Date.now();
-  proposals.value.unshift({
-    id,
-    name: newProposal.value.name,
-    amount: parseCurrency(newProposal.value.amountDesired),
+  // Deriva 'name' e 'amount' a partir dos campos dinâmicos
+  const deriveName = () => {
+    for (const f of stageDynamicFields.value) {
+      const lbl = (f.label || '').toLowerCase()
+      if (lbl.includes('nome')) {
+        const v = (extraFieldValues.value?.[f.id] || '').toString().trim()
+        if (v) return v
+      }
+    }
+    const firstText = stageDynamicFields.value.find(f => f.type === 'text')
+    return (firstText ? (extraFieldValues.value?.[firstText.id] || '').toString().trim() : '') || 'Registro'
+  }
+  const deriveAmount = () => {
+    for (const f of stageDynamicFields.value) {
+      if (f.type === 'number') {
+        const lbl = (f.label || '').toLowerCase()
+        if (lbl.includes('valor') || lbl.includes('amount') || lbl.includes('preço') || lbl.includes('preco')) {
+          return parseCurrency(extraFieldValues.value?.[f.id])
+        }
+      }
+    }
+    return 0
+  }
+  const payload = {
+    name: deriveName(),
+    amount: deriveAmount(),
     stageId: newProposal.value.stageId,
-    status: stage?.status || "Pendente",
-    isArchived: false,
-    stageEnteredAt: new Date().toISOString(),
-    details: { ...newProposal.value, extra: { ...extraFieldValues.value } },
-  });
-  persistProposals();
+    status: stage?.status || 'Pendente'
+  }
+  const stageValues = (() => {
+    const out = {}
+    try { for (const f of stageDynamicFields.value) { out[f.id] = (extraFieldValues.value?.[f.id] ?? '') } } catch {}
+    return out
+  })()
+  if (isApiEnabled()) {
+    createProposalApi(pipelineKey.value, payload)
+      .then(async (created) => {
+        if (created) {
+          try { await saveProposalStageFormApi(pipelineKey.value, String(created.id), String(created.stageId), stageValues) } catch {}
+          proposals.value = [created, ...proposals.value]
+        }
+      })
+      .catch(() => {})
+  } else {
+    const id = Date.now();
+    proposals.value.unshift({
+      id,
+      name: payload.name,
+      amount: payload.amount,
+      stageId: payload.stageId,
+      status: payload.status,
+      isArchived: false,
+      stageEnteredAt: new Date().toISOString(),
+      details: undefined,
+    })
+    persistProposals();
+  }
   closeNewProposalModal();
 };
 
@@ -1308,21 +1541,65 @@ function loadStageForms() {
 
 function initStageFields() {
   const sid = newProposal.value.stageId;
-  const arr = Array.isArray(stageFormsMap.value[sid])
-    ? stageFormsMap.value[sid]
-    : [];
-  stageDynamicFields.value = arr;
-  const vals = {};
-  arr.forEach((f) => {
-    if (f.type !== "file") vals[f.id] = "";
-  });
-  extraFieldValues.value = vals;
-  extraFieldFiles.value = {};
-  extraFieldErrors.value = {};
+  const fallback = () => {
+    const arr = Array.isArray(stageFormsMap.value[sid]) ? stageFormsMap.value[sid] : []
+    stageDynamicFields.value = arr
+    const vals = {}
+    arr.forEach((f) => { if (f.type !== 'file') vals[f.id] = '' })
+    extraFieldValues.value = vals
+    extraFieldFiles.value = {}
+    extraFieldErrors.value = {}
+  }
+  // If API is enabled and stage id looks like Mongo ObjectId, load fields from backend
+  const isMongoId = typeof sid === 'string' && /^[a-fA-F0-9]{24}$/.test(sid)
+  if (isApiEnabled() && isMongoId) {
+    fetchStageFieldsApi(sid)
+      .then(remote => {
+        const arr = Array.isArray(remote)
+          ? remote.map(r => ({ id: r.id || r.label, label: r.label, type: r.type, required: !!r.required, placeholder: r.placeholder || '', options: Array.isArray(r.options) ? r.options : [] }))
+          : []
+        stageDynamicFields.value = arr
+        const vals = {}
+        arr.forEach((f) => { if (f.type !== 'file') vals[f.id] = '' })
+        extraFieldValues.value = vals
+        extraFieldFiles.value = {}
+        extraFieldErrors.value = {}
+      })
+      .catch(() => fallback())
+  } else {
+    fallback()
+  }
 }
 
 function onExtraFile(id, files) {
   extraFieldFiles.value[id] = files;
+  // Upload immediately if API is enabled and store object keys as values
+  try {
+    if (isApiEnabled()) {
+      const arr = Array.from(files || [])
+      Promise.all(arr.map((f) => uploadFileViaPresign(f, `proposals/tmp`)))
+        .then(results => {
+          // store serialized list of keys or first key depending on expected shape
+          const keys = results.map(r => r.objectKey)
+          extraFieldValues.value[id] = arr.length <= 1 ? keys[0] : keys
+        })
+        .catch(() => {})
+    }
+  } catch {}
+}
+
+function onStageFormFile(id, files) {
+  try {
+    if (isApiEnabled()) {
+      const arr = Array.from(files || [])
+      Promise.all(arr.map((f) => uploadFileViaPresign(f, `proposals/${selectedProposal.value?.id || 'unknown'}`)))
+        .then(results => {
+          const keys = results.map(r => r.objectKey)
+          stageFormValues.value[id] = arr.length <= 1 ? keys[0] : keys
+        })
+        .catch(() => {})
+    }
+  } catch {}
 }
 
 watch(
