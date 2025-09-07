@@ -1,8 +1,15 @@
 <template>
   <div class="min-h-screen">
     <slot />
+    <ApiLoadingOverlay />
+    <ToastContainer />
   </div>
 </template>
+
+<script setup>
+import ApiLoadingOverlay from '~/components/ui/ApiLoadingOverlay.vue'
+import ToastContainer from '~/components/ui/ToastContainer.vue'
+</script>
 
 <style>
 body {

@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useId } from 'vue'
+import { ref, computed, useId, onMounted, onBeforeUnmount, watch } from 'vue'
 
 interface Props {
   modelValue?: string | number
@@ -96,6 +96,7 @@ interface Props {
   pattern?: string
   mask?: 'none' | 'currency'
   locale?: string
+  numeric?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -104,7 +105,8 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'default',
   state: 'default',
   clearable: false,
-  showCharCount: false
+  showCharCount: false,
+  numeric: false
 })
 
 const emit = defineEmits<{
@@ -120,6 +122,7 @@ const emit = defineEmits<{
 const inputRef = ref<HTMLInputElement>()
 const inputId = useId()
 const isFocused = ref(false)
+let cleanupNumeric: undefined | (() => void)
 
 const inputValue = computed({
   get: () => props.modelValue ?? '',
@@ -215,6 +218,27 @@ defineExpose({
   focus: () => inputRef.value?.focus(),
   blur: () => inputRef.value?.blur(),
   select: () => inputRef.value?.select()
+})
+
+// Numeric enhancer (on text inputs) via global helper
+onMounted(async () => {
+  if (props.numeric && inputRef.value && props.type !== 'number') {
+    const mod = await import('~/utils/inputs/numeric')
+    cleanupNumeric = mod.attachNumericInput(inputRef.value, { allowDecimal: false })
+  }
+})
+
+watch(() => props.numeric, async (v) => {
+  if (!inputRef.value) return
+  if (cleanupNumeric) { cleanupNumeric(); cleanupNumeric = undefined }
+  if (v && props.type !== 'number') {
+    const mod = await import('~/utils/inputs/numeric')
+    cleanupNumeric = mod.attachNumericInput(inputRef.value, { allowDecimal: false })
+  }
+})
+
+onBeforeUnmount(() => {
+  if (cleanupNumeric) cleanupNumeric()
 })
 </script>
 

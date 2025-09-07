@@ -1,46 +1,45 @@
-import { ofetch } from 'ofetch'
-import { useRuntimeConfig } from '#imports'
+import { ofetch } from "ofetch";
+import { useRuntimeConfig } from "#imports";
 
 export default (nitroApp: any) => {
   // Run after server is ready
   setTimeout(async () => {
-    const cfg = useRuntimeConfig()
-    const logPrefix = '[ConsorIA]'
+    const cfg = useRuntimeConfig();
+    const logPrefix = "[ConsorIA]";
 
     // Check Gemini connectivity
     if (cfg.GEMINI_API_KEY) {
       try {
         await ofetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest`,
-          { method: 'GET', query: { key: cfg.GEMINI_API_KEY }, timeout: 4000 }
-        )
-        console.info(`${logPrefix} Provedor de IA: conexão OK`)
+          { method: "GET", query: { key: cfg.GEMINI_API_KEY }, timeout: 4000 }
+        );
+        console.info(`${logPrefix} Provedor de IA: conexão OK`);
       } catch (e: any) {
         console.warn(
-          `${logPrefix} Provedor de IA: falha no teste de conexão (${e?.status || e?.code || 'erro'}).`)
+          `${logPrefix} Provedor de IA: falha no teste de conexão (${e?.status || e?.code || "erro"}).`
+        );
       }
     } else {
-      console.info(`${logPrefix} Provedor de IA: sem credenciais configuradas`)
+      console.info(`${logPrefix} Provedor de IA: sem credenciais configuradas`);
     }
 
-    // Check Bank backend connectivity
-    if (cfg.BANK_API_URL) {
+    // Check Flow API connectivity (public runtime config)
+    const apiBase = (cfg as any)?.public?.FLOW_API_BASE as string | undefined;
+    if (apiBase) {
+      const base = apiBase.replace(/\/$/, "");
       try {
-        await ofetch(cfg.BANK_API_URL as string, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(cfg.BANK_API_TOKEN ? { Authorization: `Bearer ${cfg.BANK_API_TOKEN}` } : {})
-          },
-          body: { prompt: 'ping' },
-          timeout: 4000
-        })
-        console.info(`${logPrefix} Backend: conexão OK`)
+        await ofetch(`${base}/api/v1/processes`, { timeout: 3500 });
+        console.info(`${logPrefix} Flow API: conexão OK`);
       } catch (e: any) {
-        console.warn(`${logPrefix} Backend: falha no teste de conexão (${e?.status || e?.code || 'erro'}).`)
+        console.warn(
+          `${logPrefix} Flow API: falha no teste de conexão (${e?.status || e?.code || "erro"}).`
+        );
       }
     } else {
-      console.info(`${logPrefix} Backend: não configurado`)
+      console.info(
+        `${logPrefix} Flow API: não configurada (FLOW_API_BASE ausente)`
+      );
     }
-  }, 0)
-}
+  }, 0);
+};

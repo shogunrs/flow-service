@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   icon: { type: String, default: 'fa-solid fa-circle' },
@@ -82,6 +82,11 @@ function onClick(e) {
   clearTimers()
   open.value = !open.value
 }
+
+// Close submenu when any submenu item triggers navigation
+function onGlobalSubmenuClick() { open.value = false }
+onMounted(() => { try { window.addEventListener('sidebar:submenu-click', onGlobalSubmenuClick) } catch (_) {} })
+onBeforeUnmount(() => { try { window.removeEventListener('sidebar:submenu-click', onGlobalSubmenuClick) } catch (_) {} })
 </script>
 
 <style scoped>

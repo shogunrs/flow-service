@@ -13,5 +13,8 @@ export default defineNuxtConfig({
     BANK_API_URL: process.env.BANK_API_URL,
     BANK_API_TOKEN: process.env.BANK_API_TOKEN,
     // do not expose secrets in public runtime config
+    public: {
+      FLOW_API_BASE: process.env.FLOW_API_BASE || ''
+    }
   }
 })
