@@ -43,10 +43,11 @@
       <div>
         <label class="text-[12px] text-slate-300">SLA (dias)</label>
         <input
-          v-model.number="localSla"
+          v-model="localSla"
           type="text"
           min="0"
           class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+          v-numeric="{ allowDecimal: false, maxLength: 3 }"
         />
       </div>
       <div class="md:col-span-2">
@@ -174,14 +175,25 @@ const emit = defineEmits([
 ]);
 
 const localFields = ref((props.modelValue || []).map(normalize));
+
+function deepClone(v) {
+  try { return JSON.parse(JSON.stringify(v)) } catch (_) { return v }
+}
+function isEqual(a, b) {
+  try { return JSON.stringify(a) === JSON.stringify(b) } catch (_) { return false }
+}
+
+let syncingFromProps = false
 const localName = ref(props.stageName || "");
-const localSla = ref(Number(props.stageSla || 0));
+const localSla = ref(String(props.stageSla ?? ''));
 const localColor = ref(props.stageColor || "sky");
 
 watch(
   () => props.modelValue,
   (v) => {
-    localFields.value = (v || []).map(normalize);
+    syncingFromProps = true
+    localFields.value = (v || []).map(normalize)
+    syncingFromProps = false
   },
   { deep: true }
 );
@@ -194,7 +206,7 @@ watch(
 watch(
   () => props.stageSla,
   (v) => {
-    localSla.value = Number(v || 0);
+    localSla.value = String(v ?? '');
   }
 );
 watch(
@@ -203,9 +215,16 @@ watch(
     localColor.value = v || "sky";
   }
 );
-watch(localFields, (v) => emit("update:modelValue", v.map(denormalize)), {
-  deep: true,
-});
+watch(
+  localFields,
+  (v) => {
+    if (syncingFromProps) return
+    const next = v.map(denormalize)
+    if (isEqual(next, props.modelValue)) return
+    emit('update:modelValue', next)
+  },
+  { deep: true }
+);
 watch(localName, (v) => emit("update:stageName", v));
 watch(localSla, (v) => emit("update:stageSla", Number(v || 0)));
 watch(localColor, (v) => emit("update:stageColor", v || "sky"));

@@ -1,0 +1,66 @@
+openapi: 3.0.3
+info:
+  title: Flow Service API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/v1/processes:
+    get:
+      summary: List processes
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create process
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, name]
+              properties:
+                key: { type: string }
+                name: { type: string }
+      responses:
+        '201': { description: Created }
+  /api/v1/processes/{key}:
+    get:
+      summary: Get process by key
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+        '404': { description: Not Found }
+    put:
+      summary: Update process name
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete process
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: No Content }
+

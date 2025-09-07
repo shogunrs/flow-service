@@ -1,8 +1,11 @@
 <template>
   <NuxtPage />
+  <ToastContainer position="top-right" />
 </template>
 
 <script setup>
+import ToastContainer from '~/components/ui/ToastContainer.vue'
+
 // Mantém apenas Font Awesome via CDN para ícones
 useHead({
   link: [

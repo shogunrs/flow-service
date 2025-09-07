@@ -19,30 +19,28 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import Sidebar from '~/components/ui/Sidebar.vue'
 import KPIGrid from '~/components/dashboard/KPIGrid.vue'
 import MiniBarChart from '~/components/dashboard/MiniBarChart.vue'
 import ActivityFeed from '~/components/dashboard/ActivityFeed.vue'
 import QuickActions from '~/components/dashboard/QuickActions.vue'
+import { useProcessSubmenu } from '~/composables/useProcessMenu'
 
-const menu = [
+const { processes, getLastKey } = useProcessSubmenu()
+const menu = computed(() => [
   { key: 'home', label: 'Home', icon: 'fa-solid fa-house', to: '/' },
   {
     key: 'processos',
     label: 'Processos',
     icon: 'fa-solid fa-list-check',
+    to: (() => {
+      const last = getLastKey()
+      return last ? `/esteira/${last}` : '/processos'
+    })(),
     children: [
-      { key: 'quotaequity', label: 'QuotaEquity', to: '/esteira' }
-    ]
-  },
-  {
-    key: 'esteira',
-    label: 'Esteira',
-    icon: 'fa-solid fa-diagram-project',
-    to: '/esteira',
-    children: [
-      { key: 'kanban', label: 'Kanban', to: '/esteira' },
-      { key: 'lista', label: 'Lista', href: '/esteira?view=list' }
+      { key: 'ver-processos', label: 'Ver Processos', to: '/processos' },
+      ...processes.value.map(p => ({ key: p.key, label: p.name, to: `/esteira/${p.key}` }))
     ]
   },
   {
@@ -56,7 +54,7 @@ const menu = [
       { key: 'admin-notifications', label: 'Notificações', href: '/admin?tab=notifications' }
     ]
   }
-]
+])
 
 function onSelect(item) {
   // Placeholder para ações ao clicar nos itens do submenu
