@@ -1577,15 +1577,24 @@ function onExtraFile(id, files) {
   try {
     if (isApiEnabled()) {
       const arr = Array.from(files || [])
+      console.log('Uploading files:', arr.map(f => f.name))
       Promise.all(arr.map((f) => uploadFileViaPresign(f, `proposals/tmp`)))
         .then(results => {
+          console.log('Upload success:', results)
           // store serialized list of keys or first key depending on expected shape
           const keys = results.map(r => r.objectKey)
           extraFieldValues.value[id] = arr.length <= 1 ? keys[0] : keys
         })
-        .catch(() => {})
+        .catch(error => {
+          console.error('Upload failed:', error)
+          // Fallback: just store file names locally for now
+          const names = arr.map(f => f.name)
+          extraFieldValues.value[id] = arr.length <= 1 ? names[0] : names
+        })
     }
-  } catch {}
+  } catch (e) {
+    console.error('onExtraFile error:', e)
+  }
 }
 
 function onStageFormFile(id, files) {

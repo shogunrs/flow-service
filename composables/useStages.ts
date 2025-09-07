@@ -16,3 +16,15 @@ export async function saveStagesApi(processKey: string, stages: any[]): Promise<
     })
   } catch { return [] }
 }
+
+// Função para atualizar apenas a ordem dos estágios sem recriar
+export async function updateStagesOrderApi(processKey: string, stageOrders: Array<{id: string, order: number}>): Promise<boolean> {
+  if (!isApiEnabled()) return false
+  try {
+    await apiFetch(`/api/v1/processes/${encodeURIComponent(processKey)}/stages/reorder`, {
+      method: 'PATCH',
+      body: { orders: stageOrders }
+    })
+    return true
+  } catch { return false }
+}

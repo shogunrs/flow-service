@@ -50,8 +50,12 @@ public class S3Config {
     public S3Presigner s3Presigner() {
         if (!enabled)
             return null;
+        S3Configuration s3cfg = S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .build();
         S3Presigner.Builder b = S3Presigner.builder()
                 .region(Region.of(region))
+                .serviceConfiguration(s3cfg)
                 .credentialsProvider(
                         StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)));
         if (StringUtils.isNotBlank(endpoint))

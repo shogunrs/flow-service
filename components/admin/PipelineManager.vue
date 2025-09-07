@@ -14,8 +14,15 @@
     <div
       v-for="(stage, i) in localStages"
       :key="stage.id"
-      class="flex items-center gap-3"
+      class="flex items-center gap-3 p-2 rounded-md border border-slate-700/40 hover:border-slate-600/60 cursor-move"
+      draggable="true"
+      @dragstart="handleDragStart(i, $event)"
+      @dragover.prevent
+      @drop="handleDrop(i, $event)"
     >
+      <div class="flex items-center text-slate-400 cursor-grab active:cursor-grabbing">
+        <i class="fa-solid fa-grip-vertical text-sm"></i>
+      </div>
       <input
         v-model="stage.title"
         class="bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 flex-1 text-sm"
@@ -104,12 +111,12 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted, nextTick } from "vue";
+import { ref, watch, computed, nextTick } from "vue";
 import BaseModal from "~/components/ui/BaseModal.vue";
 import StageFormBuilder from "~/components/admin/StageFormBuilder.vue";
 import { isApiEnabled } from '~/utils/api/index'
 import { fetchStageFieldsApi, saveStageFieldsApi } from '~/composables/useStageFields'
-import { fetchStagesApi } from '~/composables/useStages'
+import { fetchStagesApi, updateStagesOrderApi } from '~/composables/useStages'
 
 const props = defineProps({
   stages: { type: Array, default: () => [] },
@@ -172,17 +179,6 @@ function remove(i) {
   localStages.value.splice(i, 1);
 }
 
-// Available colors with ring class for preview
-const colors = [
-  { name: "sky", ring: "bg-sky-500" },
-  { name: "indigo", ring: "bg-indigo-500" },
-  { name: "amber", ring: "bg-amber-500" },
-  { name: "rose", ring: "bg-rose-500" },
-  { name: "green", ring: "bg-green-500" },
-  { name: "purple", ring: "bg-purple-500" },
-  { name: "blue", ring: "bg-blue-500" },
-  { name: "orange", ring: "bg-orange-500" },
-];
 
 const colorMap = {
   sky: "bg-sky-500",
@@ -352,6 +348,42 @@ function formCount(id) {
 
 // expose forms loader for parent (future use)
 defineExpose({ loadForms });
+
+// Drag and Drop functionality
+let draggedIndex = -1;
+
+function handleDragStart(index, event) {
+  draggedIndex = index;
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+async function handleDrop(targetIndex, event) {
+  event.preventDefault();
+  
+  if (draggedIndex === -1 || draggedIndex === targetIndex) return;
+  
+  // Reorganiza localmente
+  const item = localStages.value[draggedIndex];
+  localStages.value.splice(draggedIndex, 1);
+  localStages.value.splice(targetIndex, 0, item);
+  
+  // Atualiza ordem no backend se API habilitada
+  if (isApiEnabled()) {
+    const stageOrders = localStages.value.map((stage, index) => ({
+      id: stage.id,
+      order: index
+    }));
+    
+    try {
+      await updateStagesOrderApi(props.pipelineKey, stageOrders);
+      notify('Ordem atualizada');
+    } catch (error) {
+      notify('Erro ao atualizar ordem');
+    }
+  }
+  
+  draggedIndex = -1;
+}
 
 // Toast helper
 const toast = ref({ show: false, text: "" });
