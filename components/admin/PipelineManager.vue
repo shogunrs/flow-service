@@ -107,6 +107,9 @@
 import { ref, watch, computed, onMounted, nextTick } from "vue";
 import BaseModal from "~/components/ui/BaseModal.vue";
 import StageFormBuilder from "~/components/admin/StageFormBuilder.vue";
+import { isApiEnabled } from '~/utils/api/index'
+import { fetchStageFieldsApi, saveStageFieldsApi } from '~/composables/useStageFields'
+import { fetchStagesApi } from '~/composables/useStages'
 
 const props = defineProps({
   stages: { type: Array, default: () => [] },
@@ -214,6 +217,7 @@ const builderFields = ref([]);
 const builderStageName = ref("");
 const builderStageSla = ref(0);
 const builderStageColor = ref("sky");
+const builderOriginalTitle = ref("");
 
 const currentStage = computed(
   () => localStages.value[builderIndex.value] || null
@@ -229,8 +233,44 @@ async function openBuilder(index) {
     builderStageName.value = st.title || "";
     builderStageSla.value = Number(st.slaDays || 0);
     builderStageColor.value = st.color || "sky";
+    builderOriginalTitle.value = String(st.title || "");
     const map = loadForms();
     builderFields.value = map[st.id] || [];
+    // If API is enabled, refresh stage id from backend before fetching fields
+    if (isApiEnabled()) {
+      let stageId = st.id
+      try {
+        const remoteStages = await fetchStagesApi(props.pipelineKey)
+        if (Array.isArray(remoteStages) && remoteStages.length) {
+          const sameId = typeof stageId === 'string' && /^[a-fA-F0-9]{24}$/.test(stageId) && remoteStages.find(r => r.id === stageId)
+          if (!sameId) {
+            const byIndex = remoteStages[index]
+            if (byIndex?.id) stageId = byIndex.id
+            else {
+              const byTitle = remoteStages.find(r => (r.title || '').trim() === builderOriginalTitle.value.trim())
+              if (byTitle?.id) stageId = byTitle.id
+            }
+          }
+        }
+      } catch (_) {}
+      const isMongoId = typeof stageId === 'string' && /^[a-fA-F0-9]{24}$/.test(stageId)
+      if (isMongoId) {
+        try {
+          const remote = await fetchStageFieldsApi(stageId)
+          if (Array.isArray(remote) && remote.length) {
+            builderFields.value = remote.map(r => ({
+              id: r.id || String(Date.now()),
+              label: r.label,
+              type: r.type,
+              required: !!r.required,
+              placeholder: r.placeholder || '',
+              options: Array.isArray(r.options) ? r.options : [],
+              optionsText: Array.isArray(r.options) ? r.options.join(', ') : ''
+            }))
+          }
+        } catch (_) {}
+      }
+    }
   } else {
     builderStageName.value = "";
     builderStageSla.value = 0;
@@ -241,7 +281,7 @@ async function openBuilder(index) {
 function closeBuilder() {
   showBuilder.value = false;
 }
-function saveBuilder() {
+async function saveBuilder() {
   const st = currentStage.value;
   if (!st) return;
   st.title = builderStageName.value || st.title;
@@ -250,6 +290,35 @@ function saveBuilder() {
   const map = loadForms();
   map[st.id] = builderFields.value;
   saveForms(map);
+  // If API is enabled and the stage is persisted, mirror to backend
+  try {
+    if (isApiEnabled()) {
+      // Refresh stage id to avoid stale ObjectId after replaceForProcess
+      let stageId = st.id
+      const isMongoId = typeof stageId === 'string' && /^[a-fA-F0-9]{24}$/.test(stageId)
+      try {
+        const remote = await fetchStagesApi(props.pipelineKey)
+        if (Array.isArray(remote) && remote.length) {
+          // Prefer exact id match; else try by index, else by title
+          const sameId = isMongoId && remote.find(r => r.id === stageId)
+          if (!sameId) {
+            const byIndex = remote[builderIndex.value]
+            if (byIndex?.id) stageId = byIndex.id
+            else {
+              const byTitle = remote.find(r => (r.title || '').trim() === (builderOriginalTitle.value || '').trim())
+              if (byTitle?.id) stageId = byTitle.id
+            }
+          }
+        }
+      } catch (_) {}
+
+      const finalIsMongoId = typeof stageId === 'string' && /^[a-fA-F0-9]{24}$/.test(stageId)
+      if (finalIsMongoId) {
+        const ordered = (builderFields.value || []).map((f, i) => ({ ...f, order: i }))
+        saveStageFieldsApi(stageId, ordered)
+      }
+    }
+  } catch (_) {}
   showBuilder.value = false;
 }
 
