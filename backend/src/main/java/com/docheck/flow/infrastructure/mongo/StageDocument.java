@@ -9,7 +9,7 @@ import java.time.Instant;
 @Document("stages")
 public class StageDocument {
     @Id public String id;
-    @Indexed public String processKey;
+    @Indexed public String processExternalId;
     public String title;
     public Integer slaDays;
     public String color;
@@ -17,4 +17,3 @@ public class StageDocument {
     public Instant createdAt;
     public Instant updatedAt;
 }
-

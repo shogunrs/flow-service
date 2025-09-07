@@ -4,7 +4,7 @@ import java.time.Instant;
 
 public class Process {
     private String id;
-    private String key;
+    private String externalId;
     private String name;
     private boolean active;
     private Instant createdAt;
@@ -12,9 +12,9 @@ public class Process {
 
     public Process() {}
 
-    public Process(String id, String key, String name, boolean active, Instant createdAt, Instant updatedAt) {
+    public Process(String id, String externalId, String name, boolean active, Instant createdAt, Instant updatedAt) {
         this.id = id;
-        this.key = key;
+        this.externalId = externalId;
         this.name = name;
         this.active = active;
         this.createdAt = createdAt;
@@ -23,8 +23,8 @@ public class Process {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
-    public String getKey() { return key; }
-    public void setKey(String key) { this.key = key; }
+    public String getExternalId() { return externalId; }
+    public void setExternalId(String externalId) { this.externalId = externalId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public boolean isActive() { return active; }
@@ -34,4 +34,3 @@ public class Process {
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }
-

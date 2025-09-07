@@ -5,8 +5,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 
 public interface SpringDataProcessRepository extends MongoRepository<ProcessDocument, String> {
-    Optional<ProcessDocument> findByKey(String key);
-    boolean existsByKey(String key);
-    void deleteByKey(String key);
+    Optional<ProcessDocument> findByExternalId(String externalId);
+    boolean existsByExternalId(String externalId);
+    void deleteByExternalId(String externalId);
 }
-
