@@ -236,14 +236,8 @@ const creatingProcess = ref(false)
 async function createProcess() {
   const name = newProcName.value.trim()
   if (!name) return
-  const base = sanitizeProcessKey(name)
-  const existing = new Set(listProcesses().map(p => p.key))
-  let key = base || 'processo'
-  if (existing.has(key)) {
-    let i = 2
-    while (existing.has(`${key}-${i}`)) i++
-    key = `${key}-${i}`
-  }
+  // Gera UUID opaco para o processo (mais seguro e estável)
+  const key = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36))
   if (creatingProcess.value) return
   creatingProcess.value = true
   // Otimista: atualiza DOM primeiro

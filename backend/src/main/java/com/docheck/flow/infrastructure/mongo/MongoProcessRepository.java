@@ -16,12 +16,12 @@ public class MongoProcessRepository implements ProcessRepository {
 
     private static Process toDomain(ProcessDocument d) {
         if (d == null) return null;
-        return new Process(d.id, d.key, d.name, d.active, d.createdAt, d.updatedAt);
+        return new Process(d.id, d.externalId, d.name, d.active, d.createdAt, d.updatedAt);
     }
     private static ProcessDocument toDoc(Process p) {
         ProcessDocument d = new ProcessDocument();
         d.id = p.getId();
-        d.key = p.getKey();
+        d.externalId = p.getExternalId();
         d.name = p.getName();
         d.active = p.isActive();
         d.createdAt = p.getCreatedAt();
@@ -30,9 +30,8 @@ public class MongoProcessRepository implements ProcessRepository {
     }
 
     @Override public Process save(Process p) { return toDomain(repo.save(toDoc(p))); }
-    @Override public Optional<Process> findByKey(String key) { return repo.findByKey(key).map(MongoProcessRepository::toDomain); }
+    @Override public Optional<Process> findByExternalId(String externalId) { return repo.findByExternalId(externalId).map(MongoProcessRepository::toDomain); }
     @Override public List<Process> findAll() { return repo.findAll().stream().map(MongoProcessRepository::toDomain).collect(Collectors.toList()); }
-    @Override public void deleteByKey(String key) { repo.deleteByKey(key); }
-    @Override public boolean existsByKey(String key) { return repo.existsByKey(key); }
+    @Override public void deleteByExternalId(String externalId) { repo.deleteByExternalId(externalId); }
+    @Override public boolean existsByExternalId(String externalId) { return repo.existsByExternalId(externalId); }
 }
-

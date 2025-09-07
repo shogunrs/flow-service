@@ -6,9 +6,8 @@ import java.util.Optional;
 
 public interface ProcessRepository {
     Process save(Process p);
-    Optional<Process> findByKey(String key);
+    Optional<Process> findByExternalId(String externalId);
     List<Process> findAll();
-    void deleteByKey(String key);
-    boolean existsByKey(String key);
+    void deleteByExternalId(String externalId);
+    boolean existsByExternalId(String externalId);
 }
-

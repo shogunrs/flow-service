@@ -5,7 +5,6 @@ import com.docheck.flow.domain.model.Process;
 
 public class ProcessMapper {
     public static ProcessDTO toDto(Process p) {
-        return new ProcessDTO(p.getKey(), p.getName(), p.isActive());
+        return new ProcessDTO(p.getExternalId(), p.getName(), p.isActive());
     }
 }
-

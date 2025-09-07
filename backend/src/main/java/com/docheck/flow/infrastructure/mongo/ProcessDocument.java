@@ -11,10 +11,9 @@ public class ProcessDocument {
     @Id
     public String id;
     @Indexed(unique = true)
-    public String key;
+    public String externalId;
     public String name;
     public boolean active;
     public Instant createdAt;
     public Instant updatedAt;
 }
-

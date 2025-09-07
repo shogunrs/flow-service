@@ -25,8 +25,8 @@ public class ProcessController {
     }
 
     @GetMapping("/{key}")
-    public ResponseEntity<ProcessDTO> get(@PathVariable("key") String key) {
-        return service.get(key).map(p -> ResponseEntity.ok(ProcessMapper.toDto(p)))
+    public ResponseEntity<ProcessDTO> get(@PathVariable("key") String externalId) {
+        return service.get(externalId).map(p -> ResponseEntity.ok(ProcessMapper.toDto(p)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -35,20 +35,20 @@ public class ProcessController {
     @PostMapping
     public ResponseEntity<ProcessDTO> create(@Valid @RequestBody CreateRequest req) {
         Process created = service.create(req.key(), req.name());
-        return ResponseEntity.created(URI.create("/api/v1/processes/" + created.getKey()))
+        return ResponseEntity.created(URI.create("/api/v1/processes/" + created.getExternalId()))
                 .body(ProcessMapper.toDto(created));
     }
 
     public record UpdateNameRequest(@NotBlank String name) {}
 
     @PutMapping("/{key}")
-    public ProcessDTO updateName(@PathVariable("key") String key, @Valid @RequestBody UpdateNameRequest req) {
-        return ProcessMapper.toDto(service.updateName(key, req.name()));
+    public ProcessDTO updateName(@PathVariable("key") String externalId, @Valid @RequestBody UpdateNameRequest req) {
+        return ProcessMapper.toDto(service.updateName(externalId, req.name()));
     }
 
     @DeleteMapping("/{key}")
-    public ResponseEntity<Void> delete(@PathVariable("key") String key) {
-        service.delete(key);
+    public ResponseEntity<Void> delete(@PathVariable("key") String externalId) {
+        service.delete(externalId);
         return ResponseEntity.noContent().build();
     }
 }
