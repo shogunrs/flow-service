@@ -34,6 +34,7 @@ public class MongoStageRepository implements StageRepository {
         return repo.findByProcessExternalIdOrderByOrderAsc(processExternalId).stream().map(MongoStageRepository::toDomain).collect(Collectors.toList());
     }
     @Override public void deleteByProcessKey(String processExternalId) { repo.deleteByProcessExternalId(processExternalId); }
+    @Override public void deleteById(String id) { repo.deleteById(id); }
     @Override public Stage save(Stage s) { return toDomain(repo.save(toDoc(s))); }
     @Override public List<Stage> saveAll(List<Stage> stages) { return repo.saveAll(stages.stream().map(MongoStageRepository::toDoc).collect(Collectors.toList())).stream().map(MongoStageRepository::toDomain).collect(Collectors.toList()); }
 }

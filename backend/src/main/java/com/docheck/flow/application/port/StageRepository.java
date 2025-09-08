@@ -7,6 +7,7 @@ import java.util.List;
 public interface StageRepository {
     List<Stage> findByProcessKeyOrderByOrder(String processKey);
     void deleteByProcessKey(String processKey);
+    void deleteById(String id);
     Stage save(Stage s);
     List<Stage> saveAll(List<Stage> stages);
 }
