@@ -48,7 +48,7 @@
           </div>
           <!-- New proposal -->
           <button
-            @click="openNewProposalModal"
+            @click="openGlobalNewRecordModal"
             class="bg-orange-500 hover:bg-orange-600 text-white font-medium px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 text-xs"
           >
             <i class="fa-solid fa-plus text-[10px]"></i>
@@ -267,24 +267,27 @@
     <BaseModal
       v-model="showNewModal"
       title="Novo Registro"
-      size="md"
+      size="xxl"
       :body-class="'new-proposal-modal'"
     >
       <div class="space-y-2">
-        <!-- Genérico: Etapa + Campos dinâmicos do processo -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <BaseSelect
-            v-model="newProposal.stageId"
-            label="Etapa"
-            size="xs"
-            :options="stages.map((s) => ({ label: s.title, value: s.id }))"
-          />
+        <!-- Info da primeira etapa (sempre fixa) -->
+        <div class="bg-slate-800/30 rounded-lg p-4 border border-slate-700/40">
+          <h4 class="text-sm font-semibold text-slate-200 mb-3">Nova Proposta</h4>
+          <div class="text-xs text-slate-400">
+            <span class="inline-flex items-center gap-2">
+              <span class="w-2 h-4 rounded-full" :class="getStageColor(stages[0]?.id)"></span>
+              Etapa: {{ stages[0]?.title || 'Primeira Etapa' }}
+            </span>
+          </div>
         </div>
-        <div class="space-y-2">
-          <h4 class="text-xs font-semibold text-slate-200">Campos do processo</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div class="bg-slate-800/30 rounded-lg p-4 border border-slate-700/40">
+          <h4 class="text-sm font-semibold text-slate-200 mb-3">Campos do Processo</h4>
+          
+          <!-- Grid para inputs normais (text, number, date, select) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <template v-for="f in stageDynamicFields" :key="f.id">
-              <div>
+              <div v-if="f.type !== 'file' && f.type !== 'endereco' && f.type !== 'pessoa_fisica'">
                 <BaseInput
                   v-if="f.type === 'text' || f.type === 'number'"
                   v-model="extraFieldValues[f.id]"
@@ -293,6 +296,47 @@
                   :label="f.label"
                   size="xs"
                   :placeholder="f.placeholder || ''"
+                />
+                <CpfInput
+                  v-else-if="f.type === 'cpf'"
+                  v-model="extraFieldValues[f.id]"
+                  :label="f.label"
+                  :placeholder="f.placeholder || '000.000.000-00'"
+                  :required="f.required"
+                  :show-validation-info="true"
+                />
+                <CnpjInput
+                  v-else-if="f.type === 'cnpj'"
+                  v-model="extraFieldValues[f.id]"
+                  :label="f.label"
+                  :placeholder="f.placeholder || '00.000.000/0000-00'"
+                  :required="f.required"
+                  :show-validation-info="true"
+                />
+                <RgInput
+                  v-else-if="f.type === 'rg'"
+                  v-model="extraFieldValues[f.id]"
+                  :label="f.label"
+                  :placeholder="f.placeholder || '00.000.000-0'"
+                  :required="f.required"
+                  :show-validation-info="true"
+                />
+                <CepInput
+                  v-else-if="f.type === 'cep'"
+                  v-model="extraFieldValues[f.id]"
+                  :label="f.label"
+                  :placeholder="f.placeholder || '00000-000'"
+                  :required="f.required"
+                  :show-validation-info="true"
+                  :auto-fetch-address="true"
+                />
+                <TelefoneInput
+                  v-else-if="f.type === 'telefone'"
+                  v-model="extraFieldValues[f.id]"
+                  :label="f.label"
+                  :placeholder="f.placeholder || '(00) 00000-0000'"
+                  :required="f.required"
+                  :show-validation-info="true"
                 />
                 <BaseInput
                   v-else-if="f.type === 'date'"
@@ -308,11 +352,32 @@
                   size="xs"
                   :options="(f.options || []).map(o => ({ label: o, value: o }))"
                 />
-                <div v-else-if="f.type === 'file'">
-                  <FormField :label="f.label" :dense="true">
-                    <FileDrop @files="(files) => onExtraFile(f.id, files)" />
-                  </FormField>
-                </div>
+                <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
+              </div>
+            </template>
+          </div>
+          
+          <!-- Inputs de upload ocupam largura completa -->
+          <div class="space-y-3 mt-4 pt-4 border-t border-slate-700/40">
+            <template v-for="f in stageDynamicFields" :key="f.id">
+              <div v-if="f.type === 'file'" class="w-full">
+                <FormField :label="f.label" :dense="true">
+                  <FileDrop @files="(files) => onExtraFile(f.id, files)" />
+                </FormField>
+                <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Endereço e Pessoa Física ocupam largura completa, fora do grid -->
+          <div class="space-y-3 mt-4">
+            <template v-for="f in stageDynamicFields" :key="f.id">
+              <div v-if="f.type === 'endereco'" class="w-full">
+                <EnderecoInput
+                  v-model="extraFieldValues[f.id]"
+                  :label="f.label"
+                  :required="f.required"
+                />
                 <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
               </div>
             </template>
@@ -583,23 +648,44 @@
     </BaseModal>
 
     <!-- Stage Form Modal (per card) -->
-    <BaseModal v-model="showStageFormModal" title="Formulário da Etapa" size="md" :z-index="70">
+    <BaseModal v-model="showStageFormModal" title="Formulário da Etapa" size="xxl" :z-index="70">
       <div class="space-y-2">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div class="text-[12px] text-slate-300">Etapa atual</div>
           <div class="text-[12px] text-slate-100">{{ stageTitle(selectedProposal?.stageId) }}</div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <!-- Grid para inputs normais -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <template v-for="f in stageFormFields" :key="f.id">
-            <div>
+            <div v-if="f.type !== 'file' && f.type !== 'endereco' && f.type !== 'pessoa_fisica'">
               <BaseInput v-if="f.type === 'text' || f.type === 'number'" v-model="stageFormValues[f.id]" :type="f.type === 'number' ? 'text' : 'text'" :numeric="f.type === 'number'" :label="f.label" size="xs" :placeholder="f.placeholder || ''" />
+              <CpfInput v-else-if="f.type === 'cpf'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '000.000.000-00'" :required="f.required" :show-validation-info="true" />
+              <CnpjInput v-else-if="f.type === 'cnpj'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '00.000.000/0000-00'" :required="f.required" :show-validation-info="true" />
+              <RgInput v-else-if="f.type === 'rg'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '00.000.000-0'" :required="f.required" :show-validation-info="true" />
+              <CepInput v-else-if="f.type === 'cep'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '00000-000'" :required="f.required" :show-validation-info="true" :auto-fetch-address="true" />
+              <TelefoneInput v-else-if="f.type === 'telefone'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '(00) 00000-0000'" :required="f.required" :show-validation-info="true" />
               <BaseInput v-else-if="f.type === 'date'" v-model="stageFormValues[f.id]" type="date" :label="f.label" size="xs" />
               <BaseSelect v-else-if="f.type === 'select'" v-model="stageFormValues[f.id]" :label="f.label" size="xs" :options="(f.options || []).map(o => ({ label: o, value: o }))" />
-              <div v-else-if="f.type === 'file'">
-                <FormField :label="f.label" :dense="true"><FileDrop @files="(files) => onStageFormFile(f.id, files)" /></FormField>
-              </div>
             </div>
           </template>
+        </div>
+        
+        
+        <!-- Inputs de upload e endereço ocupam largura completa -->
+        <div class="space-y-3">
+          <template v-for="f in stageFormFields" :key="f.id">
+            <div v-if="f.type === 'file'" class="w-full">
+              <FormField :label="f.label" :dense="true">
+                <FileDrop @files="(files) => onStageFormFile(f.id, files)" />
+              </FormField>
+            </div>
+            <div v-else-if="f.type === 'endereco'" class="w-full">
+              <EnderecoInput v-model="stageFormValues[f.id]" :label="f.label" :required="f.required" :auto-fill-from-cep="true" />
+            </div>
+
+          </template>
+          
+         
         </div>
       </div>
       <template #footer>
@@ -618,6 +704,7 @@
       size="sm"
       @send="onAiSend"
     />
+
 
     <!-- Toast -->
     <Teleport to="body">
@@ -641,13 +728,20 @@ import BaseInput from "~/components/ui/BaseInput.vue";
 import BaseSelect from "~/components/ui/BaseSelect.vue";
 import BaseInputGroup from "~/components/ui/BaseInputGroup.vue";
 import FileDrop from "~/components/ui/FileDrop.vue";
+import CpfInput from "~/components/ui/CpfInput.vue";
+import CnpjInput from "~/components/ui/CnpjInput.vue";
+import RgInput from "~/components/ui/RgInput.vue";
+import CepInput from "~/components/ui/CepInput.vue";
+import TelefoneInput from "~/components/ui/TelefoneInput.vue";
+import EnderecoInput from "~/components/ui/EnderecoInput.vue";
 import BaseModal from "~/components/ui/BaseModal.vue";
 import FormField from "~/components/ui/FormField.vue";
 import { isApiEnabled } from '~/utils/api/index'
-import { saveStagesApi } from '~/composables/useStages'
+import { saveStagesPreservingIdsApi } from '~/composables/useStages'
 import { useToast } from '~/composables/useToast'
 import { fetchStageFieldsApi } from '~/composables/useStageFields'
 import { uploadFileViaPresign } from '~/composables/useFiles'
+import { useNewRecordModal } from '~/composables/useNewRecordModal'
 
 useHead({ title: "Esteira" });
 definePageMeta({ layout: "default" });
@@ -657,6 +751,9 @@ const props = defineProps({
   pipelineKey: { type: String, default: "quotaequity" },
 });
 const pipelineKey = computed(() => props.pipelineKey || "quotaequity");
+
+// Modal global de novo registro
+const { openModal: openGlobalModal } = useNewRecordModal();
 
 // Detecta dispositivos touch para desabilitar drag & drop (melhor usabilidade no mobile)
 const isTouch = ref(false);
@@ -867,6 +964,23 @@ async function openCardForm(p) {
   selectedProposal.value = p
   // load fields for current stage
   try { stageFormFields.value = await fetchStageFieldsApi(String(p.stageId)) } catch { stageFormFields.value = [] }
+  // fallback to local storage (builder) if API not available or returned empty
+  if (!Array.isArray(stageFormFields.value) || stageFormFields.value.length === 0) {
+    const sid = String(p.stageId)
+    let arr = []
+    try {
+      if (stageFormsMap.value && Array.isArray(stageFormsMap.value[sid])) {
+        arr = stageFormsMap.value[sid]
+      } else {
+        const raw = localStorage.getItem(`pipeline_stage_forms__${pipelineKey.value}`)
+        if (raw) {
+          const map = JSON.parse(raw) || {}
+          if (Array.isArray(map[sid])) arr = map[sid]
+        }
+      }
+    } catch (_) {}
+    stageFormFields.value = arr
+  }
   // load saved values from backend
   stageFormValues.value = {}
   if (isApiEnabled()) {
@@ -1205,7 +1319,9 @@ function onColumnDragOver(event, overIndex) {
 function persistStages() {
   if (isApiEnabled()) {
     const { success, error } = useToast()
-    saveStagesApi(pipelineKey.value, stages.value)
+    // Preserva snapshot anterior para comparação de IDs
+    const previousStages = stages.value.map(s => ({ id: s.id, title: s.title }))
+    saveStagesPreservingIdsApi(pipelineKey.value, previousStages, stages.value)
       .then((saved) => {
         if (Array.isArray(saved) && saved.length) {
           // preserva status por título quando possível
@@ -1331,34 +1447,96 @@ const newProposal = ref({
 });
 const formErrors = ref({ name: "", cpf: "", amountDesired: "" });
 
-const openNewProposalModal = () => {
-  newProposal.value = {
-    name: "",
-    cpf: "",
-    cep: "",
-    city: "",
-    state: "",
-    administrator: "",
-    bank: "",
-    fund: "",
-    productType: "",
-    summary: "",
-    startDate: "",
-    amountDesired: 0,
-    guaranteeValue: 0,
-    guaranteeType: "",
-    objective: "",
-    representative: representatives[0],
-    manager: managerOptions[0],
-    stageId: stages.value[0]?.id || "dados_basicos",
-  };
-  formErrors.value = { name: "", cpf: "", amountDesired: "" };
-  // init dynamic fields for initial stage
+// Função para abrir o modal global
+const openGlobalNewRecordModal = () => {
+  // Sempre garantir que use a primeira etapa
+  const firstStageId = stages.value[0]?.id || "dados_basicos";
+  
+  // Carregar campos dinâmicos da primeira etapa
   initStageFields();
-  // auto expand details if there are dynamic fields
-  showAdvanced.value = stageDynamicFields.value.length > 0;
-  if (stageDynamicFields.value.length > 0) notify("Campos da etapa carregados");
-  showNewModal.value = true;
+  
+  // Abrir modal global
+  openGlobalModal({
+    stages: stages.value,
+    stageFields: stageDynamicFields.value,
+    pipelineKey: pipelineKey.value,
+    onSave: (recordData) => {
+      handleGlobalModalSave(recordData);
+    }
+  });
+  
+  // Mostrar informação sobre os campos carregados
+  const { notify } = useToast();
+  if (stageDynamicFields.value.length > 0) {
+    notify(`Carregados ${stageDynamicFields.value.length} campos da primeira etapa: ${stages.value[0]?.title || 'Primeira Etapa'}`);
+  } else {
+    notify(`Abrindo formulário da primeira etapa: ${stages.value[0]?.title || 'Primeira Etapa'}`);
+  }
+};
+
+// Função para tratar salvamento do modal global
+const handleGlobalModalSave = (recordData) => {
+  const { notify } = useToast();
+  
+  // Criar proposta com dados do modal global
+  const stage = stages.value.find((s) => s.id === recordData.stageId);
+  
+  const newId = Date.now().toString();
+  const newProposal = {
+    id: newId,
+    name: recordData.name,
+    amount: recordData.amount,
+    stageId: recordData.stageId,
+    status: recordData.status,
+    isArchived: false,
+    stageEnteredAt: new Date().toISOString(),
+    stageValues: recordData.fieldValues || {},
+    files: recordData.fieldFiles || {}
+  };
+  
+  // Adicionar à lista local
+  proposals.value.push(newProposal);
+  saveProposals(pipelineKey.value, proposals.value);
+  
+  // Salvar via API se habilitado
+  if (isApiEnabled()) {
+    const payload = {
+      name: recordData.name,
+      amount: recordData.amount,
+      stageId: recordData.stageId,
+      status: recordData.status
+    };
+    
+    createProposalApi(pipelineKey.value, payload)
+      .then(async (created) => {
+        if (created?.id) {
+          const createdId = String(created.id);
+          const localIndex = proposals.value.findIndex(p => p.id === newId);
+          if (localIndex >= 0) {
+            proposals.value[localIndex].id = createdId;
+            saveProposals(pipelineKey.value, proposals.value);
+          }
+          
+          // Upload de arquivos se necessário
+          for (const [fieldId, files] of Object.entries(recordData.fieldFiles || {})) {
+            if (files && files.length > 0) {
+              try {
+                await uploadFileViaPresign(createdId, files[0]);
+              } catch (error) {
+                console.warn(`Erro ao fazer upload do arquivo ${fieldId}:`, error);
+              }
+            }
+          }
+        }
+        notify("Registro criado com sucesso!");
+      })
+      .catch((error) => {
+        console.error("Erro ao criar registro via API:", error);
+        notify("Erro ao salvar registro na API, mantido localmente");
+      });
+  } else {
+    notify("Registro criado com sucesso!");
+  }
 };
 
 const closeNewProposalModal = () => {
@@ -1611,10 +1789,11 @@ function onStageFormFile(id, files) {
   } catch {}
 }
 
-watch(
-  () => newProposal.value.stageId,
-  () => initStageFields()
-);
+// Comentado: O modal sempre deve usar a primeira etapa, sem permitir mudança
+// watch(
+//   () => newProposal.value.stageId,
+//   () => initStageFields()
+// );
 onMounted(() => {
   loadStageForms();
   initStageFields();
@@ -1649,6 +1828,7 @@ const openAiChat = () => {
 const closeAiChat = () => {
   showAiModal.value = false;
 };
+
 const onAiSend = async ({ text, attachments }) => {
   aiMessages.value.push({ role: "user", content: text, attachments });
   aiTyping.value = true;

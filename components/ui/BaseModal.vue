@@ -32,7 +32,7 @@ import { computed } from 'vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   title: { type: String, default: '' },
-  size: { type: String, default: 'md' }, // xs|sm|md|lg|xl
+  size: { type: String, default: 'md' }, // xs|sm|md|lg|xl|xxl
   closeOnBackdrop: { type: Boolean, default: true },
   bodyClass: { type: String, default: '' },
   zIndex: { type: Number, default: 50 }
@@ -42,11 +42,12 @@ const emit = defineEmits(['update:modelValue'])
 
 const containerClass = computed(() => {
   switch (props.size) {
-    case 'xs': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[80vh] sm:rounded-2xl sm:max-w-xs'
-    case 'sm': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[80vh] sm:rounded-2xl sm:max-w-sm'
-    case 'lg': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[85vh] sm:rounded-2xl sm:max-w-3xl'
-    case 'xl': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[85vh] sm:rounded-2xl sm:max-w-5xl'
-    default: return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[85vh] sm:rounded-2xl sm:max-w-xl'
+    case 'xs': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:max-w-xs'
+    case 'sm': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:max-w-sm'
+    case 'lg': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:max-w-3xl'
+    case 'xl': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:max-w-5xl'
+    case 'xxl': return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:max-w-6xl'
+    default: return 'w-full h-full rounded-none sm:w-auto sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:max-w-xl'
   }
 })
 

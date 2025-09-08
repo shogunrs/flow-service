@@ -164,7 +164,8 @@ watch(
 );
 
 function add() {
-  const id = Date.now().toString();
+  // Usa um ID temporário que será identificado como "novo" pelo backend
+  const id = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   localStages.value.push({ id, title: "Nova Etapa", slaDays: 1, color: "sky" });
   return id;
 }

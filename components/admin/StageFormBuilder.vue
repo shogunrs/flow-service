@@ -233,6 +233,12 @@ const types = [
   { value: "text", label: "Texto" },
   { value: "number", label: "Número" },
   { value: "date", label: "Data" },
+  { value: "cpf", label: "CPF" },
+  { value: "cnpj", label: "CNPJ" },
+  { value: "rg", label: "RG" },
+  { value: "cep", label: "CEP" },
+  { value: "telefone", label: "Telefone" },
+  { value: "endereco", label: "Endereço Completo" },
   { value: "select", label: "Lista (Select)" },
   { value: "file", label: "Arquivo" },
 ];

@@ -175,7 +175,7 @@ import BaseModal from '~/components/ui/BaseModal.vue'
 import { useRoute } from '#imports'
 import PipelineManager from '~/components/admin/PipelineManager.vue'
 import { listProcesses, addProcess, setProcessActive, sanitizeProcessKey, removeProcess, setProcessName, renameProcessKey } from '~/composables/usePipeline'
-import { fetchStagesApi, saveStagesApi } from '~/composables/useStages'
+import { fetchStagesApi, saveStagesPreservingIdsApi } from '~/composables/useStages'
 import { isApiEnabled } from '~/utils/api/index'
 import { useProcessSubmenu } from '~/composables/useProcessMenu'
 import { useToast } from '~/composables/useToast'
@@ -296,7 +296,7 @@ async function savePipelineModal() {
     try {
       // snapshot antes de salvar para migrar IDs de campos
       const prevStages = (pipelineStages.value || []).map(s => ({ id: s.id, title: s.title }))
-      const saved = await saveStagesApi(currentProcessKey.value, pipelineStages.value)
+      const saved = await saveStagesPreservingIdsApi(currentProcessKey.value, prevStages, pipelineStages.value)
       if (Array.isArray(saved) && saved.length) {
         // Atualiza local com IDs reais do backend
         const asClient = saved.map((s) => ({ id: s.id, title: s.title, slaDays: s.slaDays, color: s.color }))

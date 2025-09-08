@@ -29,7 +29,7 @@ import { computed } from 'vue'
 import { useToast } from '~/composables/useToast'
 
 const props = defineProps({
-  position: { type: String, default: 'bottom-right' } // 'bottom-right' | 'top-right' | 'bottom-left' | 'top-left'
+  position: { type: String, default: 'bottom-center' } // 'bottom-right' | 'top-right' | 'bottom-left' | 'top-left'
 })
 
 const { toasts, remove } = useToast()
