@@ -94,6 +94,7 @@ const firstStage = computed(() => props.stages[0]);
 const recordName = ref("");
 const recordAmount = ref(0);
 const nameError = ref("");
+const amountError = ref("");
 
 // Cores das etapas (mesmo mapeamento usado na esteira)
 const colorMap = {

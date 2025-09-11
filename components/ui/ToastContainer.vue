@@ -40,6 +40,7 @@ const containerClass = computed(() => {
     case 'top-right': return base + ' top-0 right-0 items-end'
     case 'top-left': return base + ' top-0 left-0 items-start'
     case 'bottom-left': return base + ' bottom-0 left-0 items-start'
+    case 'bottom-center': return base + ' bottom-0 left-1/2 transform -translate-x-1/2 items-center'
     default: return base + ' bottom-0 right-0 items-end'
   }
 })
@@ -58,7 +59,8 @@ function iconClass(type) {
     case 'success': return 'fa-solid fa-circle-check text-green-400'
     case 'warning': return 'fa-solid fa-triangle-exclamation text-amber-400'
     case 'error': return 'fa-solid fa-circle-exclamation text-red-400'
-    default: return 'fa-regular fa-circle-info text-slate-300'
+    case 'info': return 'fa-solid fa-circle-info text-blue-400'
+    default: return 'fa-solid fa-circle-info text-blue-400'
   }
 }
 </script>

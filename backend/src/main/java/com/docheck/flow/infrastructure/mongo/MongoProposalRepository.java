@@ -39,11 +39,17 @@ public class MongoProposalRepository implements ProposalRepository {
     @Override public List<Proposal> findByProcessKey(String processExternalId) {
         return repo.findByProcessExternalIdOrderByCreatedAtDesc(processExternalId).stream().map(MongoProposalRepository::toDomain).collect(Collectors.toList());
     }
+    @Override public List<Proposal> findByProcessExternalId(String processExternalId) {
+        return repo.findByProcessExternalId(processExternalId).stream().map(MongoProposalRepository::toDomain).collect(Collectors.toList());
+    }
     @Override public Proposal save(Proposal p) { return toDomain(repo.save(toDoc(p))); }
     @Override public Optional<Proposal> findByIdAndProcessKey(String id, String processExternalId) {
         return repo.findByIdAndProcessExternalId(id, processExternalId).map(MongoProposalRepository::toDomain);
     }
     @Override public void deleteByIdAndProcessKey(String id, String processExternalId) {
         repo.deleteByIdAndProcessExternalId(id, processExternalId);
+    }
+    @Override public void deleteByProcessExternalId(String processExternalId) {
+        repo.deleteByProcessExternalId(processExternalId);
     }
 }

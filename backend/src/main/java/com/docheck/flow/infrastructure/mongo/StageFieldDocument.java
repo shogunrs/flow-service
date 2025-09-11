@@ -11,6 +11,7 @@ import java.util.List;
 public class StageFieldDocument {
     @Id public String id;
     @Indexed public String stageId; // reference to stages._id
+    @Indexed public String processExternalId; // reference to processes.externalId - HERANÇA PROCESSO
     public String label;
     public String type;
     public boolean required;

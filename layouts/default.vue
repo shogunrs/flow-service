@@ -2,7 +2,7 @@
   <div class="min-h-screen">
     <slot />
     <ApiLoadingOverlay />
-    <ToastContainer />
+    <ToastContainer position="bottom-center" />
   </div>
 </template>
 
