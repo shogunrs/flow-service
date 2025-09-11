@@ -6,6 +6,7 @@ import java.util.List;
 public class StageField {
     private String id;
     private String stageId; // reference to StageDocument.id
+    private String processExternalId; // reference to Process.externalId - HERANÇA DO PROCESSO
     private String label;
     private String type; // text, number, select, file, date, etc
     private boolean required;
@@ -17,10 +18,11 @@ public class StageField {
 
     public StageField() {}
 
-    public StageField(String id, String stageId, String label, String type, boolean required, String placeholder,
+    public StageField(String id, String stageId, String processExternalId, String label, String type, boolean required, String placeholder,
                       List<String> options, Integer order, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.stageId = stageId;
+        this.processExternalId = processExternalId;
         this.label = label;
         this.type = type;
         this.required = required;
@@ -35,6 +37,8 @@ public class StageField {
     public void setId(String id) { this.id = id; }
     public String getStageId() { return stageId; }
     public void setStageId(String stageId) { this.stageId = stageId; }
+    public String getProcessExternalId() { return processExternalId; }
+    public void setProcessExternalId(String processExternalId) { this.processExternalId = processExternalId; }
     public String getLabel() { return label; }
     public void setLabel(String label) { this.label = label; }
     public String getType() { return type; }

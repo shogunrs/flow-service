@@ -380,6 +380,14 @@
                 />
                 <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
               </div>
+              <div v-else-if="f.type === 'pessoa_fisica'" class="w-full">
+                <PessoaFisicaInput
+                  v-model="extraFieldValues[f.id]"
+                  :label="f.label"
+                  :required="f.required"
+                />
+                <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
+              </div>
             </template>
           </div>
         </div>
@@ -650,9 +658,20 @@
     <!-- Stage Form Modal (per card) -->
     <BaseModal v-model="showStageFormModal" title="Formulário da Etapa" size="xxl" :z-index="70">
       <div class="space-y-2">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <div class="text-[12px] text-slate-300">Etapa atual</div>
-          <div class="text-[12px] text-slate-100">{{ stageTitle(selectedProposal?.stageId) }}</div>
+        <div class="flex items-center justify-between">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1">
+            <div class="text-[12px] text-slate-300">Etapa atual</div>
+            <div class="text-[12px] text-slate-100">{{ stageTitle(selectedProposal?.stageId) }}</div>
+          </div>
+          <button
+            v-if="selectedProposal"
+            @click="openProcessFilesModal"
+            class="text-slate-400 hover:text-slate-200 flex items-center gap-2 px-2 py-1 rounded-md hover:bg-slate-700/50 transition-colors text-sm ml-4"
+            title="Ver arquivos do processo"
+          >
+            <i class="fa-solid fa-folder-open text-sm"></i>
+            <span class="text-xs">{{ processFilesCount }}</span>
+          </button>
         </div>
         <!-- Grid para inputs normais -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -682,6 +701,17 @@
             <div v-else-if="f.type === 'endereco'" class="w-full">
               <EnderecoInput v-model="stageFormValues[f.id]" :label="f.label" :required="f.required" :auto-fill-from-cep="true" />
             </div>
+            <div v-else-if="f.type === 'pessoa_fisica'" class="w-full">
+              <FormField :label="f.label" :dense="true">
+                <div class="flex items-center gap-2">
+                  <button type="button" class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs" @click="openPessoaFisicaForField(f.id)">
+                    Preencher Pessoa Física
+                  </button>
+                  <span v-if="stageFormValues[f.id]" class="text-[12px] text-green-300">Preenchido</span>
+                  <span v-else class="text-[12px] text-slate-300">Não preenchido</span>
+                </div>
+              </FormField>
+            </div>
 
           </template>
           
@@ -705,16 +735,26 @@
       @send="onAiSend"
     />
 
+    <!-- PessoaFisica Modal -->
+    <PessoaFisica
+      :show="showPessoaFisicaModal"
+      :initialData="currentPessoaFisicaFieldId ? (stageFormValues[currentPessoaFisicaFieldId] || {}) : {}"
+      @close="closePessoaFisicaModal"
+      @submit="onPessoaFisicaSubmit"
+    />
 
-    <!-- Toast -->
-    <Teleport to="body">
-      <div
-        v-if="toast.show"
-        class="fixed bottom-4 right-4 z-[70] bg-slate-800 text-slate-100 px-3 py-2 rounded-md border border-slate-700 shadow"
-      >
-        {{ toast.text }}
-      </div>
-    </Teleport>
+    <!-- Process Files Approval Modal -->
+    <ProcessFilesApprovalView
+      :show="showProcessFilesApprovalModal"
+      :process-key="selectedProposal?.processExternalId || pipelineKey"
+      :files="processFiles"
+      @close="showProcessFilesApprovalModal = false"
+      @refresh="refreshProposalFiles"
+      @approve-file="onApproveFile"
+      @reject-file="onRejectFile"
+      @download-file="onDownloadFile"
+    />
+
   </div>
 </template>
 
@@ -734,14 +774,19 @@ import RgInput from "~/components/ui/RgInput.vue";
 import CepInput from "~/components/ui/CepInput.vue";
 import TelefoneInput from "~/components/ui/TelefoneInput.vue";
 import EnderecoInput from "~/components/ui/EnderecoInput.vue";
+import PessoaFisica from "~/components/ui/PessoaFisica.vue";
+import PessoaFisicaInput from "~/components/ui/PessoaFisicaInput.vue";
 import BaseModal from "~/components/ui/BaseModal.vue";
 import FormField from "~/components/ui/FormField.vue";
+import ProcessFilesApprovalView from "~/components/ui/ProcessFilesApprovalView.vue";
 import { isApiEnabled } from '~/utils/api/index'
 import { saveStagesPreservingIdsApi } from '~/composables/useStages'
 import { useToast } from '~/composables/useToast'
 import { fetchStageFieldsApi } from '~/composables/useStageFields'
 import { uploadFileViaPresign } from '~/composables/useFiles'
 import { useNewRecordModal } from '~/composables/useNewRecordModal'
+import { useProcessFiles } from '~/composables/useProcessFiles'
+import { useProposalFiles } from '~/composables/useProposalFiles'
 
 useHead({ title: "Esteira" });
 definePageMeta({ layout: "default" });
@@ -754,6 +799,12 @@ const pipelineKey = computed(() => props.pipelineKey || "quotaequity");
 
 // Modal global de novo registro
 const { openModal: openGlobalModal } = useNewRecordModal();
+
+// Proposal files composable
+const { files: proposalFiles, extractFilesFromProposal } = useProposalFiles();
+
+// Process files for download functionality
+const { files: processFiles, loadProcessFiles, downloadFile: downloadFileFromAPI } = useProcessFiles();
 
 // Detecta dispositivos touch para desabilitar drag & drop (melhor usabilidade no mobile)
 const isTouch = ref(false);
@@ -964,23 +1015,6 @@ async function openCardForm(p) {
   selectedProposal.value = p
   // load fields for current stage
   try { stageFormFields.value = await fetchStageFieldsApi(String(p.stageId)) } catch { stageFormFields.value = [] }
-  // fallback to local storage (builder) if API not available or returned empty
-  if (!Array.isArray(stageFormFields.value) || stageFormFields.value.length === 0) {
-    const sid = String(p.stageId)
-    let arr = []
-    try {
-      if (stageFormsMap.value && Array.isArray(stageFormsMap.value[sid])) {
-        arr = stageFormsMap.value[sid]
-      } else {
-        const raw = localStorage.getItem(`pipeline_stage_forms__${pipelineKey.value}`)
-        if (raw) {
-          const map = JSON.parse(raw) || {}
-          if (Array.isArray(map[sid])) arr = map[sid]
-        }
-      }
-    } catch (_) {}
-    stageFormFields.value = arr
-  }
   // load saved values from backend
   stageFormValues.value = {}
   if (isApiEnabled()) {
@@ -989,6 +1023,16 @@ async function openCardForm(p) {
       stageFormValues.value = (all && all[String(p.stageId)]) ? { ...all[String(p.stageId)] } : {}
     } catch {}
   }
+  
+  // Load files from backend using the new endpoint
+  try {
+    if (p.processExternalId) {
+      await loadProcessFiles(p.processExternalId)
+    }
+  } catch (err) {
+    console.warn('Failed to load process files:', err)
+  }
+  
   showStageFormModal.value = true
 }
 
@@ -1040,6 +1084,20 @@ const stageFormFields = ref([])
 const stageFormValues = ref({})
 const showDeleteProposalModal = ref(false)
 const deleteProposalTarget = ref(null)
+const showPessoaFisicaModal = ref(false)
+const currentPessoaFisicaFieldId = ref(null)
+const showProcessFilesApprovalModal = ref(false)
+
+// Process Files composable for modal
+const { 
+  files: modalProcessFiles, 
+  loading: processFilesLoading, 
+  error: processFilesError,
+  loadProcessFiles: loadModalProcessFiles,
+  downloadFileFromAPI: downloadModalFile 
+} = useProcessFiles()
+
+const processFilesCount = computed(() => processFiles.value.length)
 
 const filteredByStage = (stageId) =>
   filteredProposals.value.filter((p) => p.stageId === stageId);
@@ -1466,17 +1524,60 @@ const openGlobalNewRecordModal = () => {
   });
   
   // Mostrar informação sobre os campos carregados
-  const { notify } = useToast();
+  const { info } = useToast();
   if (stageDynamicFields.value.length > 0) {
-    notify(`Carregados ${stageDynamicFields.value.length} campos da primeira etapa: ${stages.value[0]?.title || 'Primeira Etapa'}`);
+    info(`Carregados ${stageDynamicFields.value.length} campos da primeira etapa: ${stages.value[0]?.title || 'Primeira Etapa'}`);
   } else {
-    notify(`Abrindo formulário da primeira etapa: ${stages.value[0]?.title || 'Primeira Etapa'}`);
+    info(`Abrindo formulário da primeira etapa: ${stages.value[0]?.title || 'Primeira Etapa'}`);
   }
 };
 
+// Função para abrir o modal de aprovação de arquivos
+const openProcessFilesModal = () => {
+  showProcessFilesApprovalModal.value = true
+}
+
+// Função para atualizar arquivos da proposta
+const refreshProposalFiles = async () => {
+  if (selectedProposal.value && selectedProposal.value.processExternalId) {
+    try {
+      await loadProcessFiles(selectedProposal.value.processExternalId)
+    } catch (err) {
+      console.warn('Failed to refresh process files:', err)
+    }
+  }
+}
+
+// Função para aprovar arquivo
+const onApproveFile = ({ file, approvalBy }) => {
+  // TODO: Implementar chamada para API de aprovação
+  console.log(`Aprovando arquivo ${file.id} por ${approvalBy}`)
+  const { success } = useToast()
+  success(`Arquivo "${file.originalName}" aprovado por ${approvalBy}`)
+}
+
+// Função para reprovar arquivo
+const onRejectFile = ({ file }) => {
+  // TODO: Implementar chamada para API de reprovação
+  console.log(`Reprovando arquivo ${file.id}`)
+  const { warning } = useToast()
+  warning(`Arquivo "${file.originalName}" reprovado`)
+}
+
+// Função para fazer download do arquivo
+const onDownloadFile = async ({ file }) => {
+  try {
+    await downloadFileFromAPI(file)
+  } catch (err) {
+    const { error } = useToast()
+    error(`Erro ao baixar arquivo "${file.originalName}"`)
+    console.error('Download error:', err)
+  }
+}
+
 // Função para tratar salvamento do modal global
 const handleGlobalModalSave = (recordData) => {
-  const { notify } = useToast();
+  const { success, error } = useToast();
   
   // Criar proposta com dados do modal global
   const stage = stages.value.find((s) => s.id === recordData.stageId);
@@ -1528,14 +1629,14 @@ const handleGlobalModalSave = (recordData) => {
             }
           }
         }
-        notify("Registro criado com sucesso!");
+        success("Registro criado com sucesso!");
       })
       .catch((error) => {
         console.error("Erro ao criar registro via API:", error);
-        notify("Erro ao salvar registro na API, mantido localmente");
+        error("Erro ao salvar registro na API, mantido localmente");
       });
   } else {
-    notify("Registro criado com sucesso!");
+    success("Registro criado com sucesso!");
   }
 };
 
@@ -1550,6 +1651,7 @@ const validateNewProposal = () => {
 };
 
 const saveNewProposal = () => {
+  const { warning } = useToast();
   if (!validateNewProposal()) return;
   // validate dynamic required fields
   extraFieldErrors.value = {};
@@ -1572,7 +1674,7 @@ const saveNewProposal = () => {
   }
   if (!okExtra) {
     showAdvanced.value = true;
-    notify("Preencha os campos obrigatórios da etapa");
+    warning("Preencha os campos obrigatórios da etapa");
     return;
   }
   const stage = stages.value.find((s) => s.id === newProposal.value.stageId);
@@ -1692,12 +1794,6 @@ const fetchCep = async () => {
 // Upload de documentos para anexos no modal (exemplo, sem enviar ao backend ainda)
 const uploadedDocs = ref([]);
 
-// Simple toast
-const toast = ref({ show: false, text: "" });
-function notify(msg) {
-  toast.value = { show: true, text: msg };
-  setTimeout(() => (toast.value.show = false), 2200);
-}
 
 // Dynamic fields per stage (from Admin builder)
 const stageFormsMap = ref({});
@@ -1829,6 +1925,33 @@ const closeAiChat = () => {
   showAiModal.value = false;
 };
 
+// PessoaFisica modal functions
+const openPessoaFisicaModal = () => {
+  showPessoaFisicaModal.value = true;
+};
+
+const openPessoaFisicaForField = (fieldId) => {
+  currentPessoaFisicaFieldId.value = fieldId
+  showPessoaFisicaModal.value = true
+}
+
+const closePessoaFisicaModal = () => {
+  showPessoaFisicaModal.value = false;
+};
+
+const onPessoaFisicaSubmit = async (data) => {
+  try {
+    // Persistir no campo correspondente do formulário da etapa
+    if (currentPessoaFisicaFieldId.value) {
+      stageFormValues.value[currentPessoaFisicaFieldId.value] = data
+    }
+    // Fechar o modal e limpar estado
+    closePessoaFisicaModal();
+    currentPessoaFisicaFieldId.value = null
+  } catch (error) {
+    console.error('Erro ao salvar qualificação:', error);
+  }
+};
 const onAiSend = async ({ text, attachments }) => {
   aiMessages.value.push({ role: "user", content: text, attachments });
   aiTyping.value = true;

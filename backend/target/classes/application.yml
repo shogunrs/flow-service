@@ -13,6 +13,13 @@ spring:
       properties:
         acks: all
         enable.idempotence: true
+  jackson:
+    locale: pt_BR
+    time-zone: America/Sao_Paulo
+    deserialization:
+      accept-float-as-int: false
+    parser:
+      allow-numeric-leading-zeros: true
 
 app:
   kafka:

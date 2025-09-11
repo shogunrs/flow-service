@@ -77,20 +77,24 @@
         </div>
 
         <!-- Data de Nascimento - Aparece apenas se CPF validado -->
-        <div v-if="documentValid === true && tipoPessoa === 'PF'">
+        <div v-show="documentValid === true && tipoPessoa === 'PF'">
           <label :for="dataNascimentoInputId" class="text-[12px] text-slate-300"
             >Data de Nascimento</label
           >
           <div
             class="input-container input-container--xs input-container--default"
+            :class="dataNascimentoValidationClasses"
           >
             <input
               :id="dataNascimentoInputId"
-              v-model="dados.dataNascimento"
-              type="date"
+              v-model="dataNascimentoMasked"
+              type="text"
+              placeholder="dd/mm/aaaa"
               :disabled="disabled"
               class="input-field input-field--xs"
-              @input="updateDadosValue"
+              @input="handleDataNascimentoInput"
+              @blur="handleDataNascimentoBlur"
+              maxlength="10"
             />
           </div>
         </div>
@@ -165,7 +169,7 @@
         </div>
 
         <!-- Campos específicos para PJ -->
-        <div v-if="tipoPessoa === 'PJ'">
+        <div v-show="tipoPessoa === 'PJ'">
           <label
             :for="inscricaoEstadualInputId"
             class="text-[12px] text-slate-300"
@@ -187,7 +191,7 @@
         </div>
 
         <!-- Nome da Mãe - Aparece apenas se CPF validado -->
-        <div v-if="tipoPessoa === 'PF' && documentValid === true">
+        <div v-show="tipoPessoa === 'PF' && documentValid === true">
           <label :for="nomeMaeInputId" class="text-[12px] text-slate-300"
             >Nome da Mãe</label
           >
@@ -437,55 +441,24 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue", "validation", "cep-found"]);
 
-// IDs únicos para os campos
-const documentoInputId = computed(
-  () => `endereco-documento-${Math.random().toString(36).slice(2, 8)}`
-);
-const nomeInputId = computed(
-  () => `endereco-nome-${Math.random().toString(36).slice(2, 8)}`
-);
-const emailInputId = computed(
-  () => `endereco-email-${Math.random().toString(36).slice(2, 8)}`
-);
-const telefoneInputId = computed(
-  () => `endereco-telefone-${Math.random().toString(36).slice(2, 8)}`
-);
-const telefone2InputId = computed(
-  () => `endereco-telefone2-${Math.random().toString(36).slice(2, 8)}`
-);
-const inscricaoEstadualInputId = computed(
-  () => `endereco-ie-${Math.random().toString(36).slice(2, 8)}`
-);
-const dataNascimentoInputId = computed(
-  () => `endereco-nascimento-${Math.random().toString(36).slice(2, 8)}`
-);
-const nomeMaeInputId = computed(
-  () => `endereco-mae-${Math.random().toString(36).slice(2, 8)}`
-);
-const observacoesInputId = computed(
-  () => `endereco-observacoes-${Math.random().toString(36).slice(2, 8)}`
-);
-const cepInputId = computed(
-  () => `endereco-cep-${Math.random().toString(36).slice(2, 8)}`
-);
-const logradouroInputId = computed(
-  () => `endereco-logradouro-${Math.random().toString(36).slice(2, 8)}`
-);
-const numeroInputId = computed(
-  () => `endereco-numero-${Math.random().toString(36).slice(2, 8)}`
-);
-const complementoInputId = computed(
-  () => `endereco-complemento-${Math.random().toString(36).slice(2, 8)}`
-);
-const bairroInputId = computed(
-  () => `endereco-bairro-${Math.random().toString(36).slice(2, 8)}`
-);
-const cidadeInputId = computed(
-  () => `endereco-cidade-${Math.random().toString(36).slice(2, 8)}`
-);
-const ufInputId = computed(
-  () => `endereco-uf-${Math.random().toString(36).slice(2, 8)}`
-);
+// IDs únicos para os campos - gerados uma única vez
+const componentId = Math.random().toString(36).slice(2, 8);
+const documentoInputId = `endereco-documento-${componentId}`;
+const nomeInputId = `endereco-nome-${componentId}`;
+const emailInputId = `endereco-email-${componentId}`;
+const telefoneInputId = `endereco-telefone-${componentId}`;
+const telefone2InputId = `endereco-telefone2-${componentId}`;
+const inscricaoEstadualInputId = `endereco-ie-${componentId}`;
+const dataNascimentoInputId = `endereco-nascimento-${componentId}`;
+const nomeMaeInputId = `endereco-mae-${componentId}`;
+const observacoesInputId = `endereco-observacoes-${componentId}`;
+const cepInputId = `endereco-cep-${componentId}`;
+const logradouroInputId = `endereco-logradouro-${componentId}`;
+const numeroInputId = `endereco-numero-${componentId}`;
+const complementoInputId = `endereco-complemento-${componentId}`;
+const bairroInputId = `endereco-bairro-${componentId}`;
+const cidadeInputId = `endereco-cidade-${componentId}`;
+const ufInputId = `endereco-uf-${componentId}`;
 
 // Estados do documento
 const documentMasked = ref("");
@@ -499,6 +472,10 @@ const telefoneValid = ref(null);
 // Estados do segundo telefone
 const telefone2Masked = ref("");
 const telefone2Valid = ref(null);
+
+// Estados da data de nascimento
+const dataNascimentoMasked = ref("");
+const dataNascimentoValid = ref(null);
 
 // Estados do CEP
 const cepMasked = ref("");
@@ -576,6 +553,15 @@ const telefone2ValidationClasses = computed(() => {
   if (props.disabled) classes.push("input-container--disabled");
   if (telefone2Valid.value === false) classes.push("input-container--error");
   if (telefone2Valid.value === true) classes.push("input-container--success");
+  return classes;
+});
+
+// Classes de validação para a data de nascimento
+const dataNascimentoValidationClasses = computed(() => {
+  const classes = [];
+  if (props.disabled) classes.push("input-container--disabled");
+  if (dataNascimentoValid.value === false) classes.push("input-container--error");
+  if (dataNascimentoValid.value === true) classes.push("input-container--success");
   return classes;
 });
 
@@ -786,7 +772,11 @@ function handleDocumentInput(event) {
 }
 
 function handleDocumentBlur() {
-  validateDocument(documentMasked.value);
+  try {
+    validateDocument(documentMasked.value);
+  } catch (error) {
+    console.warn('Erro em handleDocumentBlur:', error);
+  }
 }
 
 function handleDocumentFocus() {
@@ -795,39 +785,46 @@ function handleDocumentFocus() {
 
 // Validação do documento
 function validateDocument(value) {
-  const numbers = value.replace(/\D/g, "");
+  try {
+    if (!value || !dados.value) return null;
+    
+    const numbers = value.replace(/\D/g, "");
 
-  if (!numbers.trim()) {
-    documentValid.value = null;
-    dados.value.documento = "";
+    if (!numbers.trim()) {
+      documentValid.value = null;
+      dados.value.documento = "";
+      updateDadosValue();
+      return null;
+    }
+
+    // Validação apenas se tiver o número completo de dígitos
+    if (tipoPessoa.value === "PF" && numbers.length === 11) {
+      // Validar CPF
+      if (validarCPF(numbers)) {
+        documentValid.value = true;
+      } else {
+        documentValid.value = false;
+      }
+    } else if (tipoPessoa.value === "PJ" && numbers.length === 14) {
+      // Validar CNPJ
+      if (validarCNPJ(numbers)) {
+        documentValid.value = true;
+      } else {
+        documentValid.value = false;
+      }
+    } else {
+      // Ainda digitando
+      documentValid.value = null;
+    }
+
+    dados.value.documento = numbers;
     updateDadosValue();
+
+    return documentValid.value;
+  } catch (error) {
+    console.warn('Erro em validateDocument:', error);
     return null;
   }
-
-  // Validação apenas se tiver o número completo de dígitos
-  if (tipoPessoa.value === "PF" && numbers.length === 11) {
-    // Validar CPF
-    if (validarCPF(numbers)) {
-      documentValid.value = true;
-    } else {
-      documentValid.value = false;
-    }
-  } else if (tipoPessoa.value === "PJ" && numbers.length === 14) {
-    // Validar CNPJ
-    if (validarCNPJ(numbers)) {
-      documentValid.value = true;
-    } else {
-      documentValid.value = false;
-    }
-  } else {
-    // Ainda digitando
-    documentValid.value = null;
-  }
-
-  dados.value.documento = numbers;
-  updateDadosValue();
-
-  return documentValid.value;
 }
 
 // Função para aplicar máscara no telefone
@@ -922,6 +919,71 @@ function handleTelefone2Blur() {
   validateTelefone2(telefone2Masked.value);
 }
 
+// Função para aplicar máscara na data brasileira
+function applyDateMask(value) {
+  const numbers = value.replace(/\D/g, "");
+  
+  if (numbers.length <= 2) return numbers;
+  if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+  return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+}
+
+// Validação da data brasileira
+function validateDataNascimento(value) {
+  const numbers = value.replace(/\D/g, "");
+
+  if (!numbers.trim()) {
+    dataNascimentoValid.value = null;
+    dados.value.dataNascimento = "";
+    updateDadosValue();
+    return null;
+  }
+
+  // Validação apenas se tiver 8 dígitos
+  if (numbers.length === 8) {
+    const day = parseInt(numbers.slice(0, 2));
+    const month = parseInt(numbers.slice(2, 4));
+    const year = parseInt(numbers.slice(4, 8));
+
+    // Validação básica
+    if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= new Date().getFullYear()) {
+      // Tentar criar data para validação mais rigorosa
+      const date = new Date(year, month - 1, day);
+      if (date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year) {
+        dataNascimentoValid.value = true;
+        dados.value.dataNascimento = `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+      } else {
+        dataNascimentoValid.value = false;
+        dados.value.dataNascimento = value;
+      }
+    } else {
+      dataNascimentoValid.value = false;
+      dados.value.dataNascimento = value;
+    }
+  } else {
+    // Ainda digitando
+    dataNascimentoValid.value = null;
+    dados.value.dataNascimento = value;
+  }
+
+  updateDadosValue();
+  return dataNascimentoValid.value;
+}
+
+// Handlers da data de nascimento
+function handleDataNascimentoInput(event) {
+  const value = event.target.value;
+  const masked = applyDateMask(value);
+  dataNascimentoMasked.value = masked;
+
+  // Validar durante digitação
+  validateDataNascimento(masked);
+}
+
+function handleDataNascimentoBlur() {
+  validateDataNascimento(dataNascimentoMasked.value);
+}
+
 // Handlers do CEP
 function handleCepInput(event) {
   const value = event.target.value;
@@ -944,25 +1006,31 @@ function handleCepFocus() {
 
 // Atualizar valor do componente (agora integrado)
 function updateDadosValue() {
-  emit("update:modelValue", { ...dados.value });
+  try {
+    if (!dados.value) return;
+    
+    emit("update:modelValue", { ...dados.value });
 
-  // Validação completa
-  const isValid =
-    dados.value.documento &&
-    dados.value.nome &&
-    dados.value.cep &&
-    dados.value.logradouro &&
-    dados.value.numero &&
-    dados.value.bairro &&
-    dados.value.cidade &&
-    dados.value.uf;
+    // Validação completa
+    const isValid =
+      dados.value.documento &&
+      dados.value.nome &&
+      dados.value.cep &&
+      dados.value.logradouro &&
+      dados.value.numero &&
+      dados.value.bairro &&
+      dados.value.cidade &&
+      dados.value.uf;
 
-  emit("validation", {
-    valid: isValid,
-    dados: dados.value,
-    tipoPessoa: tipoPessoa.value,
-    tipoDocumento: tipoDocumento.value,
-  });
+    emit("validation", {
+      valid: isValid,
+      dados: dados.value,
+      tipoPessoa: tipoPessoa.value,
+      tipoDocumento: tipoDocumento.value,
+    });
+  } catch (error) {
+    console.warn('Erro em updateDadosValue:', error);
+  }
 }
 
 // Manter função legacy para compatibilidade com código do CEP
@@ -983,9 +1051,16 @@ function updateEnderecoValue() {
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue && typeof newValue === "object") {
-      // Atualizar dados integrados
-      dados.value = { ...dados.value, ...newValue };
+    if (!newValue || typeof newValue !== "object") return;
+    
+    try {
+      // Atualizar dados integrados de forma defensiva
+      dados.value = { 
+        ...dados.value, 
+        ...Object.fromEntries(
+          Object.entries(newValue).filter(([_, v]) => v !== undefined && v !== null)
+        )
+      };
 
       // Sincronizar endereço separado
       endereco.value = {
@@ -1016,6 +1091,12 @@ watch(
         cepMasked.value = applyCepMask(newValue.cep);
         showAddressFields.value = true;
       }
+
+      if (newValue.dataNascimento) {
+        dataNascimentoMasked.value = newValue.dataNascimento;
+      }
+    } catch (error) {
+      console.warn('Erro ao atualizar EnderecoInput:', error);
     }
   },
   { immediate: true, deep: true }
@@ -1023,47 +1104,61 @@ watch(
 
 // Inicialização
 onMounted(() => {
-  // Se já tem dados, preencher
-  if (
-    props.modelValue &&
-    typeof props.modelValue === "object" &&
-    Object.keys(props.modelValue).length > 0
-  ) {
-    dados.value = { ...dados.value, ...props.modelValue };
+  try {
+    // Se já tem dados, preencher
+    const modelValue = props.modelValue;
+    if (
+      modelValue &&
+      typeof modelValue === "object" &&
+      Object.keys(modelValue).length > 0
+    ) {
+      dados.value = { 
+        ...dados.value, 
+        ...Object.fromEntries(
+          Object.entries(modelValue).filter(([_, v]) => v !== undefined && v !== null)
+        )
+      };
 
-    // Sincronizar endereço
-    endereco.value = {
-      cep: props.modelValue.cep || "",
-      logradouro: props.modelValue.logradouro || "",
-      numero: props.modelValue.numero || "",
-      complemento: props.modelValue.complemento || "",
-      bairro: props.modelValue.bairro || "",
-      cidade: props.modelValue.cidade || "",
-      uf: props.modelValue.uf || "",
-    };
+      // Sincronizar endereço
+      endereco.value = {
+        cep: modelValue.cep || "",
+        logradouro: modelValue.logradouro || "",
+        numero: modelValue.numero || "",
+        complemento: modelValue.complemento || "",
+        bairro: modelValue.bairro || "",
+        cidade: modelValue.cidade || "",
+        uf: modelValue.uf || "",
+      };
 
-    // Configurar máscaras
-    if (props.modelValue.documento) {
-      documentMasked.value = applyDocumentMask(props.modelValue.documento);
-      tipoPessoa.value = detectDocumentType(props.modelValue.documento);
+      // Configurar máscaras
+      if (modelValue.documento) {
+        documentMasked.value = applyDocumentMask(modelValue.documento);
+        tipoPessoa.value = detectDocumentType(modelValue.documento);
+      }
+
+      if (modelValue.telefone) {
+        telefoneMasked.value = applyPhoneMask(modelValue.telefone);
+      }
+
+      if (modelValue.telefone2) {
+        telefone2Masked.value = applyPhoneMask(modelValue.telefone2);
+      }
+
+      if (modelValue.cep) {
+        cepMasked.value = applyCepMask(modelValue.cep);
+      }
+
+      if (modelValue.dataNascimento) {
+        dataNascimentoMasked.value = modelValue.dataNascimento;
+      }
     }
-
-    if (props.modelValue.telefone) {
-      telefoneMasked.value = applyPhoneMask(props.modelValue.telefone);
-    }
-
-    if (props.modelValue.telefone2) {
-      telefone2Masked.value = applyPhoneMask(props.modelValue.telefone2);
-    }
-
-    if (props.modelValue.cep) {
-      cepMasked.value = applyCepMask(props.modelValue.cep);
-    }
+  } catch (error) {
+    console.warn('Erro na inicialização do EnderecoInput:', error);
   }
 });
 </script>
 
-<style scoped>
+<style scoped="postcss">
 .endereco-container {
   @apply w-full;
 }

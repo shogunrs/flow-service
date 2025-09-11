@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface SpringDataProposalRepository extends MongoRepository<ProposalDocument, String> {
     List<ProposalDocument> findByProcessExternalIdOrderByCreatedAtDesc(String processExternalId);
+    List<ProposalDocument> findByProcessExternalId(String processExternalId);
     Optional<ProposalDocument> findByIdAndProcessExternalId(String id, String processExternalId);
     void deleteByIdAndProcessExternalId(String id, String processExternalId);
+    void deleteByProcessExternalId(String processExternalId);
 }

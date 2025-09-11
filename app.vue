@@ -1,6 +1,6 @@
 <template>
   <NuxtPage />
-  <ToastContainer position="top-right" />
+  <ToastContainer position="bottom-center" />
   
   <!-- Modal global de novo registro -->
   <NewRecordModal

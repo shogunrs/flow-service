@@ -90,26 +90,144 @@ export async function addProcess(key: string, name: string): Promise<boolean> {
   return true
 }
 
-export async function removeProcess(key: string): Promise<boolean> {
+export async function removeProcess(key: string, options: { backup?: boolean, skipConfirmation?: boolean } = {}): Promise<{ success: boolean, backup?: Record<string, any>, deletedKeys?: string[] }> {
+  const k = sanitizeProcessKey(key)
+  
+  // Create backup before deletion if requested
+  let backup: Record<string, any> | null = null
+  if (options.backup !== false) { // Default to true
+    backup = backupProcessData(k)
+  }
+  
+  const result = {
+    success: false,
+    backup: backup || undefined,
+    deletedKeys: [] as string[]
+  }
+  
   if (isApiEnabled()) {
     try {
-      await apiFetch(`/api/v1/processes/${encodeURIComponent(sanitizeProcessKey(key))}`, { method: 'DELETE' })
-      apiProcessCache = apiProcessCache.filter(p => p.key !== sanitizeProcessKey(key))
+      // API should handle cascade deletion on backend
+      await apiFetch(`/api/v1/processes/${encodeURIComponent(k)}`, { method: 'DELETE' })
+      apiProcessCache = apiProcessCache.filter(p => p.key !== k)
       try { localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(apiProcessCache)) } catch {}
+      
+      // Clean local cache in case of API/local hybrid mode
+      result.deletedKeys = cascadeDeleteLocalData(k)
+      
       try { window.dispatchEvent(new Event('processes:changed')) } catch {}
-      return true
-    } catch { return false }
+      result.success = true
+      return result
+    } catch { 
+      return result 
+    }
   }
-  if (typeof localStorage === 'undefined') return
-  const k = sanitizeProcessKey(key)
+  
+  if (typeof localStorage === 'undefined') return result
+  
+  // Remove process from registry
   const arr = listProcesses().filter(p => p.key !== k)
   localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(arr))
-  // Clean related stored configs
-  try { localStorage.removeItem(PIPELINE_CONFIG_KEY(k)) } catch {}
-  try { localStorage.removeItem(STAGE_FORMS_KEY(k)) } catch {}
-  try { localStorage.removeItem(`pipeline_proposals__${k}`) } catch {}
+  
+  // Cascade delete all related data
+  result.deletedKeys = cascadeDeleteLocalData(k)
+  
   try { window.dispatchEvent(new Event('processes:changed')) } catch (_) {}
-  return true
+  result.success = true
+  return result
+}
+
+// Function to handle cascade deletion of all related data
+function cascadeDeleteLocalData(processKey: string): string[] {
+  const k = sanitizeProcessKey(processKey)
+  const deletedKeys: string[] = []
+  
+  if (typeof localStorage === 'undefined') return deletedKeys
+  
+  // Core pipeline data
+  const keysToDelete = [
+    PIPELINE_CONFIG_KEY(k),           // Stage configurations
+    STAGE_FORMS_KEY(k),              // Stage form definitions
+    `pipeline_proposals__${k}`,       // Process proposals/records
+  ]
+  
+  // Additional data patterns that might exist
+  const additionalPatterns = [
+    `pipeline_files__${k}`,          // File attachments
+    `pipeline_history__${k}`,        // Process history
+    `pipeline_analytics__${k}`,      // Analytics data
+    `pipeline_cache__${k}`,          // Cached data
+    `pipeline_settings__${k}`,       // Process-specific settings
+    `pipeline_templates__${k}`,      // Form templates
+    `pipeline_notifications__${k}`,  // Notifications
+    `pipeline_reports__${k}`,        // Generated reports
+    `pipeline_exports__${k}`,        // Export data
+    `pipeline_backups__${k}`,        // Backup data
+    `pipeline_workflow__${k}`,       // Workflow data
+    `pipeline_permissions__${k}`,    // Permission settings
+    `pipeline_logs__${k}`,           // Activity logs
+    `pipeline_drafts__${k}`,         // Draft data
+  ]
+  
+  // Delete core keys
+  keysToDelete.forEach(storageKey => {
+    try {
+      if (localStorage.getItem(storageKey) !== null) {
+        localStorage.removeItem(storageKey)
+        deletedKeys.push(storageKey)
+        console.info(`Deleted: ${storageKey}`)
+      }
+    } catch (err) {
+      console.warn(`Failed to delete ${storageKey}:`, err)
+    }
+  })
+  
+  // Delete additional pattern keys
+  additionalPatterns.forEach(storageKey => {
+    try {
+      if (localStorage.getItem(storageKey) !== null) {
+        localStorage.removeItem(storageKey)
+        deletedKeys.push(storageKey)
+      }
+    } catch (err) {
+      // Silent fail for optional keys
+    }
+  })
+  
+  // Handle special case: clear last_process if it matches deleted process
+  try {
+    const lastProcess = localStorage.getItem('pipeline_last_process')
+    if (lastProcess === k) {
+      localStorage.removeItem('pipeline_last_process')
+      deletedKeys.push('pipeline_last_process')
+      console.info(`Cleared last_process reference: ${k}`)
+    }
+  } catch {}
+  
+  // Scan and clean any orphaned keys (safety net)
+  try {
+    const allKeys = Object.keys(localStorage)
+    const orphanedKeys = allKeys.filter(storageKey => 
+      (storageKey.includes(`__${k}`) || storageKey.includes(`_${k}_`)) &&
+      !deletedKeys.includes(storageKey)
+    )
+    
+    orphanedKeys.forEach(storageKey => {
+      try {
+        localStorage.removeItem(storageKey)
+        deletedKeys.push(storageKey)
+        console.info(`Cleaned orphaned key: ${storageKey}`)
+      } catch {}
+    })
+    
+    if (deletedKeys.length > 0) {
+      console.info(`Cascade deletion complete: removed ${deletedKeys.length} keys for process "${k}"`, deletedKeys)
+    }
+  } catch (err) {
+    console.warn('Error during orphaned key cleanup:', err)
+  }
+  
+  return deletedKeys
 }
 
 export function setProcessActive(key: string, active: boolean): void {
@@ -213,6 +331,127 @@ export function usePipeline(key: string) {
   const setStages = (s: Stage[]) => { stages.value = s; saveStages(k, s) }
   const setFormsMap = (m: Record<string, StageField[]>) => { formsMap.value = m; saveStageFormsMap(k, m) }
   return { stages, formsMap, setStages, setFormsMap }
+}
+
+// Utility function to find and clean orphaned data
+export function auditAndCleanOrphanedData(): { orphaned: string[], cleaned: string[], errors: string[] } {
+  if (typeof localStorage === 'undefined') return { orphaned: [], cleaned: [], errors: [] }
+  
+  const activeProcesses = listProcesses().map(p => p.key)
+  const allKeys = Object.keys(localStorage)
+  const pipelineKeys = allKeys.filter(key => key.startsWith('pipeline_'))
+  
+  const orphaned: string[] = []
+  const cleaned: string[] = []
+  const errors: string[] = []
+  
+  pipelineKeys.forEach(key => {
+    // Skip registry and global keys
+    if (key === PROCESS_REGISTRY_KEY || key === 'pipeline_last_process') return
+    
+    // Extract process key from storage key
+    const match = key.match(/pipeline_.*?__(.+)$/)
+    if (match) {
+      const processKey = match[1]
+      
+      // Check if process still exists
+      if (!activeProcesses.includes(processKey)) {
+        orphaned.push(key)
+        
+        try {
+          localStorage.removeItem(key)
+          cleaned.push(key)
+        } catch (err) {
+          errors.push(`${key}: ${err}`)
+        }
+      }
+    }
+  })
+  
+  // Check for invalid last_process reference
+  try {
+    const lastProcess = localStorage.getItem('pipeline_last_process')
+    if (lastProcess && !activeProcesses.includes(lastProcess)) {
+      orphaned.push('pipeline_last_process')
+      localStorage.removeItem('pipeline_last_process')
+      cleaned.push('pipeline_last_process')
+    }
+  } catch (err) {
+    errors.push(`pipeline_last_process: ${err}`)
+  }
+  
+  if (cleaned.length > 0) {
+    console.info(`Orphaned data cleanup: removed ${cleaned.length} keys`, cleaned)
+  }
+  
+  return { orphaned, cleaned, errors }
+}
+
+// Utility to get storage usage by process
+export function getStorageUsageByProcess(): Record<string, { keys: string[], sizeEstimate: number }> {
+  if (typeof localStorage === 'undefined') return {}
+  
+  const processes = listProcesses()
+  const usage: Record<string, { keys: string[], sizeEstimate: number }> = {}
+  
+  processes.forEach(process => {
+    const processKeys = Object.keys(localStorage).filter(key => 
+      key.includes(`__${process.key}`) || key.includes(`_${process.key}_`)
+    )
+    
+    let sizeEstimate = 0
+    processKeys.forEach(key => {
+      try {
+        const value = localStorage.getItem(key)
+        if (value) sizeEstimate += value.length
+      } catch {}
+    })
+    
+    usage[process.key] = {
+      keys: processKeys,
+      sizeEstimate
+    }
+  })
+  
+  return usage
+}
+
+// Utility to backup process data before deletion
+export function backupProcessData(processKey: string): Record<string, any> | null {
+  if (typeof localStorage === 'undefined') return null
+  
+  const k = sanitizeProcessKey(processKey)
+  const backup: Record<string, any> = {}
+  const allKeys = Object.keys(localStorage)
+  
+  // Find all keys related to this process
+  const processKeys = allKeys.filter(key => 
+    key.includes(`__${k}`) || key.includes(`_${k}_`)
+  )
+  
+  processKeys.forEach(key => {
+    try {
+      const value = localStorage.getItem(key)
+      if (value) {
+        backup[key] = JSON.parse(value)
+      }
+    } catch {
+      // If parsing fails, store as string
+      backup[key] = localStorage.getItem(key)
+    }
+  })
+  
+  if (Object.keys(backup).length > 0) {
+    backup._metadata = {
+      processKey: k,
+      backupDate: new Date().toISOString(),
+      keyCount: Object.keys(backup).length - 1 // -1 for metadata
+    }
+    
+    console.info(`Backed up ${Object.keys(backup).length - 1} keys for process "${k}"`)
+  }
+  
+  return Object.keys(backup).length > 0 ? backup : null
 }
 
 export const pipelineKeys = {
