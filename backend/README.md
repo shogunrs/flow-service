@@ -47,3 +47,17 @@ OpenAPI UI: http://localhost:8080/swagger-ui/index.html
 - Endpoint: `GET/PUT /api/v1/stages/{stageId}/fields`
 - Cada campo possui: `label`, `type` (`text|number|date|select|file`), `required`, `placeholder`, `options[]`, `order`.
 - Relacionamento: `stageId` é o ObjectId da coleção `stages` (retornado no `id` do `StageDTO`).
+
+### Usuários e Roles (MVP)
+
+- Endpoints:
+  - `POST /api/v1/auth/login` { email, password } → { token, user }
+  - `GET /api/v1/users` → lista usuários
+  - `GET /api/v1/users/{id}` → detalha usuário
+  - `POST /api/v1/users` { name, email, password, roles[] }
+  - `PUT /api/v1/users/{id}` { id, name, email, roles[] } (não altera senha)
+  - `DELETE /api/v1/users/{id}`
+
+- Notas:
+  - Hash de senha utiliza SHA-256+salt (classe `PasswordHasher`). Em produção, substituir por BCrypt/Argon2 e JWT real.
+  - Não há proteção nas rotas (MVP). Próximo passo: adicionar Spring Security + JWT e RBAC nos controllers.

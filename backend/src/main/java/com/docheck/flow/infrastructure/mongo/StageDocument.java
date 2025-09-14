@@ -13,6 +13,7 @@ public class StageDocument {
     public String title;
     public Integer slaDays;
     public String color;
+    public String defaultStatus;
     @Indexed public Integer order;
     public Instant createdAt;
     public Instant updatedAt;

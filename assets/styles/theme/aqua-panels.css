@@ -1,0 +1,73 @@
+@tailwind components;
+@tailwind utilities;
+
+/* Aqua cyber theme panels and utilities */
+
+@layer utilities {
+  /* Dotted grid background utility */
+  .bg-grid-dots {
+    background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+    background-size: 14px 14px;
+    background-position: -1px -1px;
+  }
+
+  /* Thin aqua divider */
+  .divider-aqua {
+    position: relative;
+  }
+  .divider-aqua::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1px; height: 1px;
+    background: linear-gradient(90deg, rgba(0,229,255,0), rgba(0,229,255,0.5), rgba(0,229,255,0));
+  }
+}
+
+@layer components {
+  /* Panel inspired by the screenshot: rounded, double-border feel, subtle glow */
+  .panel {
+    @apply relative overflow-hidden rounded-xl bg-slate-900/70 border border-slate-800/70;
+  }
+  .panel::before {
+    content: "";
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(148,163,184,0.08) 1px, transparent 1px);
+    background-size: 14px 14px; background-position: -1px -1px;
+  }
+  .panel::after {
+    content: "";
+    position: absolute; inset: 0; pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(2, 132, 199, 0.15);
+    border-radius: inherit;
+  }
+
+  .panel-header {
+    @apply px-4 py-3 text-slate-200 font-semibold flex items-center gap-2;
+  }
+  .panel-body {
+    @apply p-4 text-slate-300;
+  }
+
+  /* Glass card for content blocks */
+  .card-glass {
+    @apply relative rounded-xl bg-slate-800/60 border border-slate-700/60 backdrop-blur-md;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 20px rgba(0,153,255,0.06);
+  }
+
+  /* Aqua primary button */
+  .btn-aqua {
+    @apply inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-white;
+    background-image: linear-gradient(90deg, #3b82f6 0%, #00e5ff 100%);
+    box-shadow: 0 6px 18px rgba(0,229,255,0.18), 0 2px 8px rgba(59,130,246,0.18);
+  }
+  .btn-aqua:hover { filter: brightness(1.06); }
+
+  /* Badge tint variants */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border;
+  }
+  .badge-aqua { @apply text-cyan-300 border-cyan-400/40 bg-cyan-500/10; }
+  .badge-warn { @apply text-amber-300 border-amber-400/40 bg-amber-500/10; }
+  .badge-danger { @apply text-red-300 border-red-400/40 bg-red-500/10; }
+}
+

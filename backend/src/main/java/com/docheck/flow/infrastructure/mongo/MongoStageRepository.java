@@ -15,7 +15,7 @@ public class MongoStageRepository implements StageRepository {
 
     private static Stage toDomain(StageDocument d) {
         if (d == null) return null;
-        return new Stage(d.id, d.processExternalId, d.title, d.slaDays, d.color, d.order, d.createdAt, d.updatedAt);
+        return new Stage(d.id, d.processExternalId, d.title, d.slaDays, d.color, d.defaultStatus, d.order, d.createdAt, d.updatedAt);
     }
     private static StageDocument toDoc(Stage s) {
         StageDocument d = new StageDocument();
@@ -24,6 +24,7 @@ public class MongoStageRepository implements StageRepository {
         d.title = s.getTitle();
         d.slaDays = s.getSlaDays();
         d.color = s.getColor();
+        d.defaultStatus = s.getDefaultStatus();
         d.order = s.getOrder();
         d.createdAt = s.getCreatedAt();
         d.updatedAt = s.getUpdatedAt();

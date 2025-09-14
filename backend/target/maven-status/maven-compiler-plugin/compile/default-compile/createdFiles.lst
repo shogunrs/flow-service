@@ -2,6 +2,7 @@ com/docheck/flow/api/dto/StageDTO.class
 com/docheck/flow/infrastructure/mongo/SpringDataProposalRepository.class
 com/docheck/flow/domain/model/Process.class
 com/docheck/flow/application/port/StageRepository.class
+com/docheck/flow/configuration/JacksonConfiguration$BrazilianDoubleDeserializer.class
 com/docheck/flow/api/dto/ProposalDTO.class
 com/docheck/flow/infrastructure/mongo/ProcessDocument.class
 com/docheck/flow/application/service/SimplifiedProcessCascadeService$SimplifiedCascadeResult.class
@@ -37,6 +38,7 @@ com/docheck/flow/api/dto/StageFieldDTO.class
 com/docheck/flow/infrastructure/mongo/MongoStageFieldRepository.class
 com/docheck/flow/api/mapper/ProcessMapper.class
 com/docheck/flow/infrastructure/outbox/OutboxWorker.class
+com/docheck/flow/configuration/JacksonConfiguration.class
 com/docheck/flow/FlowApplication.class
 com/docheck/flow/infrastructure/outbox/OutboxRepository.class
 com/docheck/flow/infrastructure/kafka/KafkaEventPublisher.class
@@ -46,6 +48,7 @@ com/docheck/flow/api/TestController.class
 com/docheck/flow/application/service/StageService.class
 com/docheck/flow/application/service/ProcessService.class
 com/docheck/flow/infrastructure/mongo/MongoProcessRepository.class
+com/docheck/flow/api/StatusController.class
 com/docheck/flow/api/ProposalController.class
 com/docheck/flow/api/dto/ProcessDTO.class
 com/docheck/flow/application/service/ProcessCascadeService$CascadeDeleteResult.class

@@ -19,7 +19,7 @@
           >
             <div class="flex items-center gap-2">
               <i
-                class="fa-solid fa-robot text-orange-400 text-base drop-shadow"
+                class="fa-solid fa-robot text-cyan-400 text-base drop-shadow"
               ></i>
               <h3 class="text-[13px] font-semibold tracking-wide">
                 {{ title }}
@@ -52,7 +52,7 @@
                 class="rounded-2xl px-3 py-2 max-w-[80%] text-[12px] leading-snug shadow-md"
                 :class="
                   m.role === 'user'
-                    ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white'
+                    ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white'
                     : 'bg-gradient-to-br from-slate-700/80 to-slate-800/80 text-slate-100 border border-slate-600/40'
                 "
               >
@@ -132,13 +132,13 @@
             <input
               v-model="input"
               type="text"
-              class="flex-1 bg-slate-700/70 border border-slate-600/60 rounded-xl h-9 px-3 text-[13px] outline-none focus:ring-[1.5px] focus:ring-orange-500/60 focus:border-orange-400/50 shadow-inner"
+              class="flex-1 bg-slate-700/70 border border-slate-600/60 rounded-xl h-9 px-3 text-[13px] outline-none focus:ring-[1.5px] focus:ring-cyan-400/60 focus:border-cyan-400/50 shadow-inner"
               :placeholder="placeholder"
               @keydown.enter.prevent="emitSend"
               @paste="allowPaste ? onPaste : undefined"
             />
             <button
-              class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-500 hover:to-orange-600 text-white px-3 h-9 rounded-lg text-sm disabled:opacity-50 shadow"
+              class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-500 hover:to-cyan-600 text-white px-3 h-9 rounded-lg text-sm disabled:opacity-50 shadow"
               :disabled="!input.trim() && attachments.length === 0"
               @click="emitSend"
             >

@@ -1,26 +1,17 @@
 <template>
   <div class="min-h-screen">
-    <Sidebar :items="menu" @select="onSelect" />
-    <!-- Header -->
-    <header class="p-3 border-b border-slate-800 ml-14">
-      <div class="w-full grid grid-cols-1 sm:grid-cols-3 sm:items-center gap-2">
-        <!-- Left: (reserved for menu breadcrumb/title later) -->
-        <div class="hidden sm:block"></div>
-
-        <!-- Center: global search, centered and proportional width -->
-        <div
-          class="px-0 sm:px-4 justify-self-center w-full max-w-md sm:max-w-lg md:max-w-xl"
-        >
-          <AiSearch
-            v-model="filterText"
-            aiLabel="IA"
-            size="md"
-            @ai="openAiChat"
-          />
+    <!-- Header (sem busca/IA; serão acionados pela sidebar) -->
+    <header
+      class="header-glass fixed top-0 left-0 right-0 z-30 h-16 px-3 border-b border-slate-800/60 bg-transparent backdrop-blur-md"
+    >
+      <div class="w-full h-full grid grid-cols-2 items-center gap-2">
+        <!-- Brand icon -->
+        <div class="hidden sm:flex items-center">
+          <BrandMark size="sm" />
         </div>
 
         <!-- Right: controls -->
-        <div class="flex items-center gap-2 mt-3 sm:mt-0 justify-self-end">
+        <div class="flex items-center gap-2 mt-0 justify-self-end">
           <!-- View Mode Toggle -->
           <div class="bg-slate-800/80 p-0.5 rounded-md flex items-center">
             <button
@@ -59,14 +50,18 @@
     </header>
 
     <!-- Main Content -->
-    <main class="p-3 sm:p-6 ml-14">
+    <main class="page-content p-3 sm:p-6">
       <!-- Kanban View -->
       <div v-if="viewMode === 'kanban'" class="overflow-x-auto kanban-scroll">
-        <transition-group name="kanban-col" tag="div" class="flex gap-2 min-h-[10rem] pb-2">
+        <transition-group
+          name="kanban-col"
+          tag="div"
+          class="grid grid-flow-col auto-cols-[14rem] sm:auto-cols-[15rem] md:auto-cols-[16rem] gap-3 min-h-[10rem] pb-2"
+        >
           <div
             v-for="(stage, i) in stages"
             :key="stage.id"
-            class="w-56 sm:w-60 md:w-64 flex-shrink-0 bg-slate-800 rounded-md p-1.5 transition-colors"
+            class="w-full bg-slate-800 rounded-md p-1.5 transition-colors"
             :class="[
               dragOverStage === stage.id
                 ? 'ring-2 ring-blue-400 ring-offset-0'
@@ -74,7 +69,9 @@
               isDraggingStage && columnDragOverIndex === i
                 ? 'ring-2 ring-orange-400'
                 : '',
-              isDraggingStage && draggingStageId === stage.id ? 'opacity-90' : ''
+              isDraggingStage && draggingStageId === stage.id
+                ? 'opacity-90'
+                : '',
             ]"
             @dragover.prevent="onColumnDragOver($event, i)"
             @dragenter.prevent="onDragEnter(stage.id)"
@@ -141,6 +138,7 @@
                   </div>
                   <span
                     :class="statusPillClass(p.status)"
+                    :style="getStatusColor(p.status) ? `background-color: ${getStatusColor(p.status)}; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3);` : ''"
                     class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                   >
                     {{ p.status }}
@@ -195,6 +193,7 @@
                 </div>
                 <span
                   :class="statusPillClass(p.status)"
+                  :style="getStatusColor(p.status) ? `background-color: ${getStatusColor(p.status)}; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3);` : ''"
                   class="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full"
                 >
                   {{ p.status }}
@@ -238,20 +237,35 @@
                 <td class="px-3 sm:px-6 py-2 sm:py-3">
                   <span
                     :class="statusPillClass(p.status)"
+                    :style="getStatusColor(p.status) ? `background-color: ${getStatusColor(p.status)}; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3);` : ''"
                     class="text-xs font-semibold px-2 py-1 rounded-full"
                   >
                     {{ p.status }}
                   </span>
                 </td>
                 <td class="px-3 sm:px-6 py-2 sm:py-3">
-                  <div class="flex items-center gap-2 justify-end text-slate-300">
-                    <button class="hover:text-white" title="Ver/Editar" @click="openCardForm(p)">
+                  <div
+                    class="flex items-center gap-2 justify-end text-slate-300"
+                  >
+                    <button
+                      class="hover:text-white"
+                      title="Ver/Editar"
+                      @click="openCardForm(p)"
+                    >
                       <i class="fa-regular fa-pen-to-square"></i>
                     </button>
-                    <button class="hover:text-white" title="Mover" @click="openMoveModal(p)">
+                    <button
+                      class="hover:text-white"
+                      title="Mover"
+                      @click="openMoveModal(p)"
+                    >
                       <i class="fa-solid fa-arrow-right-arrow-left"></i>
                     </button>
-                    <button class="text-red-400 hover:text-red-300" title="Excluir" @click="openDeleteProposal(p)">
+                    <button
+                      class="text-red-400 hover:text-red-300"
+                      title="Excluir"
+                      @click="openDeleteProposal(p)"
+                    >
                       <i class="fa-regular fa-trash-can"></i>
                     </button>
                   </div>
@@ -273,21 +287,34 @@
       <div class="space-y-2">
         <!-- Info da primeira etapa (sempre fixa) -->
         <div class="bg-slate-800/30 rounded-lg p-4 border border-slate-700/40">
-          <h4 class="text-sm font-semibold text-slate-200 mb-3">Nova Proposta</h4>
+          <h4 class="text-sm font-semibold text-slate-200 mb-3">
+            Nova Proposta
+          </h4>
           <div class="text-xs text-slate-400">
             <span class="inline-flex items-center gap-2">
-              <span class="w-2 h-4 rounded-full" :class="getStageColor(stages[0]?.id)"></span>
-              Etapa: {{ stages[0]?.title || 'Primeira Etapa' }}
+              <span
+                class="w-2 h-4 rounded-full"
+                :class="getStageColor(stages[0]?.id)"
+              ></span>
+              Etapa: {{ stages[0]?.title || "Primeira Etapa" }}
             </span>
           </div>
         </div>
         <div class="bg-slate-800/30 rounded-lg p-4 border border-slate-700/40">
-          <h4 class="text-sm font-semibold text-slate-200 mb-3">Campos do Processo</h4>
-          
+          <h4 class="text-sm font-semibold text-slate-200 mb-3">
+            Campos do Processo
+          </h4>
+
           <!-- Grid para inputs normais (text, number, date, select) -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <template v-for="f in stageDynamicFields" :key="f.id">
-              <div v-if="f.type !== 'file' && f.type !== 'endereco' && f.type !== 'pessoa_fisica'">
+              <div
+                v-if="
+                  f.type !== 'file' &&
+                  f.type !== 'endereco' &&
+                  f.type !== 'pessoa_fisica'
+                "
+              >
                 <BaseInput
                   v-if="f.type === 'text' || f.type === 'number'"
                   v-model="extraFieldValues[f.id]"
@@ -350,13 +377,20 @@
                   v-model="extraFieldValues[f.id]"
                   :label="f.label"
                   size="xs"
-                  :options="(f.options || []).map(o => ({ label: o, value: o }))"
+                  :options="
+                    (f.options || []).map((o) => ({ label: o, value: o }))
+                  "
                 />
-                <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
+                <div
+                  v-if="extraFieldErrors[f.id]"
+                  class="text-[11px] text-red-400 mt-1"
+                >
+                  {{ extraFieldErrors[f.id] }}
+                </div>
               </div>
             </template>
           </div>
-          
+
           <!-- Inputs de upload ocupam largura completa -->
           <div class="space-y-3 mt-4 pt-4 border-t border-slate-700/40">
             <template v-for="f in stageDynamicFields" :key="f.id">
@@ -364,7 +398,12 @@
                 <FormField :label="f.label" :dense="true">
                   <FileDrop @files="(files) => onExtraFile(f.id, files)" />
                 </FormField>
-                <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
+                <div
+                  v-if="extraFieldErrors[f.id]"
+                  class="text-[11px] text-red-400 mt-1"
+                >
+                  {{ extraFieldErrors[f.id] }}
+                </div>
               </div>
             </template>
           </div>
@@ -378,7 +417,12 @@
                   :label="f.label"
                   :required="f.required"
                 />
-                <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
+                <div
+                  v-if="extraFieldErrors[f.id]"
+                  class="text-[11px] text-red-400 mt-1"
+                >
+                  {{ extraFieldErrors[f.id] }}
+                </div>
               </div>
               <div v-else-if="f.type === 'pessoa_fisica'" class="w-full">
                 <PessoaFisicaInput
@@ -386,7 +430,12 @@
                   :label="f.label"
                   :required="f.required"
                 />
-                <div v-if="extraFieldErrors[f.id]" class="text-[11px] text-red-400 mt-1">{{ extraFieldErrors[f.id] }}</div>
+                <div
+                  v-if="extraFieldErrors[f.id]"
+                  class="text-[11px] text-red-400 mt-1"
+                >
+                  {{ extraFieldErrors[f.id] }}
+                </div>
               </div>
             </template>
           </div>
@@ -645,23 +694,47 @@
     </BaseModal>
 
     <!-- Delete Proposal Modal -->
-    <BaseModal v-model="showDeleteProposalModal" title="Excluir Registro" size="sm" :z-index="80">
-      <p class="text-sm text-slate-200">Tem certeza que deseja excluir este registro?</p>
+    <BaseModal
+      v-model="showDeleteProposalModal"
+      title="Excluir Registro"
+      size="sm"
+      :z-index="80"
+    >
+      <p class="text-sm text-slate-200">
+        Tem certeza que deseja excluir este registro?
+      </p>
       <template #footer>
         <div class="flex items-center justify-end gap-2">
-          <button class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs" @click="cancelDeleteProposal">Cancelar</button>
-          <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-xs" @click="confirmDeleteProposal">Excluir</button>
+          <button
+            class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs"
+            @click="cancelDeleteProposal"
+          >
+            Cancelar
+          </button>
+          <button
+            class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-xs"
+            @click="confirmDeleteProposal"
+          >
+            Excluir
+          </button>
         </div>
       </template>
     </BaseModal>
 
     <!-- Stage Form Modal (per card) -->
-    <BaseModal v-model="showStageFormModal" title="Formulário da Etapa" size="xxl" :z-index="70">
+    <BaseModal
+      v-model="showStageFormModal"
+      title="Formulário da Etapa"
+      size="max"
+      :z-index="70"
+    >
       <div class="space-y-2">
         <div class="flex items-center justify-between">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1">
             <div class="text-[12px] text-slate-300">Etapa atual</div>
-            <div class="text-[12px] text-slate-100">{{ stageTitle(selectedProposal?.stageId) }}</div>
+            <div class="text-[12px] text-slate-100">
+              {{ stageTitle(selectedProposal?.stageId) }}
+            </div>
           </div>
           <button
             v-if="selectedProposal"
@@ -676,20 +749,83 @@
         <!-- Grid para inputs normais -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <template v-for="f in stageFormFields" :key="f.id">
-            <div v-if="f.type !== 'file' && f.type !== 'endereco' && f.type !== 'pessoa_fisica'">
-              <BaseInput v-if="f.type === 'text' || f.type === 'number'" v-model="stageFormValues[f.id]" :type="f.type === 'number' ? 'text' : 'text'" :numeric="f.type === 'number'" :label="f.label" size="xs" :placeholder="f.placeholder || ''" />
-              <CpfInput v-else-if="f.type === 'cpf'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '000.000.000-00'" :required="f.required" :show-validation-info="true" />
-              <CnpjInput v-else-if="f.type === 'cnpj'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '00.000.000/0000-00'" :required="f.required" :show-validation-info="true" />
-              <RgInput v-else-if="f.type === 'rg'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '00.000.000-0'" :required="f.required" :show-validation-info="true" />
-              <CepInput v-else-if="f.type === 'cep'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '00000-000'" :required="f.required" :show-validation-info="true" :auto-fetch-address="true" />
-              <TelefoneInput v-else-if="f.type === 'telefone'" v-model="stageFormValues[f.id]" :label="f.label" :placeholder="f.placeholder || '(00) 00000-0000'" :required="f.required" :show-validation-info="true" />
-              <BaseInput v-else-if="f.type === 'date'" v-model="stageFormValues[f.id]" type="date" :label="f.label" size="xs" />
-              <BaseSelect v-else-if="f.type === 'select'" v-model="stageFormValues[f.id]" :label="f.label" size="xs" :options="(f.options || []).map(o => ({ label: o, value: o }))" />
+            <div
+              v-if="
+                f.type !== 'file' &&
+                f.type !== 'endereco' &&
+                f.type !== 'pessoa_fisica'
+              "
+            >
+              <BaseInput
+                v-if="f.type === 'text' || f.type === 'number'"
+                v-model="stageFormValues[f.id]"
+                :type="f.type === 'number' ? 'text' : 'text'"
+                :numeric="f.type === 'number'"
+                :label="f.label"
+                size="xs"
+                :placeholder="f.placeholder || ''"
+              />
+              <CpfInput
+                v-else-if="f.type === 'cpf'"
+                v-model="stageFormValues[f.id]"
+                :label="f.label"
+                :placeholder="f.placeholder || '000.000.000-00'"
+                :required="f.required"
+                :show-validation-info="true"
+              />
+              <CnpjInput
+                v-else-if="f.type === 'cnpj'"
+                v-model="stageFormValues[f.id]"
+                :label="f.label"
+                :placeholder="f.placeholder || '00.000.000/0000-00'"
+                :required="f.required"
+                :show-validation-info="true"
+              />
+              <RgInput
+                v-else-if="f.type === 'rg'"
+                v-model="stageFormValues[f.id]"
+                :label="f.label"
+                :placeholder="f.placeholder || '00.000.000-0'"
+                :required="f.required"
+                :show-validation-info="true"
+              />
+              <CepInput
+                v-else-if="f.type === 'cep'"
+                v-model="stageFormValues[f.id]"
+                :label="f.label"
+                :placeholder="f.placeholder || '00000-000'"
+                :required="f.required"
+                :show-validation-info="true"
+                :auto-fetch-address="true"
+              />
+              <TelefoneInput
+                v-else-if="f.type === 'telefone'"
+                v-model="stageFormValues[f.id]"
+                :label="f.label"
+                :placeholder="f.placeholder || '(00) 00000-0000'"
+                :required="f.required"
+                :show-validation-info="true"
+              />
+              <BaseInput
+                v-else-if="f.type === 'date'"
+                v-model="stageFormValues[f.id]"
+                type="date"
+                :label="f.label"
+                size="xs"
+              />
+              <BaseSelect
+                v-else-if="f.type === 'select'"
+                v-model="stageFormValues[f.id]"
+                :label="f.label"
+                size="xs"
+                :options="
+                  (f.options || []).map((o) => ({ label: o, value: o }))
+                "
+              />
             </div>
           </template>
         </div>
-        
-        
+
         <!-- Inputs de upload e endereço ocupam largura completa -->
         <div class="space-y-3">
           <template v-for="f in stageFormFields" :key="f.id">
@@ -699,29 +835,80 @@
               </FormField>
             </div>
             <div v-else-if="f.type === 'endereco'" class="w-full">
-              <EnderecoInput v-model="stageFormValues[f.id]" :label="f.label" :required="f.required" :auto-fill-from-cep="true" />
+              <EnderecoInput
+                v-model="stageFormValues[f.id]"
+                :label="f.label"
+                :required="f.required"
+                :auto-fill-from-cep="true"
+              />
             </div>
             <div v-else-if="f.type === 'pessoa_fisica'" class="w-full">
               <FormField :label="f.label" :dense="true">
                 <div class="flex items-center gap-2">
-                  <button type="button" class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs" @click="openPessoaFisicaForField(f.id)">
+                  <button
+                    type="button"
+                    class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs"
+                    @click="openPessoaFisicaForField(f.id)"
+                  >
                     Preencher Pessoa Física
                   </button>
-                  <span v-if="stageFormValues[f.id]" class="text-[12px] text-green-300">Preenchido</span>
-                  <span v-else class="text-[12px] text-slate-300">Não preenchido</span>
+                  <span
+                    v-if="stageFormValues[f.id]"
+                    class="text-[12px] text-green-300"
+                    >Preenchido</span
+                  >
+                  <span v-else class="text-[12px] text-slate-300"
+                    >Não preenchido</span
+                  >
                 </div>
               </FormField>
             </div>
-
           </template>
-          
-         
         </div>
       </div>
       <template #footer>
-        <div class="flex items-center justify-end gap-2">
-          <button class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs" @click="showStageFormModal = false">Fechar</button>
-          <button class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-md text-xs" @click="saveStageForm">Salvar</button>
+        <div class="flex items-center justify-between gap-2">
+          <!-- Status selector on the left -->
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-slate-300">Status:</label>
+            <div class="relative">
+              <select
+                v-model="selectedProposalStatus"
+                class="bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-2 py-1 text-xs min-w-[120px] pr-8"
+                @change="updateProposalStatus"
+              >
+                <option
+                  v-for="status in (statusOptionsWithColors.length ? statusOptionsWithColors : statusOptions.map(name => ({name})))"
+                  :key="status.name || status"
+                  :value="status.name || status"
+                >
+                  {{ status.name || status }}
+                </option>
+              </select>
+              <!-- Color indicator -->
+              <div
+                v-if="getStatusColor(selectedProposalStatus)"
+                class="absolute right-2 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full pointer-events-none"
+                :style="{ backgroundColor: getStatusColor(selectedProposalStatus) }"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Buttons on the right -->
+          <div class="flex items-center gap-2">
+            <button
+              class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded-md text-xs"
+              @click="showStageFormModal = false"
+            >
+              Fechar
+            </button>
+            <button
+              class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-md text-xs"
+              @click="saveStageForm"
+            >
+              Salvar
+            </button>
+          </div>
         </div>
       </template>
     </BaseModal>
@@ -734,11 +921,23 @@
       size="sm"
       @send="onAiSend"
     />
+    <BaseModal
+      v-model="showSearchModal"
+      title="Pesquisar"
+      size="sm"
+      :z-index="80"
+    >
+      <AiSearch v-model="searchText" :persist-on-click="false" />
+    </BaseModal>
 
     <!-- PessoaFisica Modal -->
     <PessoaFisica
       :show="showPessoaFisicaModal"
-      :initialData="currentPessoaFisicaFieldId ? (stageFormValues[currentPessoaFisicaFieldId] || {}) : {}"
+      :initialData="
+        currentPessoaFisicaFieldId
+          ? stageFormValues[currentPessoaFisicaFieldId] || {}
+          : {}
+      "
       @close="closePessoaFisicaModal"
       @submit="onPessoaFisicaSubmit"
     />
@@ -754,14 +953,29 @@
       @reject-file="onRejectFile"
       @download-file="onDownloadFile"
     />
-
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, onActivated } from "vue";
-import { loadProposals, saveProposals, fetchProposalsApi, createProposalApi, fetchProposalFormsApi, saveProposalStageFormApi, updateProposalApi } from "~/composables/useProposals";
-import Sidebar from "~/components/ui/Sidebar.vue";
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+  onActivated,
+  nextTick,
+} from "vue";
+import BrandMark from "~/components/ui/BrandMark.vue";
+import {
+  loadProposals,
+  saveProposals,
+  fetchProposalsApi,
+  createProposalApi,
+  fetchProposalFormsApi,
+  saveProposalStageFormApi,
+  updateProposalApi,
+} from "~/composables/useProposals";
 import { useProcessSubmenu } from "~/composables/useProcessMenu";
 import ChatModal from "~/components/ui/ChatModal.vue";
 import BaseInput from "~/components/ui/BaseInput.vue";
@@ -779,14 +993,16 @@ import PessoaFisicaInput from "~/components/ui/PessoaFisicaInput.vue";
 import BaseModal from "~/components/ui/BaseModal.vue";
 import FormField from "~/components/ui/FormField.vue";
 import ProcessFilesApprovalView from "~/components/ui/ProcessFilesApprovalView.vue";
-import { isApiEnabled } from '~/utils/api/index'
-import { saveStagesPreservingIdsApi } from '~/composables/useStages'
-import { useToast } from '~/composables/useToast'
-import { fetchStageFieldsApi } from '~/composables/useStageFields'
-import { uploadFileViaPresign } from '~/composables/useFiles'
-import { useNewRecordModal } from '~/composables/useNewRecordModal'
-import { useProcessFiles } from '~/composables/useProcessFiles'
-import { useProposalFiles } from '~/composables/useProposalFiles'
+import { isApiEnabled } from "~/utils/api/index";
+import { saveStagesPreservingIdsApi } from "~/composables/useStages";
+import { useToast } from "~/composables/useToast";
+import { fetchStageFieldsApi } from "~/composables/useStageFields";
+import { uploadFileViaPresign } from "~/composables/useFiles";
+import { useNewRecordModal } from "~/composables/useNewRecordModal";
+import { useProcessFiles } from "~/composables/useProcessFiles";
+import { useProposalFiles } from "~/composables/useProposalFiles";
+import { fetchStatuses } from "~/composables/useStatuses";
+import { fetchStatusesApi } from "~/composables/useStatusesApi";
 
 useHead({ title: "Esteira" });
 definePageMeta({ layout: "default" });
@@ -799,12 +1015,19 @@ const pipelineKey = computed(() => props.pipelineKey || "quotaequity");
 
 // Modal global de novo registro
 const { openModal: openGlobalModal } = useNewRecordModal();
+// Modal de pesquisa (acionado pelo item da sidebar)
+const showSearchModal = ref(false);
+const searchText = ref("");
 
 // Proposal files composable
 const { files: proposalFiles, extractFilesFromProposal } = useProposalFiles();
 
 // Process files for download functionality
-const { files: processFiles, loadProcessFiles, downloadFile: downloadFileFromAPI } = useProcessFiles();
+const {
+  files: processFiles,
+  loadProcessFiles,
+  downloadFile: downloadFileFromAPI,
+} = useProcessFiles();
 
 // Detecta dispositivos touch para desabilitar drag & drop (melhor usabilidade no mobile)
 const isTouch = ref(false);
@@ -818,73 +1041,32 @@ onMounted(() => {
   }
 });
 
-// Sidebar menu (mesmo usado no dashboard)
-const { processes, getLastKey } = useProcessSubmenu();
-const menu = computed(() => [
-  { key: "home", label: "Home", icon: "fa-solid fa-house", to: "/" },
-  {
-    key: "processos",
-    label: "Processos",
-    icon: "fa-solid fa-list-check",
-    to: (() => {
-      const last = getLastKey();
-      return last ? `/esteira/${last}` : "/processos";
-    })(),
-    children: [
-      { key: "ver-processos", label: "Ver Processos", to: "/processos" },
-      ...processes.value.map((p) => ({
-        key: p.key,
-        label: p.name,
-        to: `/esteira/${p.key}`,
-      })),
-    ],
-  },
-  {
-    key: "admin",
-    label: "Admin",
-    icon: "fa-solid fa-user-shield",
-    to: "/admin",
-    children: [
-      { key: "admin-users", label: "Usuários", href: "/admin?tab=users" },
-      {
-        key: "admin-pipeline",
-        label: "Gestão de Esteira",
-        href: "/admin?tab=pipeline",
-      },
-      {
-        key: "admin-notifications",
-        label: "Notificações",
-        href: "/admin?tab=notifications",
-      },
-    ],
-  },
-]);
-
-function onSelect(_item) {
-  /* hook para ações do submenu */
-}
 
 // Colunas da esteira (carregadas por processo). Mantemos vazio por padrão
 // e populamos via configuração salva ou a partir dos estágios presentes nas propostas.
 const stages = ref([]);
-const lastStagesSaveAt = ref(0)
+const lastStagesSaveAt = ref(0);
 
 // Load pipeline config: API-first, fallback local
 async function loadPipelineConfig() {
   try {
-    const { fetchStagesApi } = await import('~/composables/useStages')
-    const { isApiEnabled } = await import('~/utils/api/index')
+    const { fetchStagesApi } = await import("~/composables/useStages");
+    const { isApiEnabled } = await import("~/utils/api/index");
     if (isApiEnabled()) {
-      const apiStages = await fetchStagesApi(pipelineKey.value)
+      const apiStages = await fetchStagesApi(pipelineKey.value);
       if (Array.isArray(apiStages)) {
         stages.value = apiStages.map((s) => ({
-          id: s.id || s.key || s._id || (s.title || '').toLowerCase().replace(/\s+/g, '_'),
-          title: s.title || s.name || 'Etapa',
+          id:
+            s.id ||
+            s.key ||
+            s._id ||
+            (s.title || "").toLowerCase().replace(/\s+/g, "_"),
+          title: s.title || s.name || "Etapa",
           slaDays: Number(s.slaDays ?? 0),
-          color: s.color || 'sky',
-          status: 'Pendente'
-        }))
-        return
+          color: s.color || "sky",
+          status: "Pendente",
+        }));
+        return;
       }
     }
   } catch (_) {}
@@ -894,13 +1076,15 @@ async function loadPipelineConfig() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        const statusById = Object.fromEntries(stages.value.map((s) => [s.id, s.status]));
+        const statusById = Object.fromEntries(
+          stages.value.map((s) => [s.id, s.status])
+        );
         stages.value = parsed.map((s) => ({
           id: s.id,
           title: s.title,
           slaDays: s.slaDays ?? 0,
-          color: s.color || 'sky',
-          status: statusById[s.id] || 'Pendente',
+          color: s.color || "sky",
+          status: statusById[s.id] || "Pendente",
         }));
       }
     }
@@ -909,20 +1093,47 @@ async function loadPipelineConfig() {
 }
 
 async function syncProposalsFromApi() {
-  if (!isApiEnabled()) return
+  if (!isApiEnabled()) return;
   try {
-    const arr = await fetchProposalsApi(pipelineKey.value)
-    if (Array.isArray(arr)) proposals.value = arr
+    const arr = await fetchProposalsApi(pipelineKey.value);
+    if (Array.isArray(arr)) proposals.value = arr;
   } catch {}
 }
 
-onMounted(() => {
-  loadPipelineConfig()
-  syncProposalsFromApi()
-  try { window.addEventListener('focus', syncProposalsFromApi) } catch {}
+onMounted(async () => {
+  loadPipelineConfig();
+  syncProposalsFromApi();
+  try {
+    window.addEventListener("focus", syncProposalsFromApi);
+  } catch {}
+
+  // Load status options from backend
+  try {
+    // Load status names for backward compatibility
+    statusOptions.value = await fetchStatuses();
+
+    // Load status with colors for modal display
+    statusOptionsWithColors.value = await fetchStatusesApi();
+
+    // Force UI refresh after loading colors
+    nextTick(() => {
+      console.log('Status colors loaded:', statusOptionsWithColors.value.length, 'items');
+    });
+  } catch (error) {
+    console.error('Failed to load status options:', error);
+    // Fallback to default status options
+    statusOptions.value = ['Pendente', 'Em análise', 'Aprovado', 'Reprovado', 'Arquivado'];
+    statusOptionsWithColors.value = [];
+  }
 });
-onBeforeUnmount(() => { try { window.removeEventListener('focus', syncProposalsFromApi) } catch {} })
-onActivated(() => { syncProposalsFromApi() })
+onBeforeUnmount(() => {
+  try {
+    window.removeEventListener("focus", syncProposalsFromApi);
+  } catch {}
+});
+onActivated(() => {
+  syncProposalsFromApi();
+});
 watch(
   () => pipelineKey.value,
   () => {
@@ -930,7 +1141,11 @@ watch(
     loadStageForms();
     initStageFields();
     if (isApiEnabled()) {
-      fetchProposalsApi(pipelineKey.value).then(arr => { if (Array.isArray(arr)) proposals.value = arr }).catch(() => {})
+      fetchProposalsApi(pipelineKey.value)
+        .then((arr) => {
+          if (Array.isArray(arr)) proposals.value = arr;
+        })
+        .catch(() => {});
     }
   }
 );
@@ -943,12 +1158,18 @@ watch(
     const loaded = loadProposals(k);
     proposals.value = Array.isArray(loaded) ? loaded : [];
     if (isApiEnabled()) {
-      fetchProposalsApi(k).then(arr => { if (Array.isArray(arr)) proposals.value = arr }).catch(() => {})
+      fetchProposalsApi(k)
+        .then((arr) => {
+          if (Array.isArray(arr)) proposals.value = arr;
+        })
+        .catch(() => {});
     }
   }
 );
 const persistProposals = () => {
-  try { saveProposals(pipelineKey.value, proposals.value); } catch (_) {}
+  try {
+    saveProposals(pipelineKey.value, proposals.value);
+  } catch (_) {}
 };
 
 // Ensure Kanban has columns for all proposal stageIds
@@ -1012,98 +1233,195 @@ const filteredProposals = computed(() => {
 });
 
 async function openCardForm(p) {
-  selectedProposal.value = p
+  selectedProposal.value = p;
   // load fields for current stage
-  try { stageFormFields.value = await fetchStageFieldsApi(String(p.stageId)) } catch { stageFormFields.value = [] }
+  try {
+    stageFormFields.value = await fetchStageFieldsApi(String(p.stageId));
+  } catch {
+    stageFormFields.value = [];
+  }
   // load saved values from backend
-  stageFormValues.value = {}
+  stageFormValues.value = {};
   if (isApiEnabled()) {
     try {
-      const all = await fetchProposalFormsApi(pipelineKey.value, String(p.id))
-      stageFormValues.value = (all && all[String(p.stageId)]) ? { ...all[String(p.stageId)] } : {}
+      const all = await fetchProposalFormsApi(pipelineKey.value, String(p.id));
+      stageFormValues.value =
+        all && all[String(p.stageId)] ? { ...all[String(p.stageId)] } : {};
     } catch {}
   }
-  
+
   // Load files from backend using the new endpoint
   try {
     if (p.processExternalId) {
-      await loadProcessFiles(p.processExternalId)
+      await loadProcessFiles(p.processExternalId);
     }
   } catch (err) {
-    console.warn('Failed to load process files:', err)
+    console.warn("Failed to load process files:", err);
   }
-  
-  showStageFormModal.value = true
+
+  // Initialize status selector with current proposal status
+  selectedProposalStatus.value = p.status || "Pendente";
+
+  // Refresh status options to ensure latest status are available
+  try {
+    statusOptionsWithColors.value = await fetchStatusesApi();
+    console.log('Status options refreshed on card open:', statusOptionsWithColors.value.length, 'items');
+  } catch (error) {
+    console.error('Failed to refresh status options:', error);
+  }
+
+  showStageFormModal.value = true;
 }
 
 async function saveStageForm() {
-  const p = selectedProposal.value
-  if (!p) { showStageFormModal.value = false; return }
+  const p = selectedProposal.value;
+  if (!p) {
+    showStageFormModal.value = false;
+    return;
+  }
   try {
     if (isApiEnabled()) {
-      await saveProposalStageFormApi(pipelineKey.value, String(p.id), String(p.stageId), stageFormValues.value)
+      await saveProposalStageFormApi(
+        pipelineKey.value,
+        String(p.id),
+        String(p.stageId),
+        stageFormValues.value
+      );
     }
   } catch {}
-  showStageFormModal.value = false
+  showStageFormModal.value = false;
 }
 
 function openDeleteProposal(p) {
-  deleteProposalTarget.value = p
-  showDeleteProposalModal.value = true
+  deleteProposalTarget.value = p;
+  showDeleteProposalModal.value = true;
 }
 function cancelDeleteProposal() {
-  showDeleteProposalModal.value = false
-  deleteProposalTarget.value = null
+  showDeleteProposalModal.value = false;
+  deleteProposalTarget.value = null;
 }
 async function confirmDeleteProposal() {
-  const p = deleteProposalTarget.value
-  if (!p) return cancelDeleteProposal()
+  const p = deleteProposalTarget.value;
+  if (!p) return cancelDeleteProposal();
   // optimistic UI update
-  const prev = proposals.value.slice()
-  proposals.value = proposals.value.filter(x => x.id !== p.id)
+  const prev = proposals.value.slice();
+  proposals.value = proposals.value.filter((x) => x.id !== p.id);
   try {
     if (isApiEnabled()) {
-      const ok = await deleteProposalApi(pipelineKey.value, String(p.id))
-      if (!ok) proposals.value = prev
+      const ok = await deleteProposalApi(pipelineKey.value, String(p.id));
+      if (!ok) proposals.value = prev;
     } else {
-      persistProposals()
+      persistProposals();
     }
-  } catch { proposals.value = prev }
-  cancelDeleteProposal()
+  } catch {
+    proposals.value = prev;
+  }
+  cancelDeleteProposal();
+}
+
+async function updateProposalStatus() {
+  const proposal = selectedProposal.value;
+  if (!proposal) return;
+
+  // Update the status immediately in the UI
+  proposal.status = selectedProposalStatus.value;
+
+  // Update in the proposals array
+  const index = proposals.value.findIndex(p => p.id === proposal.id);
+  if (index !== -1) {
+    proposals.value[index].status = selectedProposalStatus.value;
+  }
+
+  // Persist to backend if API is enabled
+  try {
+    if (isApiEnabled()) {
+      await updateProposalApi(
+        pipelineKey.value,
+        String(proposal.id),
+        null, // stageId - keep current
+        selectedProposalStatus.value, // status - update to new value
+        null, // name - keep current
+        null  // amount - keep current
+      );
+    } else {
+      // Save to localStorage
+      persistProposals();
+    }
+  } catch (error) {
+    console.error('Failed to update proposal status:', error);
+    // Could show toast error here
+  }
+}
+
+// Helper function to convert hex to rgba
+function hexToRgba(hex, alpha = 0.2) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Function to get the color of a status with transparency
+function getStatusColor(statusName) {
+  if (!statusName || !statusOptionsWithColors.value.length) return null;
+
+  // Try exact match first
+  const exactMatch = statusOptionsWithColors.value.find(s => s.name === statusName);
+  if (exactMatch?.color) return hexToRgba(exactMatch.color, 0.6);
+
+  // Try case-insensitive match
+  const caseInsensitiveMatch = statusOptionsWithColors.value.find(s =>
+    s.name?.toLowerCase() === statusName.toLowerCase()
+  );
+  if (caseInsensitiveMatch?.color) return hexToRgba(caseInsensitiveMatch.color, 0.2);
+
+  return null;
 }
 
 function openMoveModal(p) {
   // For now open the stage form as edit; future: implement a quick move popup
-  openCardForm(p)
+  openCardForm(p);
 }
 
 // Stage form modal state
-const showStageFormModal = ref(false)
-const selectedProposal = ref(null)
-const stageFormFields = ref([])
-const stageFormValues = ref({})
-const showDeleteProposalModal = ref(false)
-const deleteProposalTarget = ref(null)
-const showPessoaFisicaModal = ref(false)
-const currentPessoaFisicaFieldId = ref(null)
-const showProcessFilesApprovalModal = ref(false)
+const showStageFormModal = ref(false);
+const selectedProposal = ref(null);
+const stageFormFields = ref([]);
+const stageFormValues = ref({});
+const showDeleteProposalModal = ref(false);
+const deleteProposalTarget = ref(null);
+const showPessoaFisicaModal = ref(false);
+const currentPessoaFisicaFieldId = ref(null);
+const showProcessFilesApprovalModal = ref(false);
+const selectedProposalStatus = ref("");
+const statusOptions = ref([]);
+const statusOptionsWithColors = ref([]);
 
 // Process Files composable for modal
-const { 
-  files: modalProcessFiles, 
-  loading: processFilesLoading, 
+const {
+  files: modalProcessFiles,
+  loading: processFilesLoading,
   error: processFilesError,
   loadProcessFiles: loadModalProcessFiles,
-  downloadFileFromAPI: downloadModalFile 
-} = useProcessFiles()
+  downloadFileFromAPI: downloadModalFile,
+} = useProcessFiles();
 
-const processFilesCount = computed(() => processFiles.value.length)
+const processFilesCount = computed(() => processFiles.value.length);
 
 const filteredByStage = (stageId) =>
   filteredProposals.value.filter((p) => p.stageId === stageId);
 const stageTitle = (id) => stages.value.find((s) => s.id === id)?.title || id;
 
 const statusPillClass = (status) => {
+  // Get color from database
+  const statusColor = getStatusColor(status);
+
+  if (statusColor) {
+    // Use the hex color from database with golden border effect
+    return `text-white border border-amber-400/60 shadow-sm`;
+  }
+
+  // Fallback to hardcoded colors if not found in database
   switch (status) {
     case "Pendente":
       return "bg-amber-900/50 text-amber-300 ring-1 ring-inset ring-amber-500/20";
@@ -1326,25 +1644,31 @@ const onDrop = (stageId) => {
   if (!stage) return onDragEnd();
 
   // Update stage and default status when moved
+  const newStatus = (stage.defaultStatus && stage.defaultStatus.trim() !== "")
+    ? stage.defaultStatus
+    : (proposals.value[idx].status || "Pendente");
+
   const updated = {
     ...proposals.value[idx],
     stageId,
-    status: stage.status,
+    status: newStatus,
     stageEnteredAt: new Date().toISOString(),
   };
   const next = proposals.value.slice();
   next[idx] = updated;
   proposals.value = next;
   if (isApiEnabled()) {
-    const pid = String(updated.id)
-    const prev = proposals.value[idx]
-    updateProposalApi(pipelineKey.value, pid, { stageId: stageId, status: stage.status })
-      .catch(() => {
-        // rollback on failure
-        const arr = proposals.value.slice();
-        arr[idx] = { ...prev }
-        proposals.value = arr
-      })
+    const pid = String(updated.id);
+    const prev = proposals.value[idx];
+    updateProposalApi(pipelineKey.value, pid, {
+      stageId: stageId,
+      status: newStatus,
+    }).catch(() => {
+      // rollback on failure
+      const arr = proposals.value.slice();
+      arr[idx] = { ...prev };
+      proposals.value = arr;
+    });
   } else {
     persistProposals();
   }
@@ -1376,31 +1700,38 @@ function onColumnDragOver(event, overIndex) {
 }
 function persistStages() {
   if (isApiEnabled()) {
-    const { success, error } = useToast()
+    const { success, error } = useToast();
     // Preserva snapshot anterior para comparação de IDs
-    const previousStages = stages.value.map(s => ({ id: s.id, title: s.title }))
+    const previousStages = stages.value.map((s) => ({
+      id: s.id,
+      title: s.title,
+    }));
     saveStagesPreservingIdsApi(pipelineKey.value, previousStages, stages.value)
       .then((saved) => {
         if (Array.isArray(saved) && saved.length) {
           // preserva status por título quando possível
-          const statusByTitle = {}
-          try { stages.value.forEach((s) => { statusByTitle[s.title] = s.status || 'Pendente' }) } catch {}
+          const statusByTitle = {};
+          try {
+            stages.value.forEach((s) => {
+              statusByTitle[s.title] = s.status || "Pendente";
+            });
+          } catch {}
           stages.value = saved.map((s) => ({
             id: s.id,
             title: s.title,
             slaDays: s.slaDays,
             color: s.color,
-            status: statusByTitle[s.title] || 'Pendente'
-          }))
+            status: statusByTitle[s.title] || "Pendente",
+          }));
         }
-      const now = Date.now()
+        const now = Date.now();
         if (now - lastStagesSaveAt.value > 1500) {
-          success('Colunas atualizadas')
-          lastStagesSaveAt.value = now
+          success("Colunas atualizadas");
+          lastStagesSaveAt.value = now;
         }
       })
-      .catch(() => error('Falha ao salvar colunas'))
-    return
+      .catch(() => error("Falha ao salvar colunas"));
+    return;
   }
   try {
     localStorage.setItem(
@@ -1509,10 +1840,10 @@ const formErrors = ref({ name: "", cpf: "", amountDesired: "" });
 const openGlobalNewRecordModal = () => {
   // Sempre garantir que use a primeira etapa
   const firstStageId = stages.value[0]?.id || "dados_basicos";
-  
+
   // Carregar campos dinâmicos da primeira etapa
   initStageFields();
-  
+
   // Abrir modal global
   openGlobalModal({
     stages: stages.value,
@@ -1520,68 +1851,72 @@ const openGlobalNewRecordModal = () => {
     pipelineKey: pipelineKey.value,
     onSave: (recordData) => {
       handleGlobalModalSave(recordData);
-    }
+    },
   });
-  
+
   // Mostrar informação sobre os campos carregados
   const { info } = useToast();
   if (stageDynamicFields.value.length > 0) {
-    info(`Carregados ${stageDynamicFields.value.length} campos da primeira etapa: ${stages.value[0]?.title || 'Primeira Etapa'}`);
+    info(
+      `Carregados ${stageDynamicFields.value.length} campos da primeira etapa: ${stages.value[0]?.title || "Primeira Etapa"}`
+    );
   } else {
-    info(`Abrindo formulário da primeira etapa: ${stages.value[0]?.title || 'Primeira Etapa'}`);
+    info(
+      `Abrindo formulário da primeira etapa: ${stages.value[0]?.title || "Primeira Etapa"}`
+    );
   }
 };
 
 // Função para abrir o modal de aprovação de arquivos
 const openProcessFilesModal = () => {
-  showProcessFilesApprovalModal.value = true
-}
+  showProcessFilesApprovalModal.value = true;
+};
 
 // Função para atualizar arquivos da proposta
 const refreshProposalFiles = async () => {
   if (selectedProposal.value && selectedProposal.value.processExternalId) {
     try {
-      await loadProcessFiles(selectedProposal.value.processExternalId)
+      await loadProcessFiles(selectedProposal.value.processExternalId);
     } catch (err) {
-      console.warn('Failed to refresh process files:', err)
+      console.warn("Failed to refresh process files:", err);
     }
   }
-}
+};
 
 // Função para aprovar arquivo
 const onApproveFile = ({ file, approvalBy }) => {
   // TODO: Implementar chamada para API de aprovação
-  console.log(`Aprovando arquivo ${file.id} por ${approvalBy}`)
-  const { success } = useToast()
-  success(`Arquivo "${file.originalName}" aprovado por ${approvalBy}`)
-}
+  console.log(`Aprovando arquivo ${file.id} por ${approvalBy}`);
+  const { success } = useToast();
+  success(`Arquivo "${file.originalName}" aprovado por ${approvalBy}`);
+};
 
 // Função para reprovar arquivo
 const onRejectFile = ({ file }) => {
   // TODO: Implementar chamada para API de reprovação
-  console.log(`Reprovando arquivo ${file.id}`)
-  const { warning } = useToast()
-  warning(`Arquivo "${file.originalName}" reprovado`)
-}
+  console.log(`Reprovando arquivo ${file.id}`);
+  const { warning } = useToast();
+  warning(`Arquivo "${file.originalName}" reprovado`);
+};
 
 // Função para fazer download do arquivo
 const onDownloadFile = async ({ file }) => {
   try {
-    await downloadFileFromAPI(file)
+    await downloadFileFromAPI(file);
   } catch (err) {
-    const { error } = useToast()
-    error(`Erro ao baixar arquivo "${file.originalName}"`)
-    console.error('Download error:', err)
+    const { error } = useToast();
+    error(`Erro ao baixar arquivo "${file.originalName}"`);
+    console.error("Download error:", err);
   }
-}
+};
 
 // Função para tratar salvamento do modal global
 const handleGlobalModalSave = (recordData) => {
   const { success, error } = useToast();
-  
+
   // Criar proposta com dados do modal global
   const stage = stages.value.find((s) => s.id === recordData.stageId);
-  
+
   const newId = Date.now().toString();
   const newProposal = {
     id: newId,
@@ -1592,39 +1927,44 @@ const handleGlobalModalSave = (recordData) => {
     isArchived: false,
     stageEnteredAt: new Date().toISOString(),
     stageValues: recordData.fieldValues || {},
-    files: recordData.fieldFiles || {}
+    files: recordData.fieldFiles || {},
   };
-  
+
   // Adicionar à lista local
   proposals.value.push(newProposal);
   saveProposals(pipelineKey.value, proposals.value);
-  
+
   // Salvar via API se habilitado
   if (isApiEnabled()) {
     const payload = {
       name: recordData.name,
       amount: recordData.amount,
       stageId: recordData.stageId,
-      status: recordData.status
+      status: recordData.status,
     };
-    
+
     createProposalApi(pipelineKey.value, payload)
       .then(async (created) => {
         if (created?.id) {
           const createdId = String(created.id);
-          const localIndex = proposals.value.findIndex(p => p.id === newId);
+          const localIndex = proposals.value.findIndex((p) => p.id === newId);
           if (localIndex >= 0) {
             proposals.value[localIndex].id = createdId;
             saveProposals(pipelineKey.value, proposals.value);
           }
-          
+
           // Upload de arquivos se necessário
-          for (const [fieldId, files] of Object.entries(recordData.fieldFiles || {})) {
+          for (const [fieldId, files] of Object.entries(
+            recordData.fieldFiles || {}
+          )) {
             if (files && files.length > 0) {
               try {
                 await uploadFileViaPresign(createdId, files[0]);
               } catch (error) {
-                console.warn(`Erro ao fazer upload do arquivo ${fieldId}:`, error);
+                console.warn(
+                  `Erro ao fazer upload do arquivo ${fieldId}:`,
+                  error
+                );
               }
             }
           }
@@ -1678,6 +2018,7 @@ const saveNewProposal = () => {
     return;
   }
   const stage = stages.value.find((s) => s.id === newProposal.value.stageId);
+  console.log('Creating new card - Stage found:', stage, 'defaultStatus:', stage?.defaultStatus);
   const parseCurrency = (s) => {
     const str = String(s || "").trim();
     if (!str) return 0;
@@ -1688,46 +2029,66 @@ const saveNewProposal = () => {
   // Deriva 'name' e 'amount' a partir dos campos dinâmicos
   const deriveName = () => {
     for (const f of stageDynamicFields.value) {
-      const lbl = (f.label || '').toLowerCase()
-      if (lbl.includes('nome')) {
-        const v = (extraFieldValues.value?.[f.id] || '').toString().trim()
-        if (v) return v
+      const lbl = (f.label || "").toLowerCase();
+      if (lbl.includes("nome")) {
+        const v = (extraFieldValues.value?.[f.id] || "").toString().trim();
+        if (v) return v;
       }
     }
-    const firstText = stageDynamicFields.value.find(f => f.type === 'text')
-    return (firstText ? (extraFieldValues.value?.[firstText.id] || '').toString().trim() : '') || 'Registro'
-  }
+    const firstText = stageDynamicFields.value.find((f) => f.type === "text");
+    return (
+      (firstText
+        ? (extraFieldValues.value?.[firstText.id] || "").toString().trim()
+        : "") || "Registro"
+    );
+  };
   const deriveAmount = () => {
     for (const f of stageDynamicFields.value) {
-      if (f.type === 'number') {
-        const lbl = (f.label || '').toLowerCase()
-        if (lbl.includes('valor') || lbl.includes('amount') || lbl.includes('preço') || lbl.includes('preco')) {
-          return parseCurrency(extraFieldValues.value?.[f.id])
+      if (f.type === "number") {
+        const lbl = (f.label || "").toLowerCase();
+        if (
+          lbl.includes("valor") ||
+          lbl.includes("amount") ||
+          lbl.includes("preço") ||
+          lbl.includes("preco")
+        ) {
+          return parseCurrency(extraFieldValues.value?.[f.id]);
         }
       }
     }
-    return 0
-  }
+    return 0;
+  };
   const payload = {
     name: deriveName(),
     amount: deriveAmount(),
     stageId: newProposal.value.stageId,
-    status: stage?.status || 'Pendente'
-  }
+    status: stage?.defaultStatus || "Pendente",
+  };
   const stageValues = (() => {
-    const out = {}
-    try { for (const f of stageDynamicFields.value) { out[f.id] = (extraFieldValues.value?.[f.id] ?? '') } } catch {}
-    return out
-  })()
+    const out = {};
+    try {
+      for (const f of stageDynamicFields.value) {
+        out[f.id] = extraFieldValues.value?.[f.id] ?? "";
+      }
+    } catch {}
+    return out;
+  })();
   if (isApiEnabled()) {
     createProposalApi(pipelineKey.value, payload)
       .then(async (created) => {
         if (created) {
-          try { await saveProposalStageFormApi(pipelineKey.value, String(created.id), String(created.stageId), stageValues) } catch {}
-          proposals.value = [created, ...proposals.value]
+          try {
+            await saveProposalStageFormApi(
+              pipelineKey.value,
+              String(created.id),
+              String(created.stageId),
+              stageValues
+            );
+          } catch {}
+          proposals.value = [created, ...proposals.value];
         }
       })
-      .catch(() => {})
+      .catch(() => {});
   } else {
     const id = Date.now();
     proposals.value.unshift({
@@ -1739,7 +2100,7 @@ const saveNewProposal = () => {
       isArchived: false,
       stageEnteredAt: new Date().toISOString(),
       details: undefined,
-    })
+    });
     persistProposals();
   }
   closeNewProposalModal();
@@ -1794,7 +2155,6 @@ const fetchCep = async () => {
 // Upload de documentos para anexos no modal (exemplo, sem enviar ao backend ainda)
 const uploadedDocs = ref([]);
 
-
 // Dynamic fields per stage (from Admin builder)
 const stageFormsMap = ref({});
 const stageDynamicFields = ref([]);
@@ -1816,32 +2176,45 @@ function loadStageForms() {
 function initStageFields() {
   const sid = newProposal.value.stageId;
   const fallback = () => {
-    const arr = Array.isArray(stageFormsMap.value[sid]) ? stageFormsMap.value[sid] : []
-    stageDynamicFields.value = arr
-    const vals = {}
-    arr.forEach((f) => { if (f.type !== 'file') vals[f.id] = '' })
-    extraFieldValues.value = vals
-    extraFieldFiles.value = {}
-    extraFieldErrors.value = {}
-  }
+    const arr = Array.isArray(stageFormsMap.value[sid])
+      ? stageFormsMap.value[sid]
+      : [];
+    stageDynamicFields.value = arr;
+    const vals = {};
+    arr.forEach((f) => {
+      if (f.type !== "file") vals[f.id] = "";
+    });
+    extraFieldValues.value = vals;
+    extraFieldFiles.value = {};
+    extraFieldErrors.value = {};
+  };
   // If API is enabled and stage id looks like Mongo ObjectId, load fields from backend
-  const isMongoId = typeof sid === 'string' && /^[a-fA-F0-9]{24}$/.test(sid)
+  const isMongoId = typeof sid === "string" && /^[a-fA-F0-9]{24}$/.test(sid);
   if (isApiEnabled() && isMongoId) {
     fetchStageFieldsApi(sid)
-      .then(remote => {
+      .then((remote) => {
         const arr = Array.isArray(remote)
-          ? remote.map(r => ({ id: r.id || r.label, label: r.label, type: r.type, required: !!r.required, placeholder: r.placeholder || '', options: Array.isArray(r.options) ? r.options : [] }))
-          : []
-        stageDynamicFields.value = arr
-        const vals = {}
-        arr.forEach((f) => { if (f.type !== 'file') vals[f.id] = '' })
-        extraFieldValues.value = vals
-        extraFieldFiles.value = {}
-        extraFieldErrors.value = {}
+          ? remote.map((r) => ({
+              id: r.id || r.label,
+              label: r.label,
+              type: r.type,
+              required: !!r.required,
+              placeholder: r.placeholder || "",
+              options: Array.isArray(r.options) ? r.options : [],
+            }))
+          : [];
+        stageDynamicFields.value = arr;
+        const vals = {};
+        arr.forEach((f) => {
+          if (f.type !== "file") vals[f.id] = "";
+        });
+        extraFieldValues.value = vals;
+        extraFieldFiles.value = {};
+        extraFieldErrors.value = {};
       })
-      .catch(() => fallback())
+      .catch(() => fallback());
   } else {
-    fallback()
+    fallback();
   }
 }
 
@@ -1850,37 +2223,47 @@ function onExtraFile(id, files) {
   // Upload immediately if API is enabled and store object keys as values
   try {
     if (isApiEnabled()) {
-      const arr = Array.from(files || [])
-      console.log('Uploading files:', arr.map(f => f.name))
+      const arr = Array.from(files || []);
+      console.log(
+        "Uploading files:",
+        arr.map((f) => f.name)
+      );
       Promise.all(arr.map((f) => uploadFileViaPresign(f, `proposals/tmp`)))
-        .then(results => {
-          console.log('Upload success:', results)
+        .then((results) => {
+          console.log("Upload success:", results);
           // store serialized list of keys or first key depending on expected shape
-          const keys = results.map(r => r.objectKey)
-          extraFieldValues.value[id] = arr.length <= 1 ? keys[0] : keys
+          const keys = results.map((r) => r.objectKey);
+          extraFieldValues.value[id] = arr.length <= 1 ? keys[0] : keys;
         })
-        .catch(error => {
-          console.error('Upload failed:', error)
+        .catch((error) => {
+          console.error("Upload failed:", error);
           // Fallback: just store file names locally for now
-          const names = arr.map(f => f.name)
-          extraFieldValues.value[id] = arr.length <= 1 ? names[0] : names
-        })
+          const names = arr.map((f) => f.name);
+          extraFieldValues.value[id] = arr.length <= 1 ? names[0] : names;
+        });
     }
   } catch (e) {
-    console.error('onExtraFile error:', e)
+    console.error("onExtraFile error:", e);
   }
 }
 
 function onStageFormFile(id, files) {
   try {
     if (isApiEnabled()) {
-      const arr = Array.from(files || [])
-      Promise.all(arr.map((f) => uploadFileViaPresign(f, `proposals/${selectedProposal.value?.id || 'unknown'}`)))
-        .then(results => {
-          const keys = results.map(r => r.objectKey)
-          stageFormValues.value[id] = arr.length <= 1 ? keys[0] : keys
+      const arr = Array.from(files || []);
+      Promise.all(
+        arr.map((f) =>
+          uploadFileViaPresign(
+            f,
+            `proposals/${selectedProposal.value?.id || "unknown"}`
+          )
+        )
+      )
+        .then((results) => {
+          const keys = results.map((r) => r.objectKey);
+          stageFormValues.value[id] = arr.length <= 1 ? keys[0] : keys;
         })
-        .catch(() => {})
+        .catch(() => {});
     }
   } catch {}
 }
@@ -1931,9 +2314,9 @@ const openPessoaFisicaModal = () => {
 };
 
 const openPessoaFisicaForField = (fieldId) => {
-  currentPessoaFisicaFieldId.value = fieldId
-  showPessoaFisicaModal.value = true
-}
+  currentPessoaFisicaFieldId.value = fieldId;
+  showPessoaFisicaModal.value = true;
+};
 
 const closePessoaFisicaModal = () => {
   showPessoaFisicaModal.value = false;
@@ -1943,13 +2326,13 @@ const onPessoaFisicaSubmit = async (data) => {
   try {
     // Persistir no campo correspondente do formulário da etapa
     if (currentPessoaFisicaFieldId.value) {
-      stageFormValues.value[currentPessoaFisicaFieldId.value] = data
+      stageFormValues.value[currentPessoaFisicaFieldId.value] = data;
     }
     // Fechar o modal e limpar estado
     closePessoaFisicaModal();
-    currentPessoaFisicaFieldId.value = null
+    currentPessoaFisicaFieldId.value = null;
   } catch (error) {
-    console.error('Erro ao salvar qualificação:', error);
+    console.error("Erro ao salvar qualificação:", error);
   }
 };
 const onAiSend = async ({ text, attachments }) => {
@@ -1993,10 +2376,53 @@ watch(
 </script>
 
 <style scoped>
+.header-glass {
+  position: fixed;
+  --header-h: 64px; /* sync with h-16 */
+  height: var(--header-h);
+  background: linear-gradient(
+    to bottom,
+    rgba(7, 12, 22, 0.55),
+    rgba(7, 12, 22, 0.1)
+  );
+}
+.header-glass::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 229, 255, 0),
+    rgba(0, 229, 255, 0.35),
+    rgba(0, 229, 255, 0)
+  );
+  pointer-events: none;
+}
+
+.page-content {
+  padding-top: calc(var(--header-h, 64px) + 20px);
+}
+</style>
+
+<style scoped>
 /* Smooth column reordering */
-.kanban-col-move { transition: transform 180ms ease, opacity 180ms ease; }
-.kanban-col-enter-active, .kanban-col-leave-active { transition: all 180ms ease; }
-.kanban-col-enter-from, .kanban-col-leave-to { opacity: 0; transform: translateY(6px); }
+.kanban-col-move {
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+.kanban-col-enter-active,
+.kanban-col-leave-active {
+  transition: all 180ms ease;
+}
+.kanban-col-enter-from,
+.kanban-col-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
 
 /* Mantém a aparência próxima ao HTML original */
 

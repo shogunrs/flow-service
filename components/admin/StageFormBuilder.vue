@@ -50,7 +50,7 @@
           v-numeric="{ allowDecimal: false, maxLength: 3 }"
         />
       </div>
-      <div class="md:col-span-2">
+      <div class="md:col-span-1">
         <label class="text-[12px] text-slate-300">Cor da Coluna</label>
         <div class="mt-1 flex items-center gap-2 flex-wrap">
           <button
@@ -68,6 +68,18 @@
             @click="localColor = c.name"
           />
         </div>
+      </div>
+      <div class="md:col-span-2">
+        <label class="text-[12px] text-slate-300">Status inicial</label>
+        <select
+          v-model="localDefaultStatus"
+          class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+        >
+          <option value="">(sem status)</option>
+          <option v-for="s in statusOptions" :key="s" :value="s">
+            {{ s }}
+          </option>
+        </select>
       </div>
     </div>
 
@@ -157,7 +169,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from "vue";
 
 const props = defineProps({
@@ -166,34 +178,56 @@ const props = defineProps({
   stageId: { type: String, required: true },
   stageSla: { type: Number, default: 0 },
   stageColor: { type: String, default: "sky" },
+  stageStatus: { type: String, default: "" },
 });
 const emit = defineEmits([
   "update:modelValue",
   "update:stageName",
   "update:stageSla",
   "update:stageColor",
+  "update:stageStatus",
 ]);
 
-const localFields = ref((props.modelValue || []).map(normalize));
+const localFields = ref(((props.modelValue || []) as any[]).map(normalize));
 
-function deepClone(v) {
-  try { return JSON.parse(JSON.stringify(v)) } catch (_) { return v }
+function deepClone(v: any) {
+  try {
+    return JSON.parse(JSON.stringify(v));
+  } catch (_) {
+    return v;
+  }
 }
-function isEqual(a, b) {
-  try { return JSON.stringify(a) === JSON.stringify(b) } catch (_) { return false }
+function isEqual(
+  a: {
+    id: any;
+    label: any;
+    type: any;
+    required: boolean;
+    placeholder: any;
+    options: any;
+  }[],
+  b: unknown[]
+) {
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch (_) {
+    return false;
+  }
 }
 
-let syncingFromProps = false
+let syncingFromProps = false;
 const localName = ref(props.stageName || "");
-const localSla = ref(String(props.stageSla ?? ''));
+const localSla = ref(String(props.stageSla ?? ""));
 const localColor = ref(props.stageColor || "sky");
+const localDefaultStatus = ref(props.stageStatus || "");
+const statusOptions = ref<string[]>([]);
 
 watch(
   () => props.modelValue,
   (v) => {
-    syncingFromProps = true
-    localFields.value = (v || []).map(normalize)
-    syncingFromProps = false
+    syncingFromProps = true;
+    localFields.value = ((v || []) as any[]).map(normalize);
+    syncingFromProps = false;
   },
   { deep: true }
 );
@@ -206,7 +240,7 @@ watch(
 watch(
   () => props.stageSla,
   (v) => {
-    localSla.value = String(v ?? '');
+    localSla.value = String(v ?? "");
   }
 );
 watch(
@@ -216,18 +250,25 @@ watch(
   }
 );
 watch(
+  () => props.stageStatus,
+  (v) => {
+    localDefaultStatus.value = v || "";
+  }
+);
+watch(
   localFields,
   (v) => {
-    if (syncingFromProps) return
-    const next = v.map(denormalize)
-    if (isEqual(next, props.modelValue)) return
-    emit('update:modelValue', next)
+    if (syncingFromProps) return;
+    const next = v.map(denormalize);
+    if (isEqual(next, props.modelValue)) return;
+    emit("update:modelValue", next);
   },
   { deep: true }
 );
 watch(localName, (v) => emit("update:stageName", v));
 watch(localSla, (v) => emit("update:stageSla", Number(v || 0)));
 watch(localColor, (v) => emit("update:stageColor", v || "sky"));
+watch(localDefaultStatus, (v) => emit("update:stageStatus", v || ""));
 
 const types = [
   { value: "text", label: "Texto" },
@@ -243,29 +284,40 @@ const types = [
   { value: "file", label: "Arquivo" },
 ];
 
+// Carrega lista de status do backend
+import { onMounted } from "vue";
+import { fetchStatuses } from "~/composables/useStatuses";
+onMounted(async () => {
+  try {
+    statusOptions.value = await fetchStatuses();
+  } catch {
+    statusOptions.value = [];
+  }
+});
+
 // Paleta de cores disponível (bullet-only)
 const colors = [
-  { name: 'sky', ring: 'bg-sky-500' },
-  { name: 'indigo', ring: 'bg-indigo-500' },
-  { name: 'amber', ring: 'bg-amber-500' },
-  { name: 'rose', ring: 'bg-rose-500' },
-  { name: 'green', ring: 'bg-green-500' },
-  { name: 'purple', ring: 'bg-purple-500' },
-  { name: 'blue', ring: 'bg-blue-500' },
-  { name: 'orange', ring: 'bg-orange-500' },
-  { name: 'teal', ring: 'bg-teal-500' },
-  { name: 'cyan', ring: 'bg-cyan-500' },
-  { name: 'lime', ring: 'bg-lime-500' },
-  { name: 'emerald', ring: 'bg-emerald-500' },
-  { name: 'fuchsia', ring: 'bg-fuchsia-500' },
-  { name: 'violet', ring: 'bg-violet-500' },
-  { name: 'pink', ring: 'bg-pink-500' },
-  { name: 'red', ring: 'bg-red-500' },
-  { name: 'yellow', ring: 'bg-yellow-500' },
-  { name: 'slate', ring: 'bg-slate-500' },
-  { name: 'stone', ring: 'bg-stone-500' },
-  { name: 'zinc', ring: 'bg-zinc-500' }
-]
+  { name: "sky", ring: "bg-sky-500" },
+  { name: "indigo", ring: "bg-indigo-500" },
+  { name: "amber", ring: "bg-amber-500" },
+  { name: "rose", ring: "bg-rose-500" },
+  { name: "green", ring: "bg-green-500" },
+  { name: "purple", ring: "bg-purple-500" },
+  { name: "blue", ring: "bg-blue-500" },
+  { name: "orange", ring: "bg-orange-500" },
+  { name: "teal", ring: "bg-teal-500" },
+  { name: "cyan", ring: "bg-cyan-500" },
+  { name: "lime", ring: "bg-lime-500" },
+  { name: "emerald", ring: "bg-emerald-500" },
+  { name: "fuchsia", ring: "bg-fuchsia-500" },
+  { name: "violet", ring: "bg-violet-500" },
+  { name: "pink", ring: "bg-pink-500" },
+  { name: "red", ring: "bg-red-500" },
+  { name: "yellow", ring: "bg-yellow-500" },
+  { name: "slate", ring: "bg-slate-500" },
+  { name: "stone", ring: "bg-stone-500" },
+  { name: "zinc", ring: "bg-zinc-500" },
+];
 
 function addField() {
   localFields.value.push(
@@ -277,11 +329,19 @@ function addField() {
     })
   );
 }
-function removeField(i) {
+function removeField(i: number) {
   localFields.value.splice(i, 1);
 }
 
-function normalize(f) {
+function normalize(f: {
+  id: any;
+  label: any;
+  type: any;
+  required: any;
+  placeholder?: any;
+  options?: any;
+  optionsText?: any;
+}) {
   return {
     id: f.id || String(Date.now()),
     label: f.label || "",
@@ -294,7 +354,14 @@ function normalize(f) {
       : f.optionsText || "",
   };
 }
-function denormalize(f) {
+function denormalize(f: {
+  id: any;
+  label: any;
+  type: string;
+  required: any;
+  placeholder: any;
+  optionsText: any;
+}) {
   return {
     id: f.id,
     label: f.label,
@@ -305,24 +372,43 @@ function denormalize(f) {
       f.type === "select"
         ? (f.optionsText || "")
             .split(",")
-            .map((s) => s.trim())
+            .map((s: string) => s.trim())
             .filter(Boolean)
         : [],
   };
 }
 
-const colorMap = {
-  sky: 'bg-sky-500', indigo: 'bg-indigo-500', amber: 'bg-amber-500', rose: 'bg-rose-500',
-  green: 'bg-green-500', purple: 'bg-purple-500', blue: 'bg-blue-500', orange: 'bg-orange-500',
-  teal: 'bg-teal-500', cyan: 'bg-cyan-500', lime: 'bg-lime-500', emerald: 'bg-emerald-500',
-  fuchsia: 'bg-fuchsia-500', violet: 'bg-violet-500', pink: 'bg-pink-500', red: 'bg-red-500',
-  yellow: 'bg-yellow-500', slate: 'bg-slate-500', stone: 'bg-stone-500', zinc: 'bg-zinc-500'
+const colorMap: { [key: string]: string } = {
+  sky: "bg-sky-500",
+  indigo: "bg-indigo-500",
+  amber: "bg-amber-500",
+  rose: "bg-rose-500",
+  green: "bg-green-500",
+  purple: "bg-purple-500",
+  blue: "bg-blue-500",
+  orange: "bg-orange-500",
+  teal: "bg-teal-500",
+  cyan: "bg-cyan-500",
+  lime: "bg-lime-500",
+  emerald: "bg-emerald-500",
+  fuchsia: "bg-fuchsia-500",
+  violet: "bg-violet-500",
+  pink: "bg-pink-500",
+  red: "bg-red-500",
+  yellow: "bg-yellow-500",
+  slate: "bg-slate-500",
+  stone: "bg-stone-500",
+  zinc: "bg-zinc-500",
+};
+function colorClass(name: string) {
+  return colorMap[name] || "bg-sky-500";
 }
-function colorClass(name) { return colorMap[name] || 'bg-sky-500' }
 </script>
 
 <style scoped>
-.color-dot { position: relative; }
+.color-dot {
+  position: relative;
+}
 .color-dot::after {
   content: attr(data-tip);
   position: absolute;
@@ -332,14 +418,16 @@ function colorClass(name) { return colorMap[name] || 'bg-sky-500' }
   white-space: nowrap;
   font-size: 10px;
   color: #e5e7eb; /* slate-200 */
-  background: rgba(15,23,42,0.9); /* slate-900/90 */
-  border: 1px solid rgba(51,65,85,0.8); /* slate-700/80 */
+  background: rgba(15, 23, 42, 0.9); /* slate-900/90 */
+  border: 1px solid rgba(51, 65, 85, 0.8); /* slate-700/80 */
   padding: 2px 6px;
   border-radius: 6px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .12s ease;
+  transition: opacity 0.12s ease;
 }
 .color-dot:hover::after,
-.color-dot:focus-visible::after { opacity: 1; }
+.color-dot:focus-visible::after {
+  opacity: 1;
+}
 </style>
