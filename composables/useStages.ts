@@ -56,6 +56,7 @@ export async function saveStagesPreservingIdsApi(processKey: string, currentStag
         title: newStage.title,
         slaDays: newStage.slaDays,
         color: newStage.color,
+        defaultStatus: newStage.defaultStatus || existing?.defaultStatus || '',
         order: index
       }
     })
@@ -86,6 +87,7 @@ export async function updateStagesOrderApi(processKey: string, stageOrders: Arra
         title: stage.title,
         slaDays: stage.slaDays,
         color: stage.color,
+        defaultStatus: stage.defaultStatus,
         order: orderMap.get(stage.id) ?? 0
       }))
       .sort((a, b) => a.order - b.order)

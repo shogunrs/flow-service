@@ -73,6 +73,7 @@ flow-service/
 ## 🎯 Convenções de Nomenclatura
 
 ### Arquivos e Pastas
+
 - **Pastas**: kebab-case (ex: `user-profile`)
 - **Componentes Vue**: PascalCase (ex: `UserProfile.vue`)
 - **Composables**: camelCase com prefixo `use` (ex: `useAuth.ts`)
@@ -81,6 +82,7 @@ flow-service/
 - **Tipos**: PascalCase (ex: `UserProfile.ts`)
 
 ### Componentes
+
 - **UI Components**: Nomes descritivos (ex: `BaseButton.vue`, `AppModal.vue`)
 - **Feature Components**: Prefixo da funcionalidade (ex: `DashboardChart.vue`)
 - **Layout Components**: Prefixo `Layout` (ex: `LayoutHeader.vue`)
@@ -88,21 +90,25 @@ flow-service/
 ## 📋 Padrões de Organização
 
 ### Componentes
+
 - **Atomic Design**: Organizados por complexidade (ui → forms → features)
 - **Single Responsibility**: Cada componente tem uma responsabilidade específica
 - **Reutilização**: Componentes UI são altamente reutilizáveis
 
 ### Estilos
+
 - **CSS Variables**: Uso de variáveis CSS para consistência
 - **Utility Classes**: Classes utilitárias para espaçamento e layout
 - **Component Scoped**: Estilos específicos de componentes são scoped
 
 ### TypeScript
+
 - **Tipagem Forte**: Todos os dados são tipados
 - **Interfaces**: Uso de interfaces para contratos de dados
 - **Generics**: Uso de generics para reutilização de tipos
 
 ### Estado
+
 - **Pinia**: Gerenciamento de estado reativo
 - **Modularização**: Estados separados por domínio
 - **Composables**: Lógica reutilizável em composables

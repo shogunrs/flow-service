@@ -2,6 +2,7 @@ package com.docheck.flow.application.service;
 
 import com.docheck.flow.application.port.EventPublisher;
 import com.docheck.flow.application.port.ProposalRepository;
+import com.docheck.flow.application.port.StageRepository;
 import com.docheck.flow.domain.model.Proposal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +15,12 @@ import java.util.Map;
 public class ProposalService {
     private final ProposalRepository repo;
     private final EventPublisher publisher;
+    private final StageRepository stageRepo;
 
-    public ProposalService(ProposalRepository repo, EventPublisher publisher) {
+    public ProposalService(ProposalRepository repo, EventPublisher publisher, StageRepository stageRepo) {
         this.repo = repo;
         this.publisher = publisher;
+        this.stageRepo = stageRepo;
     }
 
     public List<Proposal> listByProcess(String processKey) {
@@ -60,6 +63,10 @@ public class ProposalService {
             p.setStageId(stageId);
             p.setStageEnteredAt(now);
             moved = true;
+            // If status not explicitly provided, adopt stage defaultStatus
+            if (status == null || status.isBlank()) {
+                try { stageRepo.findById(stageId).ifPresent(st -> { if (st.getDefaultStatus()!=null && !st.getDefaultStatus().isBlank()) p.setStatus(st.getDefaultStatus()); }); } catch (Exception ignored) {}
+            }
         }
         if (status != null && !status.isBlank()) p.setStatus(status);
         if (name != null && !name.isBlank()) p.setName(name);

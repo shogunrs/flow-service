@@ -17,7 +17,7 @@ public class StageController {
     @GetMapping
     public List<StageDTO> list(@PathVariable("processKey") String processKey) {
         return service.listByProcess(processKey).stream()
-                .map(s -> new StageDTO(s.getId(), s.getTitle(), s.getSlaDays(), s.getColor(), s.getOrder()))
+                .map(s -> new StageDTO(s.getId(), s.getTitle(), s.getSlaDays(), s.getColor(), s.getDefaultStatus(), s.getOrder()))
                 .toList();
     }
 
@@ -26,14 +26,16 @@ public class StageController {
         List<Stage> incoming = body.stream()
                 .map(d -> {
                     Stage s = new Stage();
+                    s.setId(d.id()); // CRÍTICO: preservar ID
                     s.setTitle(d.title());
                     s.setSlaDays(d.slaDays());
                     s.setColor(d.color());
+                    s.setDefaultStatus(d.defaultStatus());
                     s.setOrder(d.order());
                     return s;
                 }).toList();
         List<StageDTO> saved = service.replaceForProcess(processKey, incoming).stream()
-                .map(s -> new StageDTO(s.getId(), s.getTitle(), s.getSlaDays(), s.getColor(), s.getOrder()))
+                .map(s -> new StageDTO(s.getId(), s.getTitle(), s.getSlaDays(), s.getColor(), s.getDefaultStatus(), s.getOrder()))
                 .toList();
         return ResponseEntity.ok(saved);
     }

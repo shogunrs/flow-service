@@ -81,6 +81,7 @@
         v-model:stageName="builderStageName"
         v-model:stageSla="builderStageSla"
         v-model:stageColor="builderStageColor"
+        v-model:stageStatus="builderStageStatus"
       />
       <template #footer>
         <div class="flex items-center justify-end gap-2">
@@ -116,7 +117,7 @@ import BaseModal from "~/components/ui/BaseModal.vue";
 import StageFormBuilder from "~/components/admin/StageFormBuilder.vue";
 import { isApiEnabled } from '~/utils/api/index'
 import { fetchStageFieldsApi, saveStageFieldsApi } from '~/composables/useStageFields'
-import { fetchStagesApi, updateStagesOrderApi } from '~/composables/useStages'
+import { fetchStagesApi, updateStagesOrderApi, saveStagesPreservingIdsApi } from '~/composables/useStages'
 
 const props = defineProps({
   stages: { type: Array, default: () => [] },
@@ -214,6 +215,7 @@ const builderFields = ref([]);
 const builderStageName = ref("");
 const builderStageSla = ref(0);
 const builderStageColor = ref("sky");
+const builderStageStatus = ref("");
 const builderOriginalTitle = ref("");
 
 const currentStage = computed(
@@ -230,6 +232,7 @@ async function openBuilder(index) {
     builderStageName.value = st.title || "";
     builderStageSla.value = Number(st.slaDays || 0);
     builderStageColor.value = st.color || "sky";
+    builderStageStatus.value = st.defaultStatus || '';
     builderOriginalTitle.value = String(st.title || "");
     const map = loadForms();
     builderFields.value = map[st.id] || [];
@@ -281,41 +284,45 @@ function closeBuilder() {
 async function saveBuilder() {
   const st = currentStage.value;
   if (!st) return;
+
+  // Update local stage properties
   st.title = builderStageName.value || st.title;
   st.slaDays = Number(builderStageSla.value || 0);
   st.color = builderStageColor.value || "sky";
+  st.defaultStatus = builderStageStatus.value || '';
+
+  // Save forms to localStorage
   const map = loadForms();
   map[st.id] = builderFields.value;
   saveForms(map);
-  // If API is enabled and the stage is persisted, mirror to backend
+
+  // Save stage properties to backend
   try {
     if (isApiEnabled()) {
-      // Refresh stage id to avoid stale ObjectId after replaceForProcess
-      let stageId = st.id
-      const isMongoId = typeof stageId === 'string' && /^[a-fA-F0-9]{24}$/.test(stageId)
-      try {
-        const remote = await fetchStagesApi(props.pipelineKey)
-        if (Array.isArray(remote) && remote.length) {
-          // Prefer exact id match; else try by index, else by title
-          const sameId = isMongoId && remote.find(r => r.id === stageId)
-          if (!sameId) {
-            const byIndex = remote[builderIndex.value]
-            if (byIndex?.id) stageId = byIndex.id
-            else {
-              const byTitle = remote.find(r => (r.title || '').trim() === (builderOriginalTitle.value || '').trim())
-              if (byTitle?.id) stageId = byTitle.id
-            }
-          }
-        }
-      } catch (_) {}
+      // Save stage properties (title, slaDays, color, defaultStatus)
+      await saveStagesPreservingIdsApi(props.pipelineKey, localStages.value, localStages.value);
 
-      const finalIsMongoId = typeof stageId === 'string' && /^[a-fA-F0-9]{24}$/.test(stageId)
-      if (finalIsMongoId) {
-        const ordered = (builderFields.value || []).map((f, i) => ({ ...f, order: i }))
-        saveStageFieldsApi(stageId, ordered)
+      // Find the updated stage ID after saving
+      const remote = await fetchStagesApi(props.pipelineKey);
+      let finalStageId = st.id;
+
+      // Find the updated stage by title match
+      const updatedStage = remote.find(r => (r.title || '').trim() === (st.title || '').trim());
+      if (updatedStage?.id) {
+        finalStageId = updatedStage.id;
+      }
+
+      // Save stage fields if we have a valid MongoDB ID
+      const isMongoId = typeof finalStageId === 'string' && /^[a-fA-F0-9]{24}$/.test(finalStageId);
+      if (isMongoId) {
+        const ordered = (builderFields.value || []).map((f, i) => ({ ...f, order: i }));
+        await saveStageFieldsApi(finalStageId, ordered);
       }
     }
-  } catch (_) {}
+  } catch (error) {
+    console.error('Error saving stage:', error);
+  }
+
   showBuilder.value = false;
 }
 

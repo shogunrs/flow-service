@@ -1,6 +1,7 @@
 package com.docheck.flow.api;
 
 import com.docheck.flow.api.dto.ProposalDTO;
+import com.docheck.flow.application.port.StageRepository;
 import com.docheck.flow.application.service.ProposalService;
 import com.docheck.flow.domain.model.Proposal;
 import jakarta.validation.Valid;
@@ -17,8 +18,12 @@ import java.util.Map;
 @RequestMapping("/api/v1/processes/{processKey}/proposals")
 public class ProposalController {
     private final ProposalService service;
+    private final StageRepository stageRepository;
 
-    public ProposalController(ProposalService service) { this.service = service; }
+    public ProposalController(ProposalService service, StageRepository stageRepository) {
+        this.service = service;
+        this.stageRepository = stageRepository;
+    }
 
     @GetMapping
     public List<ProposalDTO> list(@PathVariable("processKey") String processKey) {
@@ -40,7 +45,15 @@ public class ProposalController {
         p.setName(req.name());
         p.setAmount(req.amount());
         p.setStageId(req.stageId());
-        p.setStatus(req.status() == null || req.status().isBlank() ? "Pendente" : req.status());
+        // Status: usar status da requisição, ou buscar defaultStatus da etapa, ou "Pendente" como último recurso
+        String status = req.status();
+        if (status == null || status.isBlank()) {
+            status = getStageDefaultStatus(req.stageId());
+            if (status == null || status.isBlank()) {
+                status = "Pendente";
+            }
+        }
+        p.setStatus(status);
         p.setArchived(false);
         p.setStageEnteredAt(Instant.now());
         p.setDetails(req.details());
@@ -105,6 +118,19 @@ public class ProposalController {
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    private String getStageDefaultStatus(String stageId) {
+        if (stageId == null || stageId.isBlank()) {
+            return null;
+        }
+        try {
+            return stageRepository.findById(stageId)
+                    .map(stage -> stage.getDefaultStatus())
+                    .orElse(null);
+        } catch (Exception ignored) {
+            return null;
         }
     }
 }

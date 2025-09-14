@@ -5,6 +5,6 @@ public record StageDTO(
         String title,
         Integer slaDays,
         String color,
+        String defaultStatus,
         Integer order
 ) {}
-

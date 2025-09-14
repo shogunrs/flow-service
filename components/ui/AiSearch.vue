@@ -103,7 +103,7 @@ defineExpose({
 <style scoped>
 .ais-wrapper {
   @apply relative w-full flex items-center rounded-md border bg-slate-800/80 border-slate-700 text-slate-200;
-  @apply transition shadow-sm focus-within:ring-[1px] focus-within:ring-orange-500/60 focus-within:border-orange-400/50;
+  @apply transition shadow-sm focus-within:ring-[1px] focus-within:ring-cyan-400/60 focus-within:border-cyan-400/50;
 }
 .ais-left-icon {
   @apply absolute left-2 text-slate-400 text-xs;
@@ -121,21 +121,13 @@ defineExpose({
   @apply leading-none;
 }
 
-/* Multicolor hover effect */
+/* Aqua/Blue hover effect */
 .ais-ai::before {
   content: "";
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  background: conic-gradient(
-    from 0deg,
-    #ff6b6b,
-    #f7b733,
-    #4cd137,
-    #00a8ff,
-    #9c88ff,
-    #ff6b6b
-  );
+  background: conic-gradient(from 0deg, #00e5ff, #3b82f6, #06b6d4, #00e5ff);
   filter: blur(8px);
   opacity: 0;
   transition: opacity 200ms ease;
@@ -161,20 +153,20 @@ defineExpose({
 .ais-ai:focus-visible {
   color: #fff;
   border-color: transparent;
-  background-image: linear-gradient(90deg, #1f2937, #1f2937), linear-gradient(90deg, #ff6b6b, #f7b733, #4cd137, #00a8ff, #9c88ff, #ff6b6b);
+  background-image: linear-gradient(90deg, #1f2937, #1f2937), linear-gradient(90deg, #00e5ff, #3b82f6, #06b6d4, #00e5ff);
   background-origin: border-box;
   background-clip: padding-box, border-box;
-  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.35), 0 4px 12px rgba(0,0,0,.35);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.35), 0 4px 12px rgba(0,0,0,.35);
   animation: ais-gradient 4s ease infinite;
 }
 
 .ais-ai--active {
   color: #fff;
   border-color: transparent;
-  background-image: linear-gradient(90deg, #1f2937, #1f2937), linear-gradient(90deg, #ff6b6b, #f7b733, #4cd137, #00a8ff, #9c88ff, #ff6b6b);
+  background-image: linear-gradient(90deg, #1f2937, #1f2937), linear-gradient(90deg, #00e5ff, #3b82f6, #06b6d4, #00e5ff);
   background-origin: border-box;
   background-clip: padding-box, border-box;
-  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.35), 0 4px 12px rgba(0,0,0,.35);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.35), 0 4px 12px rgba(0,0,0,.35);
   animation: ais-gradient 4s ease infinite;
 }
 
