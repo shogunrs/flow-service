@@ -76,7 +76,11 @@ const onDrop = (e: DragEvent) => {
 };
 
 function addFiles(list: File[]) {
-  const next = props.multiple ? [...files.value, ...list] : [list[0]];
+  const next: File[] = props.multiple
+    ? [...files.value, ...list]
+    : list.length
+      ? [list[0]!]
+      : [];
   files.value = next;
   emit("files", next);
 }

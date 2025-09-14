@@ -11,6 +11,7 @@ public class StatusDocument {
     private String id;
     private String name;
     private String color;
+    private String category;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -19,6 +20,15 @@ public class StatusDocument {
     public StatusDocument(String name, String color) {
         this.name = name;
         this.color = color;
+        this.category = "ESTEIRA"; // Default category
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    public StatusDocument(String name, String color, String category) {
+        this.name = name;
+        this.color = color;
+        this.category = category;
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }
@@ -46,6 +56,15 @@ public class StatusDocument {
 
     public void setColor(String color) {
         this.color = color;
+        this.updatedAt = Instant.now();
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
         this.updatedAt = Instant.now();
     }
 

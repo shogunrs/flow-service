@@ -29,16 +29,24 @@ public class StatusService {
     }
 
     public Status create(String name, String color) {
+        return create(name, color, "ESTEIRA"); // Default category
+    }
+
+    public Status create(String name, String color, String category) {
         if (repository.existsByName(name)) {
             throw new IllegalArgumentException("Status com este nome já existe");
         }
 
-        StatusDocument document = new StatusDocument(name, color);
+        StatusDocument document = new StatusDocument(name, color, category);
         StatusDocument saved = repository.save(document);
         return toModel(saved);
     }
 
     public Status update(String id, String name, String color) {
+        return update(id, name, color, null); // Keep existing category
+    }
+
+    public Status update(String id, String name, String color, String category) {
         Optional<StatusDocument> existing = repository.findById(id);
         if (existing.isEmpty()) {
             throw new IllegalArgumentException("Status não encontrado");
@@ -51,6 +59,9 @@ public class StatusService {
         StatusDocument document = existing.get();
         document.setName(name);
         document.setColor(color);
+        if (category != null) {
+            document.setCategory(category);
+        }
         document.setUpdatedAt(Instant.now());
 
         StatusDocument saved = repository.save(document);
@@ -69,6 +80,7 @@ public class StatusService {
         status.setId(document.getId());
         status.setName(document.getName());
         status.setColor(document.getColor());
+        status.setCategory(document.getCategory() != null ? document.getCategory() : "ESTEIRA");
         status.setCreatedAt(document.getCreatedAt());
         status.setUpdatedAt(document.getUpdatedAt());
         return status;

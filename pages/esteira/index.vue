@@ -1001,8 +1001,7 @@ import { uploadFileViaPresign } from "~/composables/useFiles";
 import { useNewRecordModal } from "~/composables/useNewRecordModal";
 import { useProcessFiles } from "~/composables/useProcessFiles";
 import { useProposalFiles } from "~/composables/useProposalFiles";
-import { fetchStatuses } from "~/composables/useStatuses";
-import { fetchStatusesApi } from "~/composables/useStatusesApi";
+import { fetchStatuses, fetchDetailedStatuses } from "~/composables/useStatuses";
 
 useHead({ title: "Esteira" });
 definePageMeta({ layout: "default" });
@@ -1107,17 +1106,17 @@ onMounted(async () => {
     window.addEventListener("focus", syncProposalsFromApi);
   } catch {}
 
-  // Load status options from backend
+  // Load status options from backend - only ESTEIRA category for pipeline cards
   try {
-    // Load status names for backward compatibility
+    // Load status names for backward compatibility (all status)
     statusOptions.value = await fetchStatuses();
 
-    // Load status with colors for modal display
-    statusOptionsWithColors.value = await fetchStatusesApi();
+    // Load status with colors for modal display - filtered by ESTEIRA category
+    statusOptionsWithColors.value = await fetchDetailedStatuses('ESTEIRA');
 
     // Force UI refresh after loading colors
     nextTick(() => {
-      console.log('Status colors loaded:', statusOptionsWithColors.value.length, 'items');
+      console.log('Status colors loaded (ESTEIRA category):', statusOptionsWithColors.value.length, 'items');
     });
   } catch (error) {
     console.error('Failed to load status options:', error);
@@ -1262,10 +1261,10 @@ async function openCardForm(p) {
   // Initialize status selector with current proposal status
   selectedProposalStatus.value = p.status || "Pendente";
 
-  // Refresh status options to ensure latest status are available
+  // Refresh status options to ensure latest status are available - filtered by ESTEIRA category
   try {
-    statusOptionsWithColors.value = await fetchStatusesApi();
-    console.log('Status options refreshed on card open:', statusOptionsWithColors.value.length, 'items');
+    statusOptionsWithColors.value = await fetchDetailedStatuses('ESTEIRA');
+    console.log('Status options refreshed on card open (ESTEIRA category):', statusOptionsWithColors.value.length, 'items');
   } catch (error) {
     console.error('Failed to refresh status options:', error);
   }
@@ -1338,10 +1337,7 @@ async function updateProposalStatus() {
       await updateProposalApi(
         pipelineKey.value,
         String(proposal.id),
-        null, // stageId - keep current
-        selectedProposalStatus.value, // status - update to new value
-        null, // name - keep current
-        null  // amount - keep current
+        { status: selectedProposalStatus.value } // Pass as patch object
       );
     } else {
       // Save to localStorage

@@ -53,8 +53,17 @@ public class StatusController {
 
     // Full objects with colors for admin panel
     @GetMapping("/detailed")
-    public List<StatusDTO> listDetailed() {
-        return statusService.findAll().stream()
+    public List<StatusDTO> listDetailed(@RequestParam(required = false) String category) {
+        List<Status> statuses = statusService.findAll();
+
+        // Filter by category if specified
+        if (category != null && !category.trim().isEmpty()) {
+            statuses = statuses.stream()
+                    .filter(s -> category.equalsIgnoreCase(s.getCategory()))
+                    .toList();
+        }
+
+        return statuses.stream()
                 .map(StatusController::toDto)
                 .toList();
     }
@@ -66,12 +75,13 @@ public class StatusController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    public record CreateStatusRequest(@NotBlank String name, @NotBlank String color) {}
+    public record CreateStatusRequest(@NotBlank String name, @NotBlank String color, String category) {}
 
     @PostMapping
     public ResponseEntity<StatusDTO> create(@Valid @RequestBody CreateStatusRequest request) {
         try {
-            Status created = statusService.create(request.name(), request.color());
+            String category = request.category() != null ? request.category() : "ESTEIRA";
+            Status created = statusService.create(request.name(), request.color(), category);
             return ResponseEntity.created(URI.create("/api/v1/statuses/" + created.getId()))
                     .body(toDto(created));
         } catch (IllegalArgumentException e) {
@@ -79,13 +89,14 @@ public class StatusController {
         }
     }
 
-    public record UpdateStatusRequest(@NotBlank String name, @NotBlank String color) {}
+    public record UpdateStatusRequest(@NotBlank String name, @NotBlank String color, String category) {}
 
     @PutMapping("/{id}")
     public ResponseEntity<StatusDTO> update(@PathVariable String id,
                                            @Valid @RequestBody UpdateStatusRequest request) {
         try {
-            Status updated = statusService.update(id, request.name(), request.color());
+            String category = request.category() != null ? request.category() : "ESTEIRA";
+            Status updated = statusService.update(id, request.name(), request.color(), category);
             return ResponseEntity.ok(toDto(updated));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -107,6 +118,7 @@ public class StatusController {
                 status.getId(),
                 status.getName(),
                 status.getColor(),
+                status.getCategory(),
                 status.getCreatedAt(),
                 status.getUpdatedAt()
         );

@@ -6,6 +6,7 @@ public class Status {
     private String id;
     private String name;
     private String color;
+    private String category; // ESTEIRA, USUARIOS, SISTEMA, etc.
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -18,6 +19,14 @@ public class Status {
         this();
         this.name = name;
         this.color = color;
+        this.category = "ESTEIRA"; // Default category
+    }
+
+    public Status(String name, String color, String category) {
+        this();
+        this.name = name;
+        this.color = color;
+        this.category = category;
     }
 
     public String getId() {
@@ -43,6 +52,15 @@ public class Status {
 
     public void setColor(String color) {
         this.color = color;
+        this.updatedAt = Instant.now();
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
         this.updatedAt = Instant.now();
     }
 
