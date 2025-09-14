@@ -138,8 +138,8 @@
                   </div>
                   <span
                     :class="statusPillClass(p.status)"
-                    :style="getStatusColor(p.status) ? `background-color: ${getStatusColor(p.status)}; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3);` : ''"
-                    class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                    :style="getStatusStyle(p.status)"
+                    class="text-[10px] font-semibold px-2 py-1 rounded-md"
                   >
                     {{ p.status }}
                   </span>
@@ -193,8 +193,8 @@
                 </div>
                 <span
                   :class="statusPillClass(p.status)"
-                  :style="getStatusColor(p.status) ? `background-color: ${getStatusColor(p.status)}; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3);` : ''"
-                  class="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  :style="getStatusStyle(p.status)"
+                  class="flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-md"
                 >
                   {{ p.status }}
                 </span>
@@ -237,8 +237,8 @@
                 <td class="px-3 sm:px-6 py-2 sm:py-3">
                   <span
                     :class="statusPillClass(p.status)"
-                    :style="getStatusColor(p.status) ? `background-color: ${getStatusColor(p.status)}; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3);` : ''"
-                    class="text-xs font-semibold px-2 py-1 rounded-full"
+                    :style="getStatusStyle(p.status)"
+                    class="text-xs font-semibold px-2 py-1 rounded-md"
                   >
                     {{ p.status }}
                   </span>
@@ -1378,6 +1378,18 @@ function getStatusColor(statusName) {
   return null;
 }
 
+// Function to get dynamic status style based on color
+function getStatusStyle(statusName) {
+  if (!statusName || !statusOptionsWithColors.value.length) return '';
+
+  const exactMatch = statusOptionsWithColors.value.find(s => s.name === statusName);
+  if (exactMatch?.color) {
+    const baseColor = exactMatch.color;
+    return `background-color: ${hexToRgba(baseColor, 0.1)}; color: ${baseColor}; --tw-ring-color: ${hexToRgba(baseColor, 0.3)};`;
+  }
+  return '';
+}
+
 function openMoveModal(p) {
   // For now open the stage form as edit; future: implement a quick move popup
   openCardForm(p);
@@ -1417,8 +1429,8 @@ const statusPillClass = (status) => {
   const statusColor = getStatusColor(status);
 
   if (statusColor) {
-    // Use the hex color from database with golden border effect
-    return `text-white border border-amber-400/60 shadow-sm`;
+    // Use dynamic color effect based on status color
+    return `ring-1 ring-inset transition-colors`;
   }
 
   // Fallback to hardcoded colors if not found in database

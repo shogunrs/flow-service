@@ -247,10 +247,10 @@
               class="flex items-center justify-between px-4 py-3 hover:bg-slate-700/30 group"
             >
               <div class="flex items-center gap-2">
-                <!-- Status Tag (with golden border effect) -->
+                <!-- Status Tag (dynamic color effect) -->
                 <span
-                  class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white border border-amber-400/60 shadow-sm"
-                  :style="`background-color: ${hexToRgba(status.color, 0.6)}; box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3);`"
+                  class="text-[10px] font-semibold px-2 py-1 rounded-md ring-1 ring-inset transition-colors"
+                  :style="getStatusStyle(status)"
                 >
                   {{ status.name }}
                 </span>
@@ -1011,6 +1011,13 @@ function hexToRgba(hex, alpha = 0.2) {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Function to get dynamic status style based on color
+function getStatusStyle(status) {
+  if (!status?.color) return '';
+  const baseColor = status.color;
+  return `background-color: ${hexToRgba(baseColor, 0.1)}; color: ${baseColor}; --tw-ring-color: ${hexToRgba(baseColor, 0.3)};`;
 }
 </script>
 
