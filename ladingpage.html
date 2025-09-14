@@ -1,0 +1,1118 @@
+!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FourCon - A Revolução do Consórcio com IA</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23E2E8F0'/%3E%3Cstop offset='100%25' stop-color='%2394A3B8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M36.14 2.86A19 19 0 1 0 36.14 37.14' stroke='url(%23grad1)' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3Cpath d='M29 11 L12 20 L29 29 L29 24.5 L17 20 L29 15.5Z' fill='%234F46E5'/%3E%3C/svg%3E"
+    />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide-vue-next@latest"></script>
+
+    <style>
+      /* Estilos personalizados */
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #0a0a0a;
+        color: #e2e8f0;
+      }
+
+      .hero-gradient-text {
+        background: linear-gradient(90deg, #4f46e5, #c026d3, #db2777);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-fill-color: transparent;
+      }
+
+      .section-glow {
+        position: relative;
+      }
+
+      .section-glow::before {
+        content: "";
+        position: absolute;
+        top: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 500px;
+        height: 200px;
+        background: radial-gradient(
+          circle,
+          rgba(79, 70, 229, 0.2),
+          transparent 70%
+        );
+        filter: blur(100px);
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .hero-background::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("https://images.pexels.com/photos/2387873/pexels-photo-2387873.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2");
+        background-size: cover;
+        background-position: center;
+        filter: grayscale(100%);
+        z-index: -2;
+      }
+
+      /* Animação do carrossel de parceiros */
+      .scroller {
+        max-width: 800px;
+        overflow: hidden;
+        -webkit-mask: linear-gradient(
+          90deg,
+          transparent,
+          white 20%,
+          white 80%,
+          transparent
+        );
+        mask: linear-gradient(
+          90deg,
+          transparent,
+          white 20%,
+          white 80%,
+          transparent
+        );
+      }
+
+      .scroller__inner {
+        display: flex;
+        gap: 2rem;
+        width: max-content;
+        animation: scroll 30s linear infinite;
+      }
+
+      @keyframes scroll {
+        to {
+          transform: translate(calc(-50% - 1rem));
+        }
+      }
+
+      .logo-item {
+        filter: grayscale(1) brightness(1.5);
+        transition: all 0.3s ease;
+      }
+      .logo-item:hover {
+        filter: grayscale(0) brightness(1);
+      }
+
+      /* Estilos do Chat de IA */
+      .chat-bubble {
+        transition: all 0.3s ease;
+      }
+
+      .chat-widget {
+        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      }
+
+      .message-enter-active,
+      .message-leave-active {
+        transition: all 0.5s ease;
+      }
+
+      .message-enter-from,
+      .message-leave-to {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      /* Animação do carrossel de texto no Hero */
+      .slide-fade-enter-active,
+      .slide-fade-leave-active {
+        transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .slide-fade-enter-from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      .slide-fade-leave-to {
+        opacity: 0;
+        transform: translateY(-20px);
+        position: absolute;
+      }
+
+      /* Estilos para a transição de login */
+      .main-content {
+        transition: width 0.7s cubic-bezier(0.86, 0, 0.07, 1);
+      }
+
+      .login-panel {
+        transition: transform 0.7s cubic-bezier(0.86, 0, 0.07, 1);
+      }
+    </style>
+  </head>
+  <body class="bg-black text-slate-200">
+    <div id="app" class="relative min-h-screen w-full flex">
+      <!-- Painel de Conteúdo Principal -->
+      <div
+        ref="mainContentPanel"
+        class="main-content relative w-full h-screen"
+        :class="{ 'lg:w-1/2': isLoginVisible, 'overflow-y-auto': !isLoginVisible }"
+      >
+        <!-- Header -->
+        <header
+          class="fixed top-0 left-0 z-20 py-4 px-4 sm:px-6 lg:px-8 bg-black/30 backdrop-blur-sm"
+          :class="{ 'lg:right-1/2': isLoginVisible, 'right-0': !isLoginVisible }"
+          style="transition: right 0.7s cubic-bezier(0.86, 0, 0.07, 1)"
+        >
+          <div class="container mx-auto flex justify-between items-center">
+            <a
+              href="#"
+              @click.prevent="hideLogin"
+              class="flex items-center"
+              aria-label="Página inicial da FourCon"
+            >
+              <span class="text-2xl font-bold text-white"
+                >FOUR<span class="text-indigo-400">CON</span></span
+              >
+            </a>
+            <a
+              href="#"
+              @click.prevent="showLogin"
+              title="Login"
+              class="text-slate-300 hover:text-white transition-colors duration-300"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-user-circle-2"
+              >
+                <path d="M18 20a6 6 0 0 0-12 0" />
+                <circle cx="12" cy="10" r="4" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+            </a>
+          </div>
+        </header>
+
+        <main class="w-full">
+          <!-- Seção 1: Hero -->
+          <section
+            class="hero-background relative min-h-screen flex items-center justify-center text-center overflow-hidden pt-48 pb-10"
+          >
+            <div class="absolute inset-0 bg-black opacity-70 z-0"></div>
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <div class="max-w-4xl mx-auto">
+                <h2
+                  class="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-6 text-white leading-tight"
+                >
+                  Levante capital
+                  <span class="hero-gradient-text">100x mais rápido</span> com
+                  nosso banco e IA exclusivos.
+                </h2>
+                <div
+                  class="relative h-20 md:h-16 max-w-2xl mx-auto text-lg md:text-xl text-slate-300 mb-10 flex items-center justify-center"
+                >
+                  <transition name="slide-fade" mode="out-in">
+                    <p :key="currentSlideIndex" class="w-full">
+                      {{ slides[currentSlideIndex].text }}
+                    </p>
+                  </transition>
+                </div>
+                <a
+                  href="#contato"
+                  class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-10 rounded-lg text-lg transition duration-300 transform hover:scale-105 shadow-lg shadow-indigo-600/30"
+                >
+                  Inicie sua Jornada Agora
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção 2: Eficiência e IA -->
+          <section class="py-20 sm:py-32 section-glow relative overflow-hidden">
+            <canvas
+              id="particle-canvas"
+              class="absolute top-0 left-0 w-full h-full z-0"
+            ></canvas>
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <div class="text-center max-w-3xl mx-auto mb-16">
+                <h3
+                  class="text-4xl md:text-5xl font-bold tracking-tighter text-white"
+                >
+                  A Tríade da Eficiência
+                </h3>
+                <p class="mt-4 text-lg text-slate-400">
+                  Nossa plataforma se baseia em três pilares que garantem um
+                  resultado superior. Todo o processo é totalmente automatizado,
+                  entregando agilidade incomparável em cada etapa.
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1: IA Exclusiva -->
+                <div
+                  class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 backdrop-blur-sm transition-all duration-300 hover:border-indigo-500 hover:-translate-y-2"
+                >
+                  <div
+                    class="inline-flex items-center justify-center w-12 h-12 mb-6 bg-indigo-600 text-white rounded-lg"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-cpu"
+                    >
+                      <rect x="4" y="4" width="16" height="16" rx="2" />
+                      <rect x="9" y="9" width="6" height="6" />
+                      <line x1="9" x2="9" y1="1" y2="4" />
+                      <line x1="15" x2="15" y1="1" y2="4" />
+                      <line x1="9" x2="9" y1="20" y2="23" />
+                      <line x1="15" x2="15" y1="20" y2="23" />
+                      <line x1="20" x2="23" y1="9" y2="9" />
+                      <line x1="20" x2="23" y1="14" y2="14" />
+                      <line x1="1" x2="4" y1="9" y2="9" />
+                      <line x1="1" x2="4" y1="14" y2="14" />
+                    </svg>
+                  </div>
+                  <h4 class="text-2xl font-bold text-white mb-3">
+                    IA Proprietária
+                  </h4>
+                  <p class="text-slate-400">
+                    Nossa inteligência artificial automatiza análises complexas
+                    e otimiza estratégias em tempo real, garantindo as melhores
+                    oportunidades e uma aceleração sem precedentes em todo o
+                    processo.
+                  </p>
+                </div>
+
+                <!-- Card 2: Processo Maduro -->
+                <div
+                  class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 backdrop-blur-sm transition-all duration-300 hover:border-indigo-500 hover:-translate-y-2"
+                >
+                  <div
+                    class="inline-flex items-center justify-center w-12 h-12 mb-6 bg-indigo-600 text-white rounded-lg"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-shield-check"
+                    >
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                  </div>
+                  <h4 class="text-2xl font-bold text-white mb-3">
+                    Maturidade & Segurança
+                  </h4>
+                  <p class="text-slate-400">
+                    Anos de experiência no mercado financeiro consolidados em um
+                    processo robusto, transparente e seguro, que minimiza riscos
+                    e maximiza seu retorno.
+                  </p>
+                </div>
+
+                <!-- Card 3: Banco Próprio -->
+                <div
+                  class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 backdrop-blur-sm transition-all duration-300 hover:border-indigo-500 hover:-translate-y-2"
+                >
+                  <div
+                    class="inline-flex items-center justify-center w-12 h-12 mb-6 bg-indigo-600 text-white rounded-lg"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-landmark"
+                    >
+                      <line x1="3" x2="21" y1="22" y2="22" />
+                      <line x1="6" x2="6" y1="18" y2="11" />
+                      <line x1="10" x2="10" y1="18" y2="11" />
+                      <line x1="14" x2="14" y1="18" y2="11" />
+                      <line x1="18" x2="18" y1="18" y2="11" />
+                      <polygon points="12 2 20 7 4 7" />
+                    </svg>
+                  </div>
+                  <h4 class="text-2xl font-bold text-white mb-3">
+                    Banco Próprio
+                  </h4>
+                  <p class="text-slate-400">
+                    Com nosso próprio banco, eliminamos intermediários e
+                    automatizamos as operações financeiras. O resultado é menos
+                    burocracia e agilidade máxima para você ter controle e
+                    velocidade total.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção de Parceiros -->
+          <section class="py-20 sm:py-24 bg-slate-900/50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+              <h3 class="text-center text-2xl font-bold text-white mb-12">
+                Nossos Parceiros Estratégicos
+              </h3>
+              <div class="scroller" data-speed="slow">
+                <div class="scroller__inner">
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/tuple-logo-white.svg"
+                    alt="Tuple"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/reform-logo-white.svg"
+                    alt="Reform"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/savvycal-logo-white.svg"
+                    alt="SavvyCal"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/laravel-logo-white.svg"
+                    alt="Laravel"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/transistor-logo-white.svg"
+                    alt="Transistor"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/statamic-logo-white.svg"
+                    alt="Statamic"
+                  />
+                  <!-- Duplicata -->
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/tuple-logo-white.svg"
+                    alt="Tuple"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/reform-logo-white.svg"
+                    alt="Reform"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/savvycal-logo-white.svg"
+                    alt="SavvyCal"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/laravel-logo-white.svg"
+                    alt="Laravel"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/transistor-logo-white.svg"
+                    alt="Transistor"
+                  />
+                  <img
+                    class="logo-item h-12"
+                    src="https://tailwindui.com/img/logos/158x48/statamic-logo-white.svg"
+                    alt="Statamic"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção 3: Contato e Leads -->
+          <section id="contato" class="py-20 sm:py-32">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="text-center mb-16">
+                <h3
+                  class="text-4xl md:text-5xl font-bold tracking-tighter text-white"
+                >
+                  Pronto para Começar?
+                </h3>
+                <p class="mt-4 text-lg text-slate-400">
+                  Entre em contato conosco ou preencha o formulário e dê o
+                  próximo passo rumo à aceleração do seu capital.
+                </p>
+              </div>
+              <div
+                class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto"
+              >
+                <!-- Coluna do Formulário -->
+                <div
+                  class="bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-800"
+                >
+                  <h4 class="text-2xl font-bold text-white mb-6">
+                    Fale com um Especialista
+                  </h4>
+                  <form action="#" method="POST">
+                    <div class="space-y-6">
+                      <div>
+                        <label
+                          for="name"
+                          class="block text-sm font-medium text-slate-300"
+                          >Nome</label
+                        >
+                        <input
+                          type="text"
+                          name="name"
+                          id="name"
+                          autocomplete="name"
+                          class="mt-1 block w-full bg-slate-800 border border-slate-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="email"
+                          class="block text-sm font-medium text-slate-300"
+                          >Email</label
+                        >
+                        <input
+                          type="email"
+                          name="email"
+                          id="email"
+                          autocomplete="email"
+                          class="mt-1 block w-full bg-slate-800 border border-slate-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="phone"
+                          class="block text-sm font-medium text-slate-300"
+                          >Telefone</label
+                        >
+                        <input
+                          type="tel"
+                          name="phone"
+                          id="phone"
+                          autocomplete="tel"
+                          class="mt-1 block w-full bg-slate-800 border border-slate-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="message"
+                          class="block text-sm font-medium text-slate-300"
+                          >Mensagem</label
+                        >
+                        <textarea
+                          id="message"
+                          name="message"
+                          rows="4"
+                          class="mt-1 block w-full bg-slate-800 border border-slate-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        ></textarea>
+                      </div>
+                      <div>
+                        <button
+                          type="submit"
+                          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                          Enviar Mensagem
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Coluna de Informações de Contato -->
+                <div class="text-slate-300">
+                  <h4 class="text-2xl font-bold text-white mb-6">
+                    Nossos Contatos
+                  </h4>
+                  <p class="mb-8 text-slate-400">
+                    Estamos disponíveis para tirar suas dúvidas e apresentar
+                    nossas soluções.
+                  </p>
+                  <ul class="space-y-6">
+                    <li class="flex items-start">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-mail h-6 w-6 text-indigo-400 mr-4 flex-shrink-0 mt-1"
+                      >
+                        <rect width="20" height="16" x="2" y="4" rx="2" />
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                      </svg>
+                      <div>
+                        <h5 class="font-semibold text-white">Email</h5>
+                        <p>contato@fourcon.com.br</p>
+                      </div>
+                    </li>
+                    <li class="flex items-start">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-phone h-6 w-6 text-indigo-400 mr-4 flex-shrink-0 mt-1"
+                      >
+                        <path
+                          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                        />
+                      </svg>
+                      <div>
+                        <h5 class="font-semibold text-white">Telefone</h5>
+                        <p>+55 (11) 4004-2024</p>
+                      </div>
+                    </li>
+                    <li class="flex items-start">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-map-pin h-6 w-6 text-indigo-400 mr-4 flex-shrink-0 mt-1"
+                      >
+                        <path
+                          d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"
+                        />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      <div>
+                        <h5 class="font-semibold text-white">Endereço</h5>
+                        <p>Av. Paulista, 171, Andar 4, São Paulo - SP</p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <!-- Painel de Login -->
+      <div
+        class="login-panel fixed top-0 right-0 h-full w-full lg:w-1/2 bg-black flex items-center justify-center transform z-30"
+        :class="isLoginVisible ? 'translate-x-0' : 'translate-x-full'"
+      >
+        <canvas
+          id="login-particle-canvas"
+          class="absolute top-0 left-0 w-full h-full z-0"
+        ></canvas>
+        <div class="absolute inset-0 bg-black opacity-80 z-0"></div>
+        <div class="relative z-10 w-full max-w-md p-4">
+          <div
+            class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 backdrop-blur-sm"
+          >
+            <div class="text-center mb-8">
+              <h2 class="text-3xl font-bold text-white">Acesse sua Conta</h2>
+              <p class="text-slate-400 mt-2">Bem-vindo de volta!</p>
+            </div>
+            <form action="#" method="POST">
+              <div class="space-y-6">
+                <div>
+                  <label
+                    for="login-email"
+                    class="block text-sm font-medium text-slate-300"
+                    >Email</label
+                  >
+                  <input
+                    type="email"
+                    name="email"
+                    id="login-email"
+                    autocomplete="email"
+                    class="mt-1 block w-full bg-slate-800 border border-slate-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <div class="flex items-center justify-between">
+                    <label
+                      for="login-password"
+                      class="block text-sm font-medium text-slate-300"
+                      >Senha</label
+                    >
+                    <a
+                      href="#"
+                      class="text-sm text-indigo-400 hover:text-indigo-300"
+                      >Esqueceu a senha?</a
+                    >
+                  </div>
+                  <input
+                    type="password"
+                    name="password"
+                    id="login-password"
+                    autocomplete="current-password"
+                    class="mt-1 block w-full bg-slate-800 border border-slate-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <button
+                    type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Entrar
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <button
+          @click="hideLogin"
+          class="absolute top-6 right-6 text-slate-400 hover:text-white"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-x"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Chat de IA -->
+      <div v-if="!isLoginVisible" class="fixed bottom-5 right-5 z-50">
+        <!-- Botão do Chat -->
+        <button
+          @click="toggleChat"
+          class="chat-bubble bg-indigo-600 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-xl transform hover:scale-110 focus:outline-none"
+        >
+          <svg
+            v-if="!isChatOpen"
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-message-circle-question"
+          >
+            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+            <path d="M12 17h.01" />
+          </svg>
+          <svg
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-x"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+
+        <!-- Janela do Chat -->
+        <div
+          v-if="isChatOpen"
+          class="chat-widget absolute bottom-20 right-0 w-80 sm:w-96 h-[500px] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col"
+          :class="{ 'opacity-100 translate-y-0': isChatOpen, 'opacity-0 translate-y-5': !isChatOpen }"
+        >
+          <!-- Header do Chat -->
+          <div class="p-4 border-b border-slate-700 flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center p-1.5"
+            >
+              <svg
+                class="w-full h-full"
+                viewBox="0 0 40 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient id="grad1-chat" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#E2E8F0"></stop>
+                    <stop offset="100%" stop-color="#94A3B8"></stop>
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M36.14 2.86A19 19 0 1 0 36.14 37.14"
+                  stroke="url(#grad1-chat)"
+                  stroke-width="4"
+                  fill="none"
+                  stroke-linecap="round"
+                ></path>
+                <path
+                  d="M29 11 L12 20 L29 29 L29 24.5 L17 20 L29 15.5Z"
+                  fill="#4F46E5"
+                ></path>
+              </svg>
+            </div>
+            <div>
+              <h5 class="font-bold text-white">Assistente Virtual FourCon</h5>
+              <p class="text-xs text-slate-400">Online</p>
+            </div>
+          </div>
+
+          <!-- Mensagens -->
+          <div class="flex-1 p-4 overflow-y-auto" ref="chatbox">
+            <transition-group name="message" tag="div">
+              <div
+                v-for="message in messages"
+                :key="message.id"
+                class="mb-4"
+                :class="message.sender === 'user' ? 'text-right' : 'text-left'"
+              >
+                <span
+                  class="inline-block p-3 rounded-xl max-w-xs"
+                  :class="message.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-slate-700 text-slate-200 rounded-bl-none'"
+                >
+                  {{ message.text }}
+                </span>
+              </div>
+            </transition-group>
+          </div>
+
+          <!-- Input do Chat -->
+          <div class="p-4 border-t border-slate-700">
+            <form @submit.prevent="sendMessage">
+              <div class="relative">
+                <input
+                  v-model="userInput"
+                  type="text"
+                  placeholder="Digite sua dúvida..."
+                  class="w-full bg-slate-800 border border-slate-600 rounded-lg py-2 pl-4 pr-12 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="submit"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-300"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-send-horizontal"
+                  >
+                    <path d="m3 3 3 9-3 9 19-9Z" />
+                    <path d="M6 12h16" />
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp, ref, nextTick, onMounted, watch } = Vue;
+
+      const App = {
+        setup() {
+          const isChatOpen = ref(false);
+          const isLoginVisible = ref(false);
+          const userInput = ref("");
+          const chatbox = ref(null);
+          const mainContentPanel = ref(null);
+          const messages = ref([
+            {
+              id: 1,
+              text: "Olá! Sou a IA da FourCon. Como posso te ajudar a acelerar seu capital hoje?",
+              sender: "ia",
+            },
+          ]);
+
+          const slides = ref([
+            {
+              text: "ConsorEquity: Transforme seu consórcio em um ativo líquido e poderoso.",
+            },
+            {
+              text: "Acesso imediato ao crédito com nossas Cartas Contempladas selecionadas por IA.",
+            },
+            {
+              text: "Junte-se a um ecossistema de sucesso com mais de R$ 500 Milhões em capital levantado.",
+            },
+            {
+              text: "Operações blindadas com a mais alta tecnologia e segurança de ponta a ponta.",
+            },
+            {
+              text: "Expandimos fronteiras: Invista em mercados de Londres, EUA, Canadá e Japão.",
+            },
+          ]);
+          const currentSlideIndex = ref(0);
+
+          const toggleChat = () => {
+            isChatOpen.value = !isChatOpen.value;
+          };
+
+          const scrollToBottom = () => {
+            nextTick(() => {
+              if (chatbox.value) {
+                chatbox.value.scrollTop = chatbox.value.scrollHeight;
+              }
+            });
+          };
+
+          const sendMessage = () => {
+            if (userInput.value.trim() === "") return;
+
+            const userMessage = userInput.value;
+            messages.value.push({
+              id: Date.now(),
+              text: userMessage,
+              sender: "user",
+            });
+
+            userInput.value = "";
+            scrollToBottom();
+
+            // Simula resposta da IA
+            setTimeout(() => {
+              messages.value.push({
+                id: Date.now() + 1,
+                text: "Obrigado pela sua mensagem. Nossa IA está processando sua solicitação e um de nossos especialistas entrará em contato em breve.",
+                sender: "ia",
+              });
+              scrollToBottom();
+            }, 1000);
+          };
+
+          const initParticleCanvas = (canvasId) => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext("2d");
+            let particlesArray;
+
+            const setCanvasSize = () => {
+              const parent = canvas.parentElement;
+              canvas.width = parent.offsetWidth;
+              canvas.height = parent.offsetHeight;
+            };
+
+            const mouse = {
+              x: null,
+              y: null,
+              radius: (canvas.height / 120) * (canvas.width / 120),
+            };
+
+            const handleMouseMove = (event) => {
+              const rect = canvas.getBoundingClientRect();
+              mouse.x = event.clientX - rect.left;
+              mouse.y = event.clientY - rect.top;
+            };
+            window.addEventListener("mousemove", handleMouseMove);
+
+            const handleMouseOut = () => {
+              mouse.x = undefined;
+              mouse.y = undefined;
+            };
+            window.addEventListener("mouseout", handleMouseOut);
+
+            class Particle {
+              constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+              }
+
+              draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = "rgba(165, 180, 252, 0.5)";
+                ctx.fill();
+              }
+
+              update() {
+                if (this.x > canvas.width || this.x < 0) {
+                  this.directionX = -this.directionX;
+                }
+                if (this.y > canvas.height || this.y < 0) {
+                  this.directionY = -this.directionY;
+                }
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+              }
+            }
+
+            function init() {
+              particlesArray = [];
+              let numberOfParticles = (canvas.height * canvas.width) / 9000;
+              for (let i = 0; i < numberOfParticles; i++) {
+                let size = Math.random() * 2 + 1;
+                let x =
+                  Math.random() * (canvas.width - size * 2 - size * 2) +
+                  size * 2;
+                let y =
+                  Math.random() * (canvas.height - size * 2 - size * 2) +
+                  size * 2;
+                let directionX = Math.random() * 0.4 - 0.2;
+                let directionY = Math.random() * 0.4 - 0.2;
+                let color = "#8C98A8";
+                particlesArray.push(
+                  new Particle(x, y, directionX, directionY, size, color)
+                );
+              }
+            }
+
+            function connect() {
+              let opacityValue = 1;
+              for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                  let distance =
+                    (particlesArray[a].x - particlesArray[b].x) *
+                      (particlesArray[a].x - particlesArray[b].x) +
+                    (particlesArray[a].y - particlesArray[b].y) *
+                      (particlesArray[a].y - particlesArray[b].y);
+                  if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                    opacityValue = 1 - distance / 20000;
+                    ctx.strokeStyle = `rgba(79, 70, 229, ${opacityValue})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                    ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                    ctx.stroke();
+                  }
+                }
+              }
+            }
+
+            function animate() {
+              requestAnimationFrame(animate);
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+              }
+              connect();
+            }
+
+            window.addEventListener("resize", () => {
+              setCanvasSize();
+              init();
+            });
+
+            setCanvasSize();
+            init();
+            animate();
+          };
+
+          const showLogin = () => {
+            isLoginVisible.value = true;
+          };
+          const hideLogin = () => {
+            isLoginVisible.value = false;
+            if (mainContentPanel.value) {
+              mainContentPanel.value.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+            }
+          };
+
+          watch(isLoginVisible, (newValue) => {
+            if (newValue) {
+              nextTick(() => {
+                initParticleCanvas("login-particle-canvas");
+              });
+            }
+          });
+
+          // Lógica para o carrossel de parceiros e texto
+          onMounted(() => {
+            initParticleCanvas("particle-canvas");
+
+            // Carrossel de texto
+            setInterval(() => {
+              currentSlideIndex.value =
+                (currentSlideIndex.value + 1) % slides.value.length;
+            }, 4000);
+
+            // Carrossel de parceiros (código existente omitido por brevidade)
+          });
+
+          return {
+            isChatOpen,
+            userInput,
+            messages,
+            chatbox,
+            slides,
+            currentSlideIndex,
+            isLoginVisible,
+            mainContentPanel,
+            toggleChat,
+            sendMessage,
+            showLogin,
+            hideLogin,
+          };
+        },
+      };
+
+      const app = createApp(App);
+      app.use(LucideVueNext);
+      app.mount("#app");
+    </script>
+  </body>
+</html>

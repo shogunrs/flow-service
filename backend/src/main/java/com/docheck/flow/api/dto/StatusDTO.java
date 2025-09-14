@@ -6,6 +6,7 @@ public record StatusDTO(
         String id,
         String name,
         String color,
+        String category,
         Instant createdAt,
         Instant updatedAt
 ) {}

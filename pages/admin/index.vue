@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen">
-    <Sidebar :items="menu" @select="onSelect" />
     <header
       class="relative overflow-hidden px-6 py-4 flex items-center justify-between ml-10"
     >
@@ -234,19 +233,56 @@
           </button>
         </div>
 
+        <!-- Category Filter -->
+        <div class="mb-4">
+          <div class="flex gap-2">
+            <button
+              class="px-3 py-1.5 text-sm rounded-md border transition-colors"
+              :class="
+                selectedCategory === null
+                  ? 'bg-orange-500 text-white border-orange-500'
+                  : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
+              "
+              @click="filterByCategory(null)"
+            >
+              Todos
+            </button>
+            <button
+              v-for="cat in statusCategories"
+              :key="cat.value"
+              class="px-3 py-1.5 text-sm rounded-md border transition-colors"
+              :class="
+                selectedCategory === cat.value
+                  ? 'bg-orange-500 text-white border-orange-500'
+                  : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
+              "
+              @click="filterByCategory(cat.value)"
+            >
+              {{ cat.label }}
+            </button>
+          </div>
+        </div>
+
         <div class="bg-gray-800 rounded-lg overflow-hidden">
-          <div v-if="statusList.length === 0" class="p-8 text-center">
+          <div v-if="filteredStatusList.length === 0" class="p-8 text-center">
             <i class="fa-solid fa-circle-info text-4xl text-slate-400 mb-3"></i>
-            <p class="text-slate-300">Nenhum status cadastrado</p>
-            <p class="text-slate-400 text-sm">Clique em "Novo Status" para começar</p>
+            <p class="text-slate-300" v-if="statusList.length === 0">
+              Nenhum status cadastrado
+            </p>
+            <p class="text-slate-300" v-else>
+              Nenhum status encontrado para esta categoria
+            </p>
+            <p class="text-slate-400 text-sm" v-if="statusList.length === 0">
+              Clique em "Novo Status" para começar
+            </p>
           </div>
           <div v-else class="divide-y divide-slate-700">
             <div
-              v-for="status in statusList"
+              v-for="status in filteredStatusList"
               :key="status.id"
               class="flex items-center justify-between px-4 py-3 hover:bg-slate-700/30 group"
             >
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-3">
                 <!-- Status Tag (dynamic color effect) -->
                 <span
                   class="text-[10px] font-semibold px-2 py-1 rounded-md ring-1 ring-inset transition-colors"
@@ -256,6 +292,13 @@
                 </span>
 
                 <div class="text-xs text-slate-400">{{ status.color }}</div>
+
+                <!-- Category Badge -->
+                <span
+                  class="text-[10px] px-2 py-0.5 bg-slate-700/60 text-slate-300 rounded-md"
+                >
+                  {{ getCategoryLabel(status.category) }}
+                </span>
               </div>
 
               <div class="flex items-center gap-2">
@@ -279,7 +322,7 @@
         </div>
       </section>
 
-      <section v-else-if="activeTab === 'notifications'">
+      <section v-else>
         <h2 class="text-xl font-semibold mb-4">Notificações</h2>
         <div class="bg-gray-800 rounded-lg p-4">
           <p class="text-slate-300">Configurações simples de exemplo.</p>
@@ -446,13 +489,36 @@
         </div>
 
         <div>
+          <label class="text-[12px] text-slate-300">Categoria</label>
+          <select
+            v-model="statusForm.category"
+            class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+          >
+            <option
+              v-for="cat in statusCategories"
+              :key="cat.value"
+              :value="cat.value"
+            >
+              {{ cat.label }}
+            </option>
+          </select>
+          <p class="text-[11px] text-slate-400 mt-1">
+            Define onde este status será usado (esteira, usuários ou sistema)
+          </p>
+        </div>
+
+        <div>
           <label class="text-[12px] text-slate-300">Cor</label>
           <div class="mt-2 grid grid-cols-5 gap-2">
             <button
               v-for="color in statusColors"
               :key="color.value"
               class="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
-              :class="statusForm.color === color.value ? 'border-white' : 'border-slate-600'"
+              :class="
+                statusForm.color === color.value
+                  ? 'border-white'
+                  : 'border-slate-600'
+              "
               :style="{ backgroundColor: color.value }"
               :title="color.name"
               @click="statusForm.color = color.value"
@@ -462,12 +528,19 @@
 
         <div class="mt-4 p-3 bg-slate-800/40 rounded-lg">
           <div class="text-[12px] text-slate-300 mb-2">Pré-visualização:</div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <div
               class="w-3 h-3 rounded-full"
               :style="{ backgroundColor: statusForm.color }"
             ></div>
-            <span class="text-sm text-white">{{ statusForm.name || 'Nome do Status' }}</span>
+            <span class="text-sm text-white">{{
+              statusForm.name || "Nome do Status"
+            }}</span>
+            <span
+              class="text-[10px] px-2 py-0.5 bg-slate-700/60 text-slate-300 rounded-md"
+            >
+              {{ getCategoryLabel(statusForm.category) }}
+            </span>
           </div>
         </div>
       </div>
@@ -484,7 +557,7 @@
             class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm"
             @click="saveStatus"
           >
-            {{ editingStatus ? 'Atualizar' : 'Criar' }}
+            {{ editingStatus ? "Atualizar" : "Criar" }}
           </button>
         </div>
       </template>
@@ -527,6 +600,7 @@ import {
   updateStatusApi,
   deleteStatusApi,
 } from "~/composables/useStatusesApi";
+import { STATUS_CATEGORIES } from "~/composables/useStatuses";
 
 useHead({ title: "Admin" });
 definePageMeta({ layout: "default" });
@@ -712,12 +786,12 @@ async function savePipelineModal() {
   }
 }
 
-// Sync tab with query (?tab=users|pipeline|notifications)
+// Sync tab with query (?tab=users|pipeline|status|notifications)
 watch(
   () => route.query.tab,
   (t) => {
     const tab = String(t || "users");
-    if (["users", "pipeline", "notifications"].includes(tab))
+    if (["users", "pipeline", "status", "notifications"].includes(tab))
       activeTab.value = tab;
   },
   { immediate: true }
@@ -824,29 +898,6 @@ const canConfirmDelete = computed(() => {
   return !!target && typed === target;
 });
 const showResetModal = ref(false);
-
-// Status management
-const statusList = ref([]);
-const showStatusModal = ref(false);
-const statusForm = ref({
-  id: null,
-  name: "",
-  color: "#3b82f6"
-});
-const editingStatus = ref(false);
-
-const statusColors = [
-  { name: "Azul", value: "#3b82f6" },
-  { name: "Verde", value: "#10b981" },
-  { name: "Vermelho", value: "#ef4444" },
-  { name: "Amarelo", value: "#f59e0b" },
-  { name: "Roxo", value: "#8b5cf6" },
-  { name: "Rosa", value: "#ec4899" },
-  { name: "Laranja", value: "#f97316" },
-  { name: "Ciano", value: "#06b6d4" },
-  { name: "Lima", value: "#65a30d" },
-  { name: "Índigo", value: "#6366f1" }
-];
 function openDeleteModal(p) {
   deleteTarget.value = p;
   deleteConfirm.value = "";
@@ -912,23 +963,69 @@ function confirmReset() {
   cancelReset();
 }
 
+// Status management
+const statusList = ref([]);
+const statusCategories = STATUS_CATEGORIES;
+const selectedCategory = ref(null);
+const showStatusModal = ref(false);
+const statusForm = ref({
+  id: null,
+  name: "",
+  color: "#3b82f6",
+  category: "ESTEIRA",
+});
+const editingStatus = ref(false);
+
+const statusColors = [
+  { name: "Azul", value: "#3b82f6" },
+  { name: "Verde", value: "#10b981" },
+  { name: "Vermelho", value: "#ef4444" },
+  { name: "Amarelo", value: "#f59e0b" },
+  { name: "Roxo", value: "#8b5cf6" },
+  { name: "Rosa", value: "#ec4899" },
+  { name: "Laranja", value: "#f97316" },
+  { name: "Ciano", value: "#06b6d4" },
+  { name: "Lima", value: "#65a30d" },
+  { name: "Índigo", value: "#6366f1" },
+];
+
+// Computed properties
+const filteredStatusList = computed(() => {
+  if (selectedCategory.value === null) {
+    return statusList.value;
+  }
+  return statusList.value.filter(
+    (status) => status.category === selectedCategory.value
+  );
+});
+
 // Status management functions
 async function loadStatusList() {
   try {
-    console.log('Loading status list...');
+    console.log("Loading status list...");
     statusList.value = await fetchStatusesApi();
-    console.log('Status list loaded:', statusList.value.length, 'items');
+    console.log("Status list loaded:", statusList.value.length, "items");
   } catch (error) {
-    console.error('Failed to load status list:', error);
-    toastError('Erro ao carregar status');
+    console.error("Failed to load status list:", error);
+    toastError("Erro ao carregar status");
   }
+}
+
+function filterByCategory(category) {
+  selectedCategory.value = category;
+}
+
+function getCategoryLabel(category) {
+  const cat = statusCategories.find((c) => c.value === category);
+  return cat ? cat.label : "Desconhecido";
 }
 
 function openNewStatusModal() {
   statusForm.value = {
     id: null,
     name: "",
-    color: "#3b82f6"
+    color: "#3b82f6",
+    category: "ESTEIRA",
   };
   editingStatus.value = false;
   showStatusModal.value = true;
@@ -938,7 +1035,8 @@ function editStatus(status) {
   statusForm.value = {
     id: status.id,
     name: status.name,
-    color: status.color
+    color: status.color,
+    category: status.category,
   };
   editingStatus.value = true;
   showStatusModal.value = true;
@@ -946,52 +1044,60 @@ function editStatus(status) {
 
 async function saveStatus() {
   try {
-    const { id, name, color } = statusForm.value;
+    const { id, name, color, category } = statusForm.value;
 
     if (!name.trim()) {
-      toastError('Nome é obrigatório');
+      toastError("Nome é obrigatório");
       return;
     }
 
     if (editingStatus.value && id) {
       // Update existing status
-      const updated = await updateStatusApi(id, { name: name.trim(), color });
+      const updated = await updateStatusApi(id, {
+        name: name.trim(),
+        color,
+        category,
+      });
       if (updated) {
-        toastSuccess('Status atualizado com sucesso');
+        toastSuccess("Status atualizado com sucesso");
         await loadStatusList();
         showStatusModal.value = false;
       }
     } else {
       // Create new status
-      const created = await createStatusApi({ name: name.trim(), color });
+      const created = await createStatusApi({
+        name: name.trim(),
+        color,
+        category,
+      });
       if (created) {
-        toastSuccess('Status criado com sucesso');
+        toastSuccess("Status criado com sucesso");
         await loadStatusList();
         showStatusModal.value = false;
       }
     }
   } catch (error) {
-    console.error('Error saving status:', error);
-    toastError('Erro ao salvar status');
+    console.error("Error saving status:", error);
+    toastError("Erro ao salvar status");
   }
 }
 
 async function deleteStatus(statusId) {
-  if (!confirm('Tem certeza que deseja excluir este status?')) {
+  if (!confirm("Tem certeza que deseja excluir este status?")) {
     return;
   }
 
   try {
     const success = await deleteStatusApi(statusId);
     if (success) {
-      toastSuccess('Status excluído com sucesso');
+      toastSuccess("Status excluído com sucesso");
       await loadStatusList();
     } else {
-      toastError('Erro ao excluir status');
+      toastError("Erro ao excluir status");
     }
   } catch (error) {
-    console.error('Error deleting status:', error);
-    toastError('Erro ao excluir status');
+    console.error("Error deleting status:", error);
+    toastError("Erro ao excluir status");
   }
 }
 
@@ -1000,7 +1106,8 @@ function closeStatusModal() {
   statusForm.value = {
     id: null,
     name: "",
-    color: "#3b82f6"
+    color: "#3b82f6",
+    category: "ESTEIRA",
   };
   editingStatus.value = false;
 }
@@ -1015,7 +1122,7 @@ function hexToRgba(hex, alpha = 0.2) {
 
 // Function to get dynamic status style based on color
 function getStatusStyle(status) {
-  if (!status?.color) return '';
+  if (!status?.color) return "";
   const baseColor = status.color;
   return `background-color: ${hexToRgba(baseColor, 0.1)}; color: ${baseColor}; --tw-ring-color: ${hexToRgba(baseColor, 0.3)};`;
 }
