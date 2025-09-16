@@ -113,19 +113,26 @@ const hasChildren = computed(() => {
 
 // Methods
 function handleClick() {
+  console.log("🔥 SidebarItem handleClick:", props.item);
+  console.log("🔥 hasChildren:", hasChildren.value);
+  console.log("🔥 collapsed:", props.collapsed);
+
   // Se for a Esteira, fazer fetch dos processos primeiro
   if (props.item.path === '/esteira') {
     emit('fetch-esteira')
   }
 
   if (hasChildren.value && !props.collapsed) {
+    console.log("🔥 Expandindo submenu");
     isExpanded.value = !isExpanded.value
   } else {
+    console.log("🔥 Emitindo click para:", props.item);
     emit('click', props.item)
   }
 }
 
 function handleChildClick(child) {
+  console.log("🔥 SidebarItem handleChildClick:", child);
   emit('click', child)
 }
 
