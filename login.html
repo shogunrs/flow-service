@@ -1,20 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome para ícones -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
     />
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
       body {
-        font-family: 'Inter', sans-serif;
+        font-family: "Inter", sans-serif;
       }
       .backdrop-blur-strong {
         backdrop-filter: blur(12px);
@@ -30,7 +28,7 @@
       <div
         class="absolute inset-0 bg-cover bg-center z-0"
         style="
-          background-image: url('https://images.unsplash.com/photo-1677442135703-1787eea5ce01?q=80&w=2574&auto=format&fit=crop');
+          background-image: url(&quot;https://images.unsplash.com/photo-1677442135703-1787eea5ce01?q=80&w=2574&auto=format&fit=crop&quot;);
         "
       >
         <!-- Overlay escuro -->
@@ -53,7 +51,10 @@
             >
             <div class="mt-1 relative">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                <i class="fa-solid fa-envelope text-slate-400"></i>
+                <i
+                  class="fa-solid fa-envelope text-slate-400"
+                  aria-hidden="true"
+                ></i>
               </span>
               <input
                 id="email"
@@ -75,7 +76,10 @@
             >
             <div class="mt-1 relative">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                <i class="fa-solid fa-lock text-slate-400"></i>
+                <i
+                  class="fa-solid fa-lock text-slate-400"
+                  aria-hidden="true"
+                ></i>
               </span>
               <input
                 id="password"
@@ -114,7 +118,7 @@
           <div>
             <button
               type="submit"
-              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-orange-500 transition-transform transform hover:scale-105"
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-orange-500 transition-transform transform hover:scale-105 cursor-pointer"
             >
               Entrar
             </button>
@@ -129,5 +133,8 @@
         </p>
       </div>
     </div>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
   </body>
 </html>

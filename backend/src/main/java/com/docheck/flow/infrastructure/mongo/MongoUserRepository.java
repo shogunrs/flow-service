@@ -16,7 +16,35 @@ public class MongoUserRepository implements UserRepository {
 
     private static User toDomain(UserDocument d) {
         if (d == null) return null;
-        return new User(d.id, d.name, d.email, d.passwordHash, d.roles, d.createdAt, d.updatedAt);
+        User u = new User(d.id, d.name, d.email, d.passwordHash, d.roles, d.createdAt, d.updatedAt);
+
+        // Documentos
+        u.setCpf(d.cpf);
+        u.setCnpj(d.cnpj);
+        u.setRg(d.rg);
+
+        // Dados bancários
+        u.setBanco(d.banco);
+        u.setAgencia(d.agencia);
+        u.setConta(d.conta);
+        u.setTipoConta(d.tipoConta);
+
+        // PIX
+        u.setPixTipo(d.pixTipo);
+        u.setPixChave(d.pixChave);
+
+        // Arquivos e biometria
+        u.setFotoPerfilUrl(d.fotoPerfilUrl);
+        u.setComprovanteEnderecoUrl(d.comprovanteEnderecoUrl);
+        u.setFaceEmbedding(d.faceEmbedding);
+        u.setUltimoIpAcesso(d.ultimoIpAcesso);
+        u.setUltimaLocalizacao(d.ultimaLocalizacao);
+
+        // Dados de auditoria
+        u.setIpCadastro(d.ipCadastro);
+        u.setLocalizacaoCadastro(d.localizacaoCadastro);
+
+        return u;
     }
 
     private static UserDocument toDoc(User u) {
@@ -28,6 +56,33 @@ public class MongoUserRepository implements UserRepository {
         d.roles = u.getRoles();
         d.createdAt = u.getCreatedAt();
         d.updatedAt = u.getUpdatedAt();
+
+        // Documentos
+        d.cpf = u.getCpf();
+        d.cnpj = u.getCnpj();
+        d.rg = u.getRg();
+
+        // Dados bancários
+        d.banco = u.getBanco();
+        d.agencia = u.getAgencia();
+        d.conta = u.getConta();
+        d.tipoConta = u.getTipoConta();
+
+        // PIX
+        d.pixTipo = u.getPixTipo();
+        d.pixChave = u.getPixChave();
+
+        // Arquivos e biometria
+        d.fotoPerfilUrl = u.getFotoPerfilUrl();
+        d.comprovanteEnderecoUrl = u.getComprovanteEnderecoUrl();
+        d.faceEmbedding = u.getFaceEmbedding();
+        d.ultimoIpAcesso = u.getUltimoIpAcesso();
+        d.ultimaLocalizacao = u.getUltimaLocalizacao();
+
+        // Dados de auditoria
+        d.ipCadastro = u.getIpCadastro();
+        d.localizacaoCadastro = u.getLocalizacaoCadastro();
+
         return d;
     }
 

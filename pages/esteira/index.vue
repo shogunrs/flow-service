@@ -2,7 +2,7 @@
   <div class="min-h-screen">
     <!-- Header (sem busca/IA; serão acionados pela sidebar) -->
     <header
-      class="header-glass fixed top-0 left-0 right-0 z-30 h-16 px-3 border-b border-slate-800/60 bg-transparent backdrop-blur-md"
+      class="header-glass fixed top-0 left-0 right-0 lg:left-64 z-30 h-16 px-3 border-b border-slate-800/60 bg-transparent backdrop-blur-md"
     >
       <div class="w-full h-full grid grid-cols-2 items-center gap-2">
         <!-- Brand icon -->
@@ -878,7 +878,9 @@
                 @change="updateProposalStatus"
               >
                 <option
-                  v-for="status in (statusOptionsWithColors.length ? statusOptionsWithColors : statusOptions.map(name => ({name})))"
+                  v-for="status in statusOptionsWithColors.length
+                    ? statusOptionsWithColors
+                    : statusOptions.map((name) => ({ name }))"
                   :key="status.name || status"
                   :value="status.name || status"
                 >
@@ -889,7 +891,9 @@
               <div
                 v-if="getStatusColor(selectedProposalStatus)"
                 class="absolute right-2 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full pointer-events-none"
-                :style="{ backgroundColor: getStatusColor(selectedProposalStatus) }"
+                :style="{
+                  backgroundColor: getStatusColor(selectedProposalStatus),
+                }"
               ></div>
             </div>
           </div>
@@ -967,6 +971,10 @@ import {
   nextTick,
 } from "vue";
 import BrandMark from "~/components/ui/BrandMark.vue";
+
+definePageMeta({
+  layout: 'sidebar'
+});
 import {
   loadProposals,
   saveProposals,
@@ -1001,10 +1009,12 @@ import { uploadFileViaPresign } from "~/composables/useFiles";
 import { useNewRecordModal } from "~/composables/useNewRecordModal";
 import { useProcessFiles } from "~/composables/useProcessFiles";
 import { useProposalFiles } from "~/composables/useProposalFiles";
-import { fetchStatuses, fetchDetailedStatuses } from "~/composables/useStatuses";
+import {
+  fetchStatuses,
+  fetchDetailedStatuses,
+} from "~/composables/useStatuses";
 
 useHead({ title: "Esteira" });
-definePageMeta({ layout: "default" });
 
 // Pipeline key (padrão: quotaequity). Pode ser passado como prop quando usado dentro de [process].vue
 const props = defineProps({
@@ -1040,7 +1050,6 @@ onMounted(() => {
   }
 });
 
-
 // Colunas da esteira (carregadas por processo). Mantemos vazio por padrão
 // e populamos via configuração salva ou a partir dos estágios presentes nas propostas.
 const stages = ref([]);
@@ -1063,7 +1072,7 @@ async function loadPipelineConfig() {
           title: s.title || s.name || "Etapa",
           slaDays: Number(s.slaDays ?? 0),
           color: s.color || "sky",
-          status: "Pendente",
+          status: "Offline",
         }));
         return;
       }
@@ -1072,6 +1081,7 @@ async function loadPipelineConfig() {
   // Fallback local (somente se API off)
   try {
     const raw = localStorage.getItem(`pipeline_config__${pipelineKey.value}`);
+    console.log(">>>>>>>>", raw);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
@@ -1083,7 +1093,7 @@ async function loadPipelineConfig() {
           title: s.title,
           slaDays: s.slaDays ?? 0,
           color: s.color || "sky",
-          status: statusById[s.id] || "Pendente",
+          status: statusById[s.id] || "Offline",
         }));
       }
     }
@@ -1112,16 +1122,20 @@ onMounted(async () => {
     statusOptions.value = await fetchStatuses();
 
     // Load status with colors for modal display - filtered by ESTEIRA category
-    statusOptionsWithColors.value = await fetchDetailedStatuses('ESTEIRA');
+    statusOptionsWithColors.value = await fetchDetailedStatuses("ESTEIRA");
 
     // Force UI refresh after loading colors
     nextTick(() => {
-      console.log('Status colors loaded (ESTEIRA category):', statusOptionsWithColors.value.length, 'items');
+      console.log(
+        "Status colors loaded (ESTEIRA category):",
+        statusOptionsWithColors.value.length,
+        "items"
+      );
     });
   } catch (error) {
-    console.error('Failed to load status options:', error);
+    console.error("Failed to load status options:", error);
     // Fallback to default status options
-    statusOptions.value = ['Pendente', 'Em análise', 'Aprovado', 'Reprovado', 'Arquivado'];
+    statusOptions.value = ["Api Offline"];
     statusOptionsWithColors.value = [];
   }
 });
@@ -1191,7 +1205,7 @@ function ensureStagesCoverProposals() {
       id,
       title: titleFromId(id),
       slaDays: 0,
-      status: "Pendente",
+      status: "Offline",
       color: "sky",
       auto: true,
     }));
@@ -1210,15 +1224,15 @@ const filterStatus = ref("");
 const showArchived = ref(false);
 const viewMode = ref("kanban");
 
-const statusList = [
-  "Pendente",
+/* const statusList = [
+  "Offline",
   "Em Análise",
   "Aguardando",
   "Em Processamento",
   "Aprovado",
   "Reprovado",
   "Finalizado",
-];
+]; */
 
 const filteredProposals = computed(() => {
   return proposals.value.filter((p) => {
@@ -1259,14 +1273,18 @@ async function openCardForm(p) {
   }
 
   // Initialize status selector with current proposal status
-  selectedProposalStatus.value = p.status || "Pendente";
+  selectedProposalStatus.value = p.status || "Offline";
 
   // Refresh status options to ensure latest status are available - filtered by ESTEIRA category
   try {
-    statusOptionsWithColors.value = await fetchDetailedStatuses('ESTEIRA');
-    console.log('Status options refreshed on card open (ESTEIRA category):', statusOptionsWithColors.value.length, 'items');
+    statusOptionsWithColors.value = await fetchDetailedStatuses("ESTEIRA");
+    console.log(
+      "Status options refreshed on card open (ESTEIRA category):",
+      statusOptionsWithColors.value.length,
+      "items"
+    );
   } catch (error) {
-    console.error('Failed to refresh status options:', error);
+    console.error("Failed to refresh status options:", error);
   }
 
   showStageFormModal.value = true;
@@ -1322,11 +1340,15 @@ async function updateProposalStatus() {
   const proposal = selectedProposal.value;
   if (!proposal) return;
 
+  // Store original status for rollback
+  const originalStatus = proposal.status;
+  const { success, error: showError } = useToast();
+
   // Update the status immediately in the UI
   proposal.status = selectedProposalStatus.value;
 
   // Update in the proposals array
-  const index = proposals.value.findIndex(p => p.id === proposal.id);
+  const index = proposals.value.findIndex((p) => p.id === proposal.id);
   if (index !== -1) {
     proposals.value[index].status = selectedProposalStatus.value;
   }
@@ -1339,13 +1361,22 @@ async function updateProposalStatus() {
         String(proposal.id),
         { status: selectedProposalStatus.value } // Pass as patch object
       );
+      // Show success toast
+      success("Status atualizado com sucesso!");
     } else {
       // Save to localStorage
       persistProposals();
+      success("Status atualizado!");
     }
   } catch (error) {
-    console.error('Failed to update proposal status:', error);
-    // Could show toast error here
+    console.error("Failed to update proposal status:", error);
+    showError("Erro ao atualizar status. Tente novamente.");
+    // Revert UI changes on error
+    proposal.status = originalStatus;
+    const index = proposals.value.findIndex((p) => p.id === proposal.id);
+    if (index !== -1) {
+      proposals.value[index].status = originalStatus;
+    }
   }
 }
 
@@ -1362,28 +1393,33 @@ function getStatusColor(statusName) {
   if (!statusName || !statusOptionsWithColors.value.length) return null;
 
   // Try exact match first
-  const exactMatch = statusOptionsWithColors.value.find(s => s.name === statusName);
+  const exactMatch = statusOptionsWithColors.value.find(
+    (s) => s.name === statusName
+  );
   if (exactMatch?.color) return hexToRgba(exactMatch.color, 0.6);
 
   // Try case-insensitive match
-  const caseInsensitiveMatch = statusOptionsWithColors.value.find(s =>
-    s.name?.toLowerCase() === statusName.toLowerCase()
+  const caseInsensitiveMatch = statusOptionsWithColors.value.find(
+    (s) => s.name?.toLowerCase() === statusName.toLowerCase()
   );
-  if (caseInsensitiveMatch?.color) return hexToRgba(caseInsensitiveMatch.color, 0.2);
+  if (caseInsensitiveMatch?.color)
+    return hexToRgba(caseInsensitiveMatch.color, 0.2);
 
   return null;
 }
 
 // Function to get dynamic status style based on color
 function getStatusStyle(statusName) {
-  if (!statusName || !statusOptionsWithColors.value.length) return '';
+  if (!statusName || !statusOptionsWithColors.value.length) return "";
 
-  const exactMatch = statusOptionsWithColors.value.find(s => s.name === statusName);
+  const exactMatch = statusOptionsWithColors.value.find(
+    (s) => s.name === statusName
+  );
   if (exactMatch?.color) {
     const baseColor = exactMatch.color;
     return `background-color: ${hexToRgba(baseColor, 0.1)}; color: ${baseColor}; --tw-ring-color: ${hexToRgba(baseColor, 0.3)};`;
   }
-  return '';
+  return "";
 }
 
 function openMoveModal(p) {
@@ -1430,24 +1466,9 @@ const statusPillClass = (status) => {
   }
 
   // Fallback to hardcoded colors if not found in database
-  switch (status) {
-    case "Pendente":
-      return "bg-amber-900/50 text-amber-300 ring-1 ring-inset ring-amber-500/20";
-    case "Em Análise":
-      return "bg-blue-900/50 text-blue-300 ring-1 ring-inset ring-blue-500/20";
-    case "Aguardando":
-      return "bg-slate-700 text-slate-300 ring-1 ring-inset ring-slate-500/20";
-    case "Em Processamento":
-      return "bg-purple-900/50 text-purple-300 ring-1 ring-inset ring-purple-500/20";
-    case "Aprovado":
-      return "bg-green-900/50 text-green-300 ring-1 ring-inset ring-green-500/20";
-    case "Reprovado":
-      return "bg-red-900/50 text-red-300 ring-1 ring-inset ring-red-500/20";
-    case "Finalizado":
-      return "bg-orange-900/50 text-orange-300 ring-1 ring-inset ring-orange-500/20";
-    default:
-      return "bg-slate-700 text-slate-300 ring-1 ring-inset ring-slate-500/20";
-  }
+
+  if (!status)
+    return "bg-slate-700 text-slate-300 ring-1 ring-inset ring-slate-500/20";
 };
 
 // Stage color styles derived from color field
@@ -1652,9 +1673,10 @@ const onDrop = (stageId) => {
   if (!stage) return onDragEnd();
 
   // Update stage and default status when moved
-  const newStatus = (stage.defaultStatus && stage.defaultStatus.trim() !== "")
-    ? stage.defaultStatus
-    : (proposals.value[idx].status || "Pendente");
+  const newStatus =
+    stage.defaultStatus && stage.defaultStatus.trim() !== ""
+      ? stage.defaultStatus
+      : proposals.value[idx].status || "Offline";
 
   const updated = {
     ...proposals.value[idx],
@@ -1721,7 +1743,7 @@ function persistStages() {
           const statusByTitle = {};
           try {
             stages.value.forEach((s) => {
-              statusByTitle[s.title] = s.status || "Pendente";
+              statusByTitle[s.title] = s.status || "Offline";
             });
           } catch {}
           stages.value = saved.map((s) => ({
@@ -1729,7 +1751,7 @@ function persistStages() {
             title: s.title,
             slaDays: s.slaDays,
             color: s.color,
-            status: statusByTitle[s.title] || "Pendente",
+            status: statusByTitle[s.title] || "Offline",
           }));
         }
         const now = Date.now();
@@ -1950,7 +1972,7 @@ const handleGlobalModalSave = (recordData) => {
       stageId: recordData.stageId,
       status: recordData.status,
     };
-
+    console.log("Creating proposal via API with payload:", payload);
     createProposalApi(pipelineKey.value, payload)
       .then(async (created) => {
         if (created?.id) {
@@ -2026,7 +2048,12 @@ const saveNewProposal = () => {
     return;
   }
   const stage = stages.value.find((s) => s.id === newProposal.value.stageId);
-  console.log('Creating new card - Stage found:', stage, 'defaultStatus:', stage?.defaultStatus);
+  console.log(
+    "Creating new card - Stage found:",
+    stage,
+    "defaultStatus:",
+    stage?.defaultStatus
+  );
   const parseCurrency = (s) => {
     const str = String(s || "").trim();
     if (!str) return 0;
@@ -2070,7 +2097,7 @@ const saveNewProposal = () => {
     name: deriveName(),
     amount: deriveAmount(),
     stageId: newProposal.value.stageId,
-    status: stage?.defaultStatus || "Pendente",
+    status: stage?.defaultStatus || "Offline",
   };
   const stageValues = (() => {
     const out = {};
