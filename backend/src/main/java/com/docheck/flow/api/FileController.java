@@ -20,7 +20,7 @@ public class FileController {
     }
 
     @GetMapping("/presign-download")
-    public ResponseEntity<Map<String, Object>> presignDownload(@RequestParam("key") String key) {
+    public ResponseEntity<Map<String, Object>> presignDownload(@RequestParam(value = "key") String key) {
         return ResponseEntity.ok(storage.presignDownload(key));
     }
 }

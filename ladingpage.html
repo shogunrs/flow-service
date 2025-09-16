@@ -27,6 +27,14 @@
     <script src="https://unpkg.com/lucide-vue-next@latest"></script>
 
     <style>
+      .parallax-bg {
+        background-image: url("./fundo.jpg");
+        background-attachment: fixed;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+
       /* Estilos personalizados */
       body {
         font-family: "Inter", sans-serif;
@@ -68,10 +76,10 @@
         content: "";
         position: absolute;
         inset: 0;
-        background-image: url("https://images.pexels.com/photos/2387873/pexels-photo-2387873.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2");
+        background-image: url("./fundo.jpg");
         background-size: cover;
         background-position: center;
-        filter: grayscale(100%);
+        filter: grayscale(40%);
         z-index: -2;
       }
 
@@ -159,6 +167,24 @@
       .login-panel {
         transition: transform 0.7s cubic-bezier(0.86, 0, 0.07, 1);
       }
+
+      /* Oculta a barra de rolagem do body */
+      body::-webkit-scrollbar {
+        display: none;
+      }
+      body {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+
+      /* Oculta a barra de rolagem do painel de conteúdo */
+      .main-content::-webkit-scrollbar {
+        display: none;
+      }
+      .main-content {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
     </style>
   </head>
   <body class="bg-black text-slate-200">
@@ -171,7 +197,7 @@
       >
         <!-- Header -->
         <header
-          class="fixed top-0 left-0 z-20 py-4 px-4 sm:px-6 lg:px-8 bg-black/30 backdrop-blur-sm"
+          class="fixed top-0 left-0 z-20 py-4 px-4 sm:px-6 lg:px-8 bg-black/10 backdrop-blur"
           :class="{ 'lg:right-1/2': isLoginVisible, 'right-0': !isLoginVisible }"
           style="transition: right 0.7s cubic-bezier(0.86, 0, 0.07, 1)"
         >
@@ -214,18 +240,20 @@
 
         <main class="w-full">
           <!-- Seção 1: Hero -->
+
           <section
-            class="hero-background relative min-h-screen flex items-center justify-center text-center overflow-hidden pt-48 pb-10"
+            class="relative min-h-screen flex items-center justify-center text-center overflow-hidden pt-48 pb-10 bg-black/70"
           >
-            <div class="absolute inset-0 bg-black opacity-70 z-0"></div>
             <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               <div class="max-w-4xl mx-auto">
                 <h2
                   class="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-6 text-white leading-tight"
                 >
-                  Levante capital
-                  <span class="hero-gradient-text">100x mais rápido</span> com
-                  nosso banco e IA exclusivos.
+                  O futuro do consórcio chegou.
+                  <span class="hero-gradient-text"
+                    >Mais liquidez, mais tecnologia</span
+                  >
+                  com mais resultados para você..
                 </h2>
                 <div
                   class="relative h-20 md:h-16 max-w-2xl mx-auto text-lg md:text-xl text-slate-300 mb-10 flex items-center justify-center"
@@ -247,11 +275,10 @@
           </section>
 
           <!-- Seção 2: Eficiência e IA -->
-          <section class="py-20 sm:py-32 section-glow relative overflow-hidden">
-            <canvas
-              id="particle-canvas"
-              class="absolute top-0 left-0 w-full h-full z-0"
-            ></canvas>
+
+          <section
+            class="py-20 sm:py-32 section-glow relative overflow-hidden bg-black/80"
+          >
             <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               <div class="text-center max-w-3xl mx-auto mb-16">
                 <h3
@@ -384,7 +411,8 @@
           </section>
 
           <!-- Seção de Parceiros -->
-          <section class="py-20 sm:py-24 bg-slate-900/50">
+
+          <section class="py-20 sm:py-24 bg-black/80">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
               <h3 class="text-center text-2xl font-bold text-white mb-12">
                 Nossos Parceiros Estratégicos
@@ -458,7 +486,8 @@
           </section>
 
           <!-- Seção 3: Contato e Leads -->
-          <section id="contato" class="py-20 sm:py-32">
+
+          <section id="contato" class="py-20 sm:py-32 bg-black/80">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
               <div class="text-center mb-16">
                 <h3
@@ -639,10 +668,7 @@
         class="login-panel fixed top-0 right-0 h-full w-full lg:w-1/2 bg-black flex items-center justify-center transform z-30"
         :class="isLoginVisible ? 'translate-x-0' : 'translate-x-full'"
       >
-        <canvas
-          id="login-particle-canvas"
-          class="absolute top-0 left-0 w-full h-full z-0"
-        ></canvas>
+        <div class="absolute inset-0 parallax-bg"></div>
         <div class="absolute inset-0 bg-black opacity-80 z-0"></div>
         <div class="relative z-10 w-full max-w-md p-4">
           <div
@@ -883,16 +909,16 @@
 
           const slides = ref([
             {
-              text: "ConsorEquity: Transforme seu consórcio em um ativo líquido e poderoso.",
+              text: "A unica FIDC de consórcio do Brasil com banco próprio.",
             },
             {
-              text: "Acesso imediato ao crédito com nossas Cartas Contempladas selecionadas por IA.",
+              text: "Estudo de Grupos de Consórcio: Análise detalhada e insights valiosos.",
             },
             {
               text: "Junte-se a um ecossistema de sucesso com mais de R$ 500 Milhões em capital levantado.",
             },
             {
-              text: "Operações blindadas com a mais alta tecnologia e segurança de ponta a ponta.",
+              text: "A unica FIDC de consórcio do Brasil com banco próprio.",
             },
             {
               text: "Expandimos fronteiras: Invista em mercados de Londres, EUA, Canadá e Japão.",
@@ -1083,6 +1109,7 @@
           // Lógica para o carrossel de parceiros e texto
           onMounted(() => {
             initParticleCanvas("particle-canvas");
+            document.body.classList.add("parallax-bg");
 
             // Carrossel de texto
             setInterval(() => {

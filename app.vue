@@ -1,5 +1,7 @@
 <template>
-  <NuxtPage />
+  <NuxtLayout name="sidebar">
+    <NuxtPage />
+  </NuxtLayout>
   <ToastContainer position="bottom-center" />
 
   <!-- Modal global de novo registro -->

@@ -53,7 +53,7 @@ public class StatusController {
 
     // Full objects with colors for admin panel
     @GetMapping("/detailed")
-    public List<StatusDTO> listDetailed(@RequestParam(required = false) String category) {
+    public List<StatusDTO> listDetailed(@RequestParam(value = "category", required = false) String category) {
         List<Status> statuses = statusService.findAll();
 
         // Filter by category if specified
@@ -69,7 +69,7 @@ public class StatusController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StatusDTO> getById(@PathVariable String id) {
+    public ResponseEntity<StatusDTO> getById(@PathVariable(value = "id") String id) {
         return statusService.findById(id)
                 .map(status -> ResponseEntity.ok(toDto(status)))
                 .orElse(ResponseEntity.notFound().build());
@@ -92,7 +92,7 @@ public class StatusController {
     public record UpdateStatusRequest(@NotBlank String name, @NotBlank String color, String category) {}
 
     @PutMapping("/{id}")
-    public ResponseEntity<StatusDTO> update(@PathVariable String id,
+    public ResponseEntity<StatusDTO> update(@PathVariable(value = "id") String id,
                                            @Valid @RequestBody UpdateStatusRequest request) {
         try {
             String category = request.category() != null ? request.category() : "ESTEIRA";
@@ -104,7 +104,7 @@ public class StatusController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable(value = "id") String id) {
         try {
             statusService.delete(id);
             return ResponseEntity.noContent().build();

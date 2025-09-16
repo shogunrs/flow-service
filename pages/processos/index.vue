@@ -79,8 +79,11 @@ import {
   sanitizeProcessKey,
 } from "~/composables/usePipeline";
 
+definePageMeta({
+  layout: 'sidebar'
+});
+
 useHead({ title: "Processos" });
-definePageMeta({ layout: "default" });
 
 const processes = ref(listActiveProcesses());
 

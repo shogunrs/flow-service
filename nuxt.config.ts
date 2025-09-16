@@ -7,6 +7,9 @@ export default defineNuxtConfig({
   pages: true,
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/styles/globals.css', '~/assets/styles/main.css'],
+  app: {
+    layoutTransition: { name: 'layout', mode: 'out-in' }
+  },
   runtimeConfig: {
     // server-only
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,

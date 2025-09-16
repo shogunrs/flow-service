@@ -1,14 +1,20 @@
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/FlowApplication.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/AuthController.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/FaceRecognitionController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/FileController.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/MobileDocumentController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/ProcessController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/ProposalController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/StageController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/StageFieldController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/StatusController.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/TemporaryFileController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/TestController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/UserController.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/UserFileController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/CreateUserDTO.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/FaceRecognitionDTO.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/FileUploadRequestDTO.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/LoginDTO.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/ProcessDTO.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/ProposalDTO.java
@@ -68,3 +74,4 @@
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/infrastructure/outbox/OutboxWorkerCondition.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/infrastructure/storage/FileStorageService.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/infrastructure/storage/S3Config.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/infrastructure/storage/UserFileStorageService.java

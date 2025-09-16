@@ -30,7 +30,7 @@ public class TestController {
      * Endpoint para testar a deleção cascade
      */
     @DeleteMapping("/cascade/{processKey}")
-    public ResponseEntity<Map<String, Object>> testCascadeDelete(@PathVariable String processKey) {
+    public ResponseEntity<Map<String, Object>> testCascadeDelete(@PathVariable(value = "processKey") String processKey) {
         try {
             ProcessCascadeService.CascadeDeleteResult result = 
                 cascadeService.deleteProcessWithCascade(processKey, true);
@@ -176,7 +176,7 @@ public class TestController {
      * Endpoint para testar CASCATA SIMPLIFICADA (nova versão otimizada)
      */
     @DeleteMapping("/simplified-cascade/{processKey}")
-    public ResponseEntity<Map<String, Object>> testSimplifiedCascadeDelete(@PathVariable String processKey) {
+    public ResponseEntity<Map<String, Object>> testSimplifiedCascadeDelete(@PathVariable(value = "processKey") String processKey) {
         try {
             SimplifiedProcessCascadeService.SimplifiedCascadeResult result = 
                 simplifiedCascadeService.deleteProcessWithSimplifiedCascade(processKey);
@@ -210,7 +210,7 @@ public class TestController {
      * Endpoint para contar dados de um processo (debugging)
      */
     @GetMapping("/count/{processKey}")
-    public ResponseEntity<Map<String, Object>> countProcessData(@PathVariable String processKey) {
+    public ResponseEntity<Map<String, Object>> countProcessData(@PathVariable(value = "processKey") String processKey) {
         try {
             Map<String, Long> counts = simplifiedCascadeService.countDataForProcess(processKey);
             long total = counts.values().stream().mapToLong(Long::longValue).sum();

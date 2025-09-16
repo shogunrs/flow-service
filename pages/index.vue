@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen">
-    <main class="p-4 space-y-4">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <main class="p-6 space-y-6">
       <div class="relative overflow-hidden rounded-lg h-14">
         <CanvasFinance class="opacity-40" :speed="0.6" :font-size="12" />
         <div class="absolute inset-0 flex items-center px-2">
@@ -33,6 +33,10 @@ import MiniBarChart from "~/components/dashboard/MiniBarChart.vue";
 import ActivityFeed from "~/components/dashboard/ActivityFeed.vue";
 import QuickActions from "~/components/dashboard/QuickActions.vue";
 import { useProcessSubmenu } from "~/composables/useProcessMenu";
+
+definePageMeta({
+  layout: 'sidebar'
+});
 
 // Dashboard data (mocked)
 const kpis = [
