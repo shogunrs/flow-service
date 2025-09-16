@@ -85,7 +85,7 @@
           :item="item"
           :is-active="isActive(item.path)"
           :collapsed="collapsed"
-          @click="navigateTo(item)"
+          @click="navigateTo"
           @fetch-esteira="handleEsteiraFetch"
         />
       </div>
@@ -259,6 +259,12 @@ function isActive(path) {
 }
 
 async function navigateTo(item) {
+  console.log("🚀 Navegando para:", item);
+  console.log("🚀 Tipo do item:", typeof item);
+  console.log("🚀 Item é objeto?", typeof item === 'object');
+  console.log("🚀 Path:", item?.path);
+  console.log("🚀 Label:", item?.label);
+
   // Se o item tem children e a sidebar está colapsada, expandir automaticamente
   if (item.children && item.children.length > 0 && collapsed.value) {
     collapsed.value = false;
@@ -266,9 +272,12 @@ async function navigateTo(item) {
     emit("collapsed", collapsed.value);
   }
 
-  // Sempre navegar para a página, exceto para Esteira que só expande os submenus
-  if (item.path !== "/esteira") {
-    router.push(item.path || item);
+  // Sempre navegar para a página, exceto para Esteira principal que só expande os submenus
+  if (item?.path && item.path !== "/esteira") {
+    console.log("🚀 Fazendo push para:", item.path);
+    router.push(item.path);
+  } else {
+    console.log("🚀 Não navegando. Item path:", item?.path);
   }
 
   if (mobileMenuOpen.value) {
