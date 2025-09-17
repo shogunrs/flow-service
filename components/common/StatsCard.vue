@@ -48,7 +48,7 @@ const props = defineProps<Props>()
 
 const colorClasses = computed(() => {
   const colors = {
-    orange: 'bg-orange-500/20 text-orange-400',
+    orange: 'bg-indigo-600/20 text-indigo-400',
     green: 'bg-green-500/20 text-green-400',
     blue: 'bg-blue-500/20 text-blue-400',
     purple: 'bg-purple-500/20 text-purple-400',

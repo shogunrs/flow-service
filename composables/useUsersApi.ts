@@ -104,3 +104,36 @@ export async function deleteUserApi(userId: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function checkEmailAvailabilityApi(email: string, excludeUserId?: string): Promise<boolean> {
+  const { apiFetch } = await import('~/utils/api/index');
+  try {
+    const params = new URLSearchParams({ email });
+    if (excludeUserId) {
+      params.append('excludeUserId', excludeUserId);
+    }
+    const response = await apiFetch<{ available: boolean }>(`/api/v1/users/check-email?${params}`);
+    return response?.available || false;
+  } catch (error) {
+    console.error('Error checking email availability:', error);
+    return false;
+  }
+}
+
+export async function createBasicUserApi(name: string, email: string): Promise<{ id: string } | null> {
+  const { apiFetch } = await import('~/utils/api/index');
+  try {
+    const response = await apiFetch<{ id: string }>('/api/v1/users/create-basic', {
+      method: 'POST',
+      body: {
+        name,
+        email,
+        password: 'temp123' // Senha temporária
+      }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creating basic user:', error);
+    throw error;
+  }
+}

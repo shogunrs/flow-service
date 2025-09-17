@@ -75,9 +75,9 @@ const fieldClasses = computed(() => [`select-field--${props.size}`])
   line-height: 1.75rem; /* align text vertically */
   @apply px-2 pr-6 text-[12px] bg-clip-padding;
   padding-top: 0; padding-bottom: 0;
-  @apply focus:ring-[0.5px] focus:ring-orange-500/60 focus:border-orange-400/50;
+  @apply focus:ring-[0.5px] focus:ring-indigo-500/60 focus:border-indigo-400/50;
 }
-.select-field--sm { @apply h-8 px-2 text-sm focus:ring-1 focus:ring-orange-500/60; }
-.select-field--md { @apply h-10 px-3 text-base focus:ring-1 focus:ring-orange-500/60; }
+.select-field--sm { @apply h-8 px-2 text-sm focus:ring-1 focus:ring-indigo-500/60; }
+.select-field--md { @apply h-10 px-3 text-base focus:ring-1 focus:ring-indigo-500/60; }
 .select-error { @apply text-[11px] text-red-400 mt-0.5; }
 </style>

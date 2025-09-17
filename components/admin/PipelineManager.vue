@@ -54,7 +54,7 @@
         </span>
       </div>
       <button
-        class="text-orange-400 hover:text-orange-300 text-sm"
+        class="text-indigo-400 hover:text-indigo-300 text-sm"
         @click="openBuilder(i)"
       >
         Inputs
@@ -92,7 +92,7 @@
             Cancelar
           </button>
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             @click="saveBuilder"
           >
             Salvar
@@ -190,7 +190,7 @@ const colorMap = {
   green: "bg-green-500",
   purple: "bg-purple-500",
   blue: "bg-blue-500",
-  orange: "bg-orange-500",
+  orange: "bg-indigo-600",
   teal: "bg-teal-500",
   cyan: "bg-cyan-500",
   lime: "bg-lime-500",
@@ -296,11 +296,11 @@ async function saveBuilder() {
   map[st.id] = builderFields.value;
   saveForms(map);
 
-  // Save stage properties to backend
+  // Save stage properties to backend (restaurar comportamento original)
   try {
     if (isApiEnabled()) {
       // Save stage properties (title, slaDays, color, defaultStatus)
-      await saveStagesPreservingIdsApi(props.pipelineKey, localStages.value, localStages.value);
+      await saveStagesPreservingIdsApi(props.pipelineKey, localStages.value);
 
       // Find the updated stage ID after saving
       const remote = await fetchStagesApi(props.pipelineKey);

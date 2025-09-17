@@ -22,7 +22,7 @@
             class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap"
             :class="
               activeTab === tab.value
-                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
             "
             @click="activeTab = tab.value"
@@ -39,7 +39,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
           <h2 class="text-xl font-semibold">Usuários</h2>
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 md:px-3 md:py-2 rounded-md text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-4 py-3 md:px-3 md:py-2 rounded-md text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
             @click="openNewUserModal"
           >
             <i class="fa-solid fa-user-plus"></i>
@@ -166,7 +166,7 @@
                 />
               </div>
               <button
-                class="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
+                class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
                 :disabled="creatingProcess"
                 @click="createProcess"
                 title="Adicionar processo"
@@ -201,7 +201,7 @@
                   >
                     <input
                       type="radio"
-                      class="accent-orange-500"
+                      class="accent-indigo-500"
                       :checked="currentProcessKey === p.key"
                     />
                     <span class="text-sm font-medium">{{ p.name }}</span>
@@ -254,7 +254,7 @@
           </div>
           <div class="text-[12px] text-slate-300">
             Selecione um processo acima e clique em
-            <span class="text-orange-400 font-medium">Editar</span> para
+            <span class="text-indigo-400 font-medium">Editar</span> para
             configurar colunas e inputs no modal.
           </div>
         </div>
@@ -264,7 +264,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
           <h2 class="text-xl font-semibold">Gerenciar Status</h2>
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 md:px-3 md:py-2 rounded-md text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-4 py-3 md:px-3 md:py-2 rounded-md text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
             @click="openNewStatusModal"
           >
             <i class="fa-solid fa-plus"></i>
@@ -279,7 +279,7 @@
               class="px-3 py-2 md:py-1.5 text-sm rounded-md border transition-colors"
               :class="
                 selectedCategory === null
-                  ? 'bg-orange-500 text-white border-orange-500'
+                  ? 'bg-indigo-600 text-white border-indigo-500'
                   : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
               "
               @click="filterByCategory(null)"
@@ -292,7 +292,7 @@
               class="px-3 py-2 md:py-1.5 text-sm rounded-md border transition-colors"
               :class="
                 selectedCategory === cat.value
-                  ? 'bg-orange-500 text-white border-orange-500'
+                  ? 'bg-indigo-600 text-white border-indigo-500'
                   : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
               "
               @click="filterByCategory(cat.value)"
@@ -399,7 +399,7 @@
             Fechar
           </button>
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-3 py-2 rounded-md text-sm"
             @click="savePipelineModal"
           >
             Salvar
@@ -593,7 +593,7 @@
             Cancelar
           </button>
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-3 py-2 rounded-md text-sm"
             @click="saveStatus"
           >
             {{ editingStatus ? "Atualizar" : "Criar" }}
@@ -627,7 +627,7 @@
                 <button
                   type="button"
                   @click="allowEmailEdit = !allowEmailEdit"
-                  class="p-1 text-slate-400 hover:text-orange-400 transition-colors"
+                  class="p-1 text-slate-400 hover:text-indigo-400 transition-colors"
                   :title="allowEmailEdit ? 'Desabilitar edição do email' : 'Habilitar edição do email'"
                 >
                   <i
@@ -763,7 +763,7 @@
                 type="checkbox"
                 :checked="userForm.roles.includes(role.value)"
                 @change="toggleRole(role.value)"
-                class="accent-orange-500"
+                class="accent-indigo-500"
               />
               <span class="text-sm text-slate-200">{{ role.label }}</span>
             </label>
@@ -927,7 +927,7 @@
             Cancelar
           </button>
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-3 py-2 rounded-md text-sm"
             @click="saveUser"
           >
             {{ editingUser ? "Atualizar" : "Criar" }}

@@ -131,6 +131,6 @@ const formatSize = (s: number) => {
   @apply text-slate-400 text-xs;
 }
 .fd-remove {
-  @apply text-xs text-orange-400 hover:text-orange-300 bg-slate-700/50 hover:bg-slate-600/50 px-2 py-1 rounded-md transition-colors;
+  @apply text-xs text-indigo-400 hover:text-indigo-300 bg-slate-700/50 hover:bg-slate-600/50 px-2 py-1 rounded-md transition-colors;
 }
 </style>

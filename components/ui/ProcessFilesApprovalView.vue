@@ -29,7 +29,7 @@
       <div class="flex items-center gap-2 text-xs">
         <button
           @click="filterStatus = 'all'"
-          :class="filterStatus === 'all' ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'"
+          :class="filterStatus === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'"
           class="px-2 py-1 rounded-md transition-colors"
         >
           Todos ({{ files.length }})
