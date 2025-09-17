@@ -18,7 +18,7 @@
               @click="viewMode = 'kanban'"
               :class="
                 viewMode === 'kanban'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-indigo-600 text-white'
                   : 'text-slate-300 hover:bg-slate-700/80'
               "
               class="px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1"
@@ -29,7 +29,7 @@
               @click="viewMode = 'list'"
               :class="
                 viewMode === 'list'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-indigo-600 text-white'
                   : 'text-slate-300 hover:bg-slate-700/80'
               "
               class="px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1"
@@ -40,7 +40,7 @@
           <!-- New proposal -->
           <button
             @click="openGlobalNewRecordModal"
-            class="bg-orange-500 hover:bg-orange-600 text-white font-medium px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 text-xs"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white font-medium px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 text-xs"
           >
             <i class="fa-solid fa-plus text-[10px]"></i>
             <span class="hidden sm:inline">Novo Registro</span>
@@ -67,7 +67,7 @@
                 ? 'ring-2 ring-blue-400 ring-offset-0'
                 : '',
               isDraggingStage && columnDragOverIndex === i
-                ? 'ring-2 ring-orange-400'
+                ? 'ring-2 ring-indigo-400'
                 : '',
               isDraggingStage && draggingStageId === stage.id
                 ? 'opacity-90'
@@ -684,7 +684,7 @@
             Cancelar
           </button>
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-md text-xs"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-2 py-1 rounded-md text-xs"
             @click="saveNewProposal"
           >
             <i class="fa-solid fa-check mr-1"></i>Salvar
@@ -907,7 +907,7 @@
               Fechar
             </button>
             <button
-              class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-md text-xs"
+              class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-2 py-1 rounded-md text-xs"
               @click="saveStageForm"
             >
               Salvar
@@ -1511,10 +1511,10 @@ const colorStyles = {
     badge: "bg-blue-900/50 text-blue-300 ring-1 ring-inset ring-blue-500/20",
   },
   orange: {
-    border: "border-orange-500",
-    strip: "bg-orange-500",
+    border: "border-indigo-500",
+    strip: "bg-indigo-600",
     badge:
-      "bg-orange-900/50 text-orange-300 ring-1 ring-inset ring-orange-500/20",
+      "bg-indigo-900/50 text-indigo-300 ring-1 ring-inset ring-indigo-500/20",
   },
   teal: {
     border: "border-teal-500",
@@ -2489,13 +2489,13 @@ watch(
   @apply text-[10px];
 }
 .new-proposal-modal .form-input {
-  @apply w-full bg-slate-700/70 border border-slate-600/60 rounded-sm h-5 px-1 text-[10px] leading-none outline-none focus:ring-[0.5px] focus:ring-orange-500/60 focus:border-orange-400/50 transition;
+  @apply w-full bg-slate-700/70 border border-slate-600/60 rounded-sm h-5 px-1 text-[10px] leading-none outline-none focus:ring-[0.5px] focus:ring-indigo-500/60 focus:border-indigo-400/50 transition;
 }
 .new-proposal-modal .form-select {
-  @apply w-full bg-slate-700/70 border border-slate-600/60 rounded-sm h-5 px-1 text-[10px] leading-none outline-none focus:ring-[0.5px] focus:ring-orange-500/60 focus:border-orange-400/50 transition;
+  @apply w-full bg-slate-700/70 border border-slate-600/60 rounded-sm h-5 px-1 text-[10px] leading-none outline-none focus:ring-[0.5px] focus:ring-indigo-500/60 focus:border-indigo-400/50 transition;
 }
 .new-proposal-modal .form-textarea {
-  @apply w-full bg-slate-700/70 border border-slate-600/60 rounded-sm px-1.5 py-1 text-[10px] outline-none focus:ring-[0.5px] focus:ring-orange-500/60 focus:border-orange-400/50 transition;
+  @apply w-full bg-slate-700/70 border border-slate-600/60 rounded-sm px-1.5 py-1 text-[10px] outline-none focus:ring-[0.5px] focus:ring-indigo-500/60 focus:border-indigo-400/50 transition;
 }
 .new-proposal-modal .cep-group {
   @apply flex items-center gap-2;
@@ -2510,7 +2510,7 @@ watch(
   @apply bg-slate-700 hover:bg-slate-600 text-slate-200;
 }
 .new-proposal-modal .btn-primary {
-  @apply bg-orange-500 hover:bg-orange-600 text-white;
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white;
 }
 /* tighten grid gaps globally in modal */
 .new-proposal-modal .grid {
@@ -2528,7 +2528,7 @@ watch(
   @apply bg-slate-700/70 border border-slate-600/60 rounded-sm;
 }
 .new-proposal-modal .input-container--focused {
-  @apply ring-[0.5px] ring-orange-500/60 border-orange-400/50;
+  @apply ring-[0.5px] ring-indigo-500/60 border-indigo-400/50;
 }
 .new-proposal-modal .input-field {
   @apply text-slate-200 placeholder-gray-400;

@@ -57,7 +57,7 @@
         </button>
         <button
           type="button"
-          class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="!recordName.trim()"
           @click="handleSave"
         >
@@ -105,7 +105,7 @@ const colorMap = {
   green: "bg-green-500",
   purple: "bg-purple-500",
   blue: "bg-blue-500",
-  orange: "bg-orange-500",
+  orange: "bg-indigo-600",
   teal: "bg-teal-500",
   cyan: "bg-cyan-500",
   lime: "bg-lime-500",

@@ -300,7 +300,7 @@ const getDueDateClass = (dueDate: string) => {
   const diffDays = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
   
   if (diffDays < 0) return 'text-red-600 font-semibold' // Overdue
-  if (diffDays <= 3) return 'text-orange-600 font-semibold' // Due soon
+  if (diffDays <= 3) return 'text-indigo-600 font-semibold' // Due soon
   return 'text-gray-600' // Normal
 }
 

@@ -7,7 +7,7 @@
       :class="[
         'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all duration-200 relative',
         isActive
-          ? 'bg-orange-500 text-white shadow-lg'
+          ? 'bg-indigo-600 text-white shadow-lg'
           : 'text-slate-300 hover:text-white hover:bg-slate-800',
         collapsed ? 'justify-center' : ''
       ]"
@@ -113,26 +113,19 @@ const hasChildren = computed(() => {
 
 // Methods
 function handleClick() {
-  console.log("🔥 SidebarItem handleClick:", props.item);
-  console.log("🔥 hasChildren:", hasChildren.value);
-  console.log("🔥 collapsed:", props.collapsed);
-
   // Se for a Esteira, fazer fetch dos processos primeiro
   if (props.item.path === '/esteira') {
     emit('fetch-esteira')
   }
 
   if (hasChildren.value && !props.collapsed) {
-    console.log("🔥 Expandindo submenu");
     isExpanded.value = !isExpanded.value
   } else {
-    console.log("🔥 Emitindo click para:", props.item);
     emit('click', props.item)
   }
 }
 
 function handleChildClick(child) {
-  console.log("🔥 SidebarItem handleChildClick:", child);
   emit('click', child)
 }
 

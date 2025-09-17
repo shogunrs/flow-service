@@ -129,7 +129,7 @@
             <input
               type="checkbox"
               v-model="f.required"
-              class="accent-orange-500"
+              class="accent-indigo-500"
             />
             Obrigatório
           </label>
@@ -304,7 +304,7 @@ const colors = [
   { name: "green", ring: "bg-green-500" },
   { name: "purple", ring: "bg-purple-500" },
   { name: "blue", ring: "bg-blue-500" },
-  { name: "orange", ring: "bg-orange-500" },
+  { name: "orange", ring: "bg-indigo-600" },
   { name: "teal", ring: "bg-teal-500" },
   { name: "cyan", ring: "bg-cyan-500" },
   { name: "lime", ring: "bg-lime-500" },
@@ -386,7 +386,7 @@ const colorMap: { [key: string]: string } = {
   green: "bg-green-500",
   purple: "bg-purple-500",
   blue: "bg-blue-500",
-  orange: "bg-orange-500",
+  orange: "bg-indigo-600",
   teal: "bg-teal-500",
   cyan: "bg-cyan-500",
   lime: "bg-lime-500",

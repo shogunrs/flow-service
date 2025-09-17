@@ -68,7 +68,7 @@ const btnClasses = computed(() => [props.size === 'xs' ? 'h-7 text-[12px] px-2' 
 <style scoped>
 .group-label { @apply text-[10px] text-slate-300; }
 .group-row { @apply flex items-center gap-2 mt-1; }
-.group-input { @apply w-full bg-slate-700/70 border border-slate-600/60 rounded-sm outline-none text-slate-200 placeholder-gray-400 focus:ring-[0.5px] focus:ring-orange-500/60 focus:border-orange-400/50 transition; }
+.group-input { @apply w-full bg-slate-700/70 border border-slate-600/60 rounded-sm outline-none text-slate-200 placeholder-gray-400 focus:ring-[0.5px] focus:ring-indigo-500/60 focus:border-indigo-400/50 transition; }
 .group-btn { @apply rounded-sm bg-slate-700 hover:bg-slate-600 text-slate-200 transition disabled:opacity-60 disabled:cursor-not-allowed; }
 .group-error { @apply text-[11px] text-red-400 mt-0.5; }
 </style>

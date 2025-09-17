@@ -4,7 +4,7 @@
       <h1 class="text-xl font-semibold">Processos Ativos</h1>
       <NuxtLink
         to="/admin?tab=pipeline"
-        class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm"
+        class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-3 py-2 rounded-md text-sm"
         >Gerenciar Processos</NuxtLink
       >
     </header>
@@ -57,7 +57,7 @@
             Fechar
           </button>
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-3 py-2 rounded-md text-sm"
             @click="showModal = false"
           >
             Salvar

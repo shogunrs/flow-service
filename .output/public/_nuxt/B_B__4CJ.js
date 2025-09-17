@@ -1,0 +1,1 @@
+import{_ as o}from"./DzLqderd.js";import{c as s,o as a,N as r,b as e,ag as n}from"./CPKTtwfv.js";import"./B74M8xGS.js";const c={class:"min-h-screen"},d={__name:"auth",setup(_){return(t,i)=>(a(),s("div",c,[r(t.$slots,"default"),e(o),e(n,{position:"bottom-center"})]))}};export{d as default};

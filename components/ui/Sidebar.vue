@@ -10,7 +10,7 @@
     <!-- Sidebar -->
     <nav
       :class="[
-        'fixed top-0 left-0 h-screen bg-slate-900 border-r border-slate-700 transform transition-all duration-300 ease-in-out z-50',
+        'fixed top-0 left-0 h-screen bg-slate-900 border-r border-slate-700 transform transition-all duration-300 ease-in-out z-[100]',
         'lg:translate-x-0',
         collapsed ? 'w-16' : 'w-64',
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
@@ -26,7 +26,7 @@
             v-show="!collapsed"
             class="text-lg font-bold text-white transition-opacity duration-300"
           >
-            DoCheck
+            ForCon
           </h1>
         </div>
         <div class="flex items-center gap-2">
@@ -58,7 +58,7 @@
       <div class="p-4 border-b border-slate-700">
         <div class="flex items-center gap-3">
           <div
-            class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-orange-600 transition-colors"
+            class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
             :title="collapsed ? currentUser?.name : ''"
           >
             <i class="fa-solid fa-user text-white text-sm"></i>
@@ -118,7 +118,7 @@
     <button
       v-if="!mobileMenuOpen"
       @click="openMobileMenu"
-      class="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+      class="fixed top-4 left-4 z-[110] lg:hidden p-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 transition-colors"
     >
       <i class="fa-solid fa-bars text-lg"></i>
     </button>
@@ -234,10 +234,22 @@ const menuItems = computed(() => [
         description: "Gerenciar usuários",
       },
       {
-        label: "Pipelines",
-        path: "/admin/pipelines",
-        icon: "fa-solid fa-code-branch",
-        description: "Gerenciar pipelines",
+        label: "Esteira",
+        path: "/admin/pipeline",
+        icon: "fa-solid fa-sitemap",
+        description: "Gerenciar pipeline",
+      },
+      {
+        label: "Status",
+        path: "/admin/status",
+        icon: "fa-solid fa-circle-info",
+        description: "Gerenciar status",
+      },
+      {
+        label: "Notificações",
+        path: "/admin/notifications",
+        icon: "fa-solid fa-bell",
+        description: "Gerenciar notificações",
       },
     ],
   },
@@ -259,12 +271,6 @@ function isActive(path) {
 }
 
 async function navigateTo(item) {
-  console.log("🚀 Navegando para:", item);
-  console.log("🚀 Tipo do item:", typeof item);
-  console.log("🚀 Item é objeto?", typeof item === 'object');
-  console.log("🚀 Path:", item?.path);
-  console.log("🚀 Label:", item?.label);
-
   // Se o item tem children e a sidebar está colapsada, expandir automaticamente
   if (item.children && item.children.length > 0 && collapsed.value) {
     collapsed.value = false;
@@ -274,10 +280,7 @@ async function navigateTo(item) {
 
   // Sempre navegar para a página, exceto para Esteira principal que só expande os submenus
   if (item?.path && item.path !== "/esteira") {
-    console.log("🚀 Fazendo push para:", item.path);
     router.push(item.path);
-  } else {
-    console.log("🚀 Não navegando. Item path:", item?.path);
   }
 
   if (mobileMenuOpen.value) {
@@ -403,6 +406,6 @@ nav {
   top: 0 !important;
   left: 0 !important;
   height: 100vh !important;
-  z-index: 50 !important;
+  z-index: 100 !important;
 }
 </style>

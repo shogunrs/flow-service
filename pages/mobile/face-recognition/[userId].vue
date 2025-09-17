@@ -83,7 +83,7 @@
         v-if="!isProcessing && !captureSuccess"
         @click="capturePhoto"
         :disabled="!canCapture"
-        class="mt-6 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors"
+        class="mt-6 bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors"
       >
         <i class="fa-solid fa-camera mr-2"></i>
         Capturar

@@ -111,26 +111,26 @@ const buttonClasses = computed(() => {
   // Variant classes
   if (props.outline) {
     const outlineVariantClasses = {
-      primary: 'border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white focus:ring-orange-500',
+      primary: 'border-2 border-indigo-500 text-indigo-500 hover:bg-indigo-500 hover:text-white focus:ring-indigo-500',
       secondary: 'border-2 border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white focus:ring-gray-500',
       success: 'border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white focus:ring-green-500',
       danger: 'border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white focus:ring-red-500',
       warning: 'border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-white focus:ring-yellow-500',
       info: 'border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white focus:ring-blue-500',
       ghost: 'border-2 border-transparent text-gray-400 hover:text-white hover:bg-gray-700 focus:ring-gray-500',
-      link: 'border-2 border-transparent text-orange-500 hover:text-orange-400 focus:ring-orange-500'
+      link: 'border-2 border-transparent text-indigo-500 hover:text-indigo-400 focus:ring-indigo-500'
     }
     classes.push(outlineVariantClasses[props.variant])
   } else {
     const variantClasses = {
-      primary: 'bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500',
+      primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
       secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
       success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
       danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
       warning: 'bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500',
       info: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
       ghost: 'bg-transparent text-gray-400 hover:text-white hover:bg-gray-700 focus:ring-gray-500',
-      link: 'bg-transparent text-orange-500 hover:text-orange-400 focus:ring-orange-500'
+      link: 'bg-transparent text-indigo-500 hover:text-indigo-400 focus:ring-indigo-500'
     }
     classes.push(variantClasses[props.variant])
   }

@@ -49,8 +49,8 @@
           v-if="cameraActive && !capturedImage"
           class="absolute inset-0 pointer-events-none"
         >
-          <div class="w-full h-full border-2 border-dashed border-orange-500/50 rounded-lg flex items-center justify-center">
-            <div class="w-32 h-32 border-2 border-orange-500 rounded-full animate-pulse"></div>
+          <div class="w-full h-full border-2 border-dashed border-indigo-500/50 rounded-lg flex items-center justify-center">
+            <div class="w-32 h-32 border-2 border-indigo-500 rounded-full animate-pulse"></div>
           </div>
         </div>
 
@@ -83,7 +83,7 @@
         <button
           v-if="!cameraActive && !capturedImage"
           @click="startCamera"
-          class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
           :disabled="processing"
         >
           <i class="fa-solid fa-camera"></i>

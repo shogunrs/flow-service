@@ -30,7 +30,7 @@
         <p class="text-sm text-slate-300">Enviando arquivo...</p>
         <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
           <div
-            class="bg-orange-500 h-2 rounded-full transition-all duration-300"
+            class="bg-indigo-600 h-2 rounded-full transition-all duration-300"
             :style="{ width: uploadProgress + '%' }"
           ></div>
         </div>
