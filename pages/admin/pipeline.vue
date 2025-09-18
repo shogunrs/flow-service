@@ -25,14 +25,24 @@
               />
             </div>
             <div class="flex items-center">
-              <label class="flex items-center space-x-2 text-sm text-slate-300 cursor-pointer">
-                <input
-                  v-model="newProcFinanceiro"
-                  type="checkbox"
-                  class="rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900"
-                />
-                <span>Financeiro</span>
-              </label>
+              <button
+                type="button"
+                @click="newProcFinanceiro = !newProcFinanceiro"
+                :class="[
+                  'flex items-center justify-center w-9 h-9 rounded-md transition-all duration-200 border',
+                  newProcFinanceiro
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-lg shadow-emerald-500/25'
+                    : 'bg-slate-800/70 hover:bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-500'
+                ]"
+                :title="newProcFinanceiro ? 'Processo Financeiro (clique para desativar)' : 'Marcar como processo financeiro'"
+              >
+                <i :class="[
+                  'fa-solid transition-all duration-200',
+                  newProcFinanceiro ? 'fa-dollar-sign text-white animate-pulse' : 'fa-dollar-sign text-slate-400'
+                ]"
+                :style="newProcFinanceiro ? 'filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.8));' : ''"
+                ></i>
+              </button>
             </div>
             <button
               class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
