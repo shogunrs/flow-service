@@ -25,7 +25,7 @@
               />
             </div>
             <button
-              class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
               :disabled="creatingProcess"
               @click="createProcess"
               title="Adicionar processo"
@@ -108,27 +108,24 @@
             </div>
           </div>
         </div>
-
-        <!-- Pipeline Manager Component -->
-        <div v-if="currentProcessKey" class="mt-6">
-          <PipelineManager
-            ref="pipelineManagerRef"
-            v-model:stages="pipelineStages"
-            :pipeline-key="currentProcessKey"
-          />
+        <div class="text-[12px] text-slate-300">
+          Selecione um processo acima e clique em
+          <span class="text-indigo-400 font-medium">Editar</span> para
+          configurar colunas e inputs no modal.
         </div>
       </div>
     </main>
 
-    <!-- Pipeline Edit Modal -->
+    <!-- Modal: Gestão da Esteira (BaseModal) -->
     <BaseModal
       v-model="showPipelineModal"
-      :title="`Editar Pipeline: ${processName}`"
-      size="xl"
+      title="Gestão da Esteira"
+      size="lg"
+      :z-index="55"
     >
-      <div class="space-y-4">
+      <div class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
         <div>
-          <label class="text-[12px] text-slate-300">Nome do processo</label>
+          <label class="text-[12px] text-slate-300">Nome do Processo</label>
           <input
             v-model="processName"
             class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
@@ -136,7 +133,6 @@
           />
         </div>
         <PipelineManager
-          ref="pipelineManagerModalRef"
           v-model:stages="pipelineStages"
           :pipeline-key="currentProcessKey"
         />
@@ -150,8 +146,8 @@
             Fechar
           </button>
           <button
-            class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            @click="savePipeline"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-3 py-2 rounded-md text-sm"
+            @click="savePipelineModal"
           >
             Salvar
           </button>
@@ -159,49 +155,80 @@
       </template>
     </BaseModal>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Modal: Confirmar Exclusão de Processo -->
     <BaseModal
       v-model="showDeleteModal"
-      title="Confirmar Exclusão"
+      title="Confirmar exclusão"
       size="sm"
+      :z-index="60"
     >
-      <div class="space-y-4">
-        <p class="text-slate-300">
-          Tem certeza que deseja excluir o processo "{{ processToDelete?.name }}"?
+      <div class="space-y-2">
+        <p class="text-sm text-slate-200">
+          Para confirmar, digite exatamente o nome do processo abaixo.
         </p>
-        <p class="text-sm text-slate-400">
-          Esta ação não pode ser desfeita.
-        </p>
+        <div
+          class="rounded-md border border-slate-700/60 bg-slate-900/40 px-3 py-2"
+        >
+          <div class="text-white text-sm font-semibold">
+            {{ deleteTarget?.name || deleteTarget?.key }}
+          </div>
+          <div class="text-[11px] text-slate-400">{{ deleteTarget?.key }}</div>
+        </div>
+        <div>
+          <label class="text-[12px] text-slate-300">Digite o nome do processo</label>
+          <input
+            v-model="deleteConfirm"
+            class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+            :placeholder="deleteTarget?.name || ''"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            @paste.prevent
+            @drop.prevent
+            @copy.prevent
+            @cut.prevent
+            @contextmenu.prevent
+            @keydown="onDeleteConfirmKeydown"
+          />
+          <div
+            v-if="deleteConfirm && !canConfirmDelete"
+            class="text-[11px] text-red-400 mt-1"
+          >
+            O nome digitado não confere.
+          </div>
+        </div>
       </div>
       <template #footer>
         <div class="flex items-center justify-end gap-2">
           <button
             class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md text-sm"
-            @click="showDeleteModal = false"
+            @click="cancelDelete"
           >
             Cancelar
           </button>
           <button
             class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm"
+            :disabled="!canConfirmDelete"
             @click="confirmDelete"
           >
-            Excluir
+            Excluir Processo
           </button>
         </div>
       </template>
     </BaseModal>
 
-    <!-- Reset Confirmation Modal -->
+    <!-- Modal: Confirmar Reset -->
     <BaseModal
       v-model="showResetModal"
-      title="Zerar Dados Locais"
+      title="Confirmar reset"
       size="sm"
+      :z-index="60"
     >
-      <div class="space-y-4">
-        <p class="text-slate-300">
+      <div class="space-y-2">
+        <p class="text-sm text-slate-200">
           Tem certeza que deseja zerar todos os dados locais?
         </p>
-        <p class="text-sm text-slate-400">
+        <p class="text-[12px] text-slate-400">
           Esta ação removerá todos os processos e configurações locais.
         </p>
       </div>
@@ -209,7 +236,7 @@
         <div class="flex items-center justify-end gap-2">
           <button
             class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md text-sm"
-            @click="showResetModal = false"
+            @click="cancelReset"
           >
             Cancelar
           </button>
@@ -226,7 +253,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import BaseModal from "~/components/ui/BaseModal.vue"
 import PipelineManager from "~/components/admin/PipelineManager.vue"
 import {
@@ -259,25 +286,12 @@ definePageMeta({
 const { setLastKey } = useProcessSubmenu()
 const { success: toastSuccess, error: toastError, info: toastInfo } = useToast()
 
-// State
+// Process registry
 const processes = ref(listProcesses())
 const currentProcessKey = ref(processes.value[0]?.key || "")
 const newProcName = ref("")
 const creatingProcess = ref(false)
-const processName = ref("")
-const pipelineStages = ref([])
 
-// Component refs
-const pipelineManagerRef = ref(null)
-const pipelineManagerModalRef = ref(null)
-
-// Modals
-const showPipelineModal = ref(false)
-const showDeleteModal = ref(false)
-const showResetModal = ref(false)
-const processToDelete = ref(null)
-
-// Functions
 async function createProcess() {
   const name = newProcName.value.trim()
   if (!name) return
@@ -303,86 +317,21 @@ async function createProcess() {
   creatingProcess.value = false
 }
 
-function toggleActive(p) {
-  setProcessActive(p.key, !(p.active !== false))
-  processes.value = listProcesses()
-}
+const pipelineStages = ref([
+  { id: "dados_basicos", title: "Dados Básicos", slaDays: 2, color: "sky" },
+  { id: "documentacao", title: "Documentação", slaDays: 5, color: "indigo" },
+])
+const processName = ref("")
 
-async function editProcess(p) {
-  currentProcessKey.value = p.key
-  const loaded = await fetchStagesApi(p.key)
-  pipelineStages.value = Array.isArray(loaded)
-    ? loaded.map((s) => ({
-        id: s.id,
-        title: s.title,
-        slaDays: s.slaDays,
-        color: s.color,
-      }))
-    : []
-  setLastKey(p.key)
-  const p_found = processes.value.find((x) => x.key === p.key)
-  processName.value = p_found?.name || p.key
-  await prefetchStageFields()
+// Modal Gestão da Esteira
+const showPipelineModal = ref(false)
+function openPipelineModal() {
   showPipelineModal.value = true
 }
-
-function openDeleteModal(p) {
-  processToDelete.value = p
-  showDeleteModal.value = true
-}
-
-async function confirmDelete() {
-  const p = processToDelete.value
-  if (!p) return
-
-  // Remoção otimista no DOM
-  const key = p.key
-  processes.value = processes.value.filter((x) => x.key !== key)
-  if (currentProcessKey.value === key) {
-    currentProcessKey.value = processes.value[0]?.key || ""
-    pipelineStages.value = []
-    if (currentProcessKey.value) setLastKey(currentProcessKey.value)
-  }
-
-  // Efetiva no backend e re-sincroniza silenciosamente
-  const ok = await removeProcess(key)
-  if (ok) toastSuccess("Processo excluído")
-  else {
-    // rollback
-    processes.value = [...processes.value, p]
-    toastError("Falha ao excluir. Tente novamente.")
-  }
-
-  showDeleteModal.value = false
-  processToDelete.value = null
-}
-
-function openResetModal() {
-  showResetModal.value = true
-}
-
-function confirmReset() {
-  // Remove todos os processos e dados locais relacionados
-  try {
-    const keys = processes.value.map((p) => p.key)
-    keys.forEach((k) => removeProcess(k))
-    // também limpa o registro explicitamente
-    localStorage.removeItem("pipeline_processes")
-  } catch (_) {}
-  processes.value = []
-  currentProcessKey.value = ""
-  pipelineStages.value = []
-  setLastKey("")
-  showResetModal.value = false
-}
-
 function closePipelineModal() {
   showPipelineModal.value = false
-  processName.value = ""
-  // Não zerar pipelineStages aqui - deixar para ser gerenciado pelo watch
 }
-
-async function savePipeline() {
+async function savePipelineModal() {
   if (currentProcessKey.value) {
     // Quando backend ativo, não renomeamos a key (a API ainda não suporta). Apenas atualiza nome.
     if (!isApiEnabled()) {
@@ -474,6 +423,65 @@ async function savePipeline() {
   }
 }
 
+// Load/save pipeline config locally
+onMounted(async () => {
+  if (!currentProcessKey.value) return
+  const loaded = await fetchStagesApi(currentProcessKey.value)
+  pipelineStages.value = Array.isArray(loaded)
+    ? loaded.map((s) => ({
+        id: s.id,
+        title: s.title,
+        slaDays: s.slaDays,
+        color: s.color,
+      }))
+    : []
+  await prefetchStageFields()
+})
+
+watch(currentProcessKey, async (k) => {
+  if (!k) {
+    pipelineStages.value = []
+    return
+  }
+  const loaded = await fetchStagesApi(k)
+  pipelineStages.value = Array.isArray(loaded)
+    ? loaded.map((s) => ({
+        id: s.id,
+        title: s.title,
+        slaDays: s.slaDays,
+        color: s.color,
+      }))
+    : []
+  setLastKey(k)
+  const p = processes.value.find((x) => x.key === k)
+  processName.value = p?.name || k
+  await prefetchStageFields()
+})
+
+// Persistiremos as etapas somente ao salvar no modal
+
+function toggleActive(p) {
+  setProcessActive(p.key, !(p.active !== false))
+  processes.value = listProcesses()
+}
+
+async function editProcess(p) {
+  currentProcessKey.value = p.key
+  const loaded = await fetchStagesApi(p.key)
+  pipelineStages.value = Array.isArray(loaded)
+    ? loaded.map((s) => ({
+        id: s.id,
+        title: s.title,
+        slaDays: s.slaDays,
+        color: s.color,
+      }))
+    : []
+  setLastKey(p.key)
+  processName.value = p.name || p.key
+  await prefetchStageFields()
+  openPipelineModal()
+}
+
 // Busca os fields do backend por etapa (para mostrar contagem e já aquecer o builder)
 async function prefetchStageFields() {
   if (!isApiEnabled()) return
@@ -503,41 +511,80 @@ async function prefetchStageFields() {
   } catch (_) {}
 }
 
-// Watch for process key changes
-watch(currentProcessKey, async (k) => {
-  if (!k) {
+// Delete modal state/handlers
+const showDeleteModal = ref(false)
+const deleteTarget = ref(null)
+const deleteConfirm = ref("")
+const canConfirmDelete = computed(() => {
+  const target = (deleteTarget.value?.name || "").trim().toLowerCase()
+  const typed = deleteConfirm.value.trim().toLowerCase()
+  return !!target && typed === target
+})
+const showResetModal = ref(false)
+function openDeleteModal(p) {
+  deleteTarget.value = p
+  deleteConfirm.value = ""
+  showDeleteModal.value = true
+}
+function cancelDelete() {
+  showDeleteModal.value = false
+  deleteTarget.value = null
+  deleteConfirm.value = ""
+}
+async function confirmDelete() {
+  const p = deleteTarget.value
+  if (!p || !canConfirmDelete.value) return
+
+  // Remoção otimista no DOM
+  const key = p.key
+  processes.value = processes.value.filter((x) => x.key !== key)
+  if (currentProcessKey.value === key) {
+    currentProcessKey.value = processes.value[0]?.key || ""
     pipelineStages.value = []
+    if (currentProcessKey.value) setLastKey(currentProcessKey.value)
+  }
+
+  // Efetiva no backend e re-sincroniza silenciosamente
+  const ok = await removeProcess(key)
+  if (ok) toastSuccess("Processo excluído")
+  else {
+    // rollback
+    processes.value = [...processes.value, p]
+    toastError("Falha ao excluir. Tente novamente.")
+  }
+  // Não recarrega toda a lista para evitar GET extra; o evento já atualizará quem escuta
+
+  cancelDelete()
+}
+
+function onDeleteConfirmKeydown(e) {
+  // Block paste shortcuts (Cmd/Ctrl+V) and select-all paste combos
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+    e.preventDefault()
     return
   }
-  const loaded = await fetchStagesApi(k)
-  pipelineStages.value = Array.isArray(loaded)
-    ? loaded.map((s) => ({
-        id: s.id,
-        title: s.title,
-        slaDays: s.slaDays,
-        color: s.color,
-      }))
-    : []
-  setLastKey(k)
-  const p = processes.value.find((x) => x.key === k)
-  processName.value = p?.name || k
-  await prefetchStageFields()
-})
+}
 
-// Load/save pipeline config locally
-onMounted(async () => {
-  if (!currentProcessKey.value) return
-  const loaded = await fetchStagesApi(currentProcessKey.value)
-  pipelineStages.value = Array.isArray(loaded)
-    ? loaded.map((s) => ({
-        id: s.id,
-        title: s.title,
-        slaDays: s.slaDays,
-        color: s.color,
-      }))
-    : []
-  await prefetchStageFields()
-})
+function openResetModal() {
+  showResetModal.value = true
+}
+function cancelReset() {
+  showResetModal.value = false
+}
+function confirmReset() {
+  // Remove todos os processos e dados locais relacionados
+  try {
+    const keys = processes.value.map((p) => p.key)
+    keys.forEach((k) => removeProcess(k))
+    // também limpa o registro explicitamente
+    localStorage.removeItem("pipeline_processes")
+  } catch (_) {}
+  processes.value = []
+  currentProcessKey.value = ""
+  pipelineStages.value = []
+  setLastKey("")
+  showResetModal.value = false
+}
 
 // Initialize
 if (currentProcessKey.value) {

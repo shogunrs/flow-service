@@ -20,6 +20,91 @@ export async function saveStagesApi(processKey: string, stages: any[]): Promise<
 // NOTA: Backend apenas suporta operações em lote via PUT
 // As funções individuais não são suportadas pela API atual
 
+// Função para criar um novo estágio sem afetar os existentes
+export async function createStageApi(processKey: string, newStage: any): Promise<any | null> {
+  if (!isApiEnabled()) return newStage
+
+  try {
+    // Busca estágios existentes
+    const existingStages = await fetchStagesApi(processKey)
+
+    // Adiciona o novo estágio ao final da lista
+    const stagesToSave = [
+      ...existingStages,
+      {
+        title: newStage.title,
+        slaDays: newStage.slaDays,
+        color: newStage.color,
+        defaultStatus: newStage.defaultStatus || '',
+        order: existingStages.length
+      }
+    ]
+
+    // Salva todos os estágios (preservando os existentes)
+    const saved = await saveStagesApi(processKey, stagesToSave)
+
+    // Retorna apenas o novo estágio criado
+    return saved[saved.length - 1] || null
+  } catch (error) {
+    console.error('Error creating stage:', error)
+    return null
+  }
+}
+
+// Função para atualizar um estágio específico sem afetar os outros
+export async function updateStageApi(processKey: string, stageId: string, updatedStage: any): Promise<boolean> {
+  if (!isApiEnabled()) return false
+
+  try {
+    // Busca estágios existentes
+    const existingStages = await fetchStagesApi(processKey)
+
+    // Encontra e atualiza apenas o estágio específico
+    const updatedStages = existingStages.map(stage => {
+      if (stage.id === stageId) {
+        return {
+          id: stage.id,
+          title: updatedStage.title || stage.title,
+          slaDays: updatedStage.slaDays !== undefined ? updatedStage.slaDays : stage.slaDays,
+          color: updatedStage.color || stage.color,
+          defaultStatus: updatedStage.defaultStatus !== undefined ? updatedStage.defaultStatus : stage.defaultStatus,
+          order: updatedStage.order !== undefined ? updatedStage.order : stage.order
+        }
+      }
+      return stage
+    })
+
+    // Salva todos os estágios com a atualização
+    await saveStagesApi(processKey, updatedStages)
+    return true
+  } catch (error) {
+    console.error('Error updating stage:', error)
+    return false
+  }
+}
+
+// Função para deletar um estágio específico
+export async function deleteStageApi(processKey: string, stageId: string): Promise<boolean> {
+  if (!isApiEnabled()) return false
+
+  try {
+    // Busca estágios existentes
+    const existingStages = await fetchStagesApi(processKey)
+
+    // Remove o estágio específico
+    const filteredStages = existingStages
+      .filter(stage => stage.id !== stageId)
+      .map((stage, index) => ({ ...stage, order: index })) // Reordena índices
+
+    // Salva a lista sem o estágio removido
+    await saveStagesApi(processKey, filteredStages)
+    return true
+  } catch (error) {
+    console.error('Error deleting stage:', error)
+    return false
+  }
+}
+
 // Função inteligente que preserva IDs existentes ao salvar usando PUT em lote
 export async function saveStagesPreservingIdsApi(processKey: string, currentStages: any[], newStages: any[]): Promise<any[]> {
   if (!isApiEnabled()) return newStages
