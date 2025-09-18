@@ -117,7 +117,7 @@ import BaseModal from "~/components/ui/BaseModal.vue";
 import StageFormBuilder from "~/components/admin/StageFormBuilder.vue";
 import { isApiEnabled } from '~/utils/api/index'
 import { fetchStageFieldsApi, saveStageFieldsApi } from '~/composables/useStageFields'
-import { fetchStagesApi, updateStagesOrderApi, saveStagesPreservingIdsApi } from '~/composables/useStages'
+import { fetchStagesApi, updateStagesOrderApi, createStageApi, updateStageApi, deleteStageApi } from '~/composables/useStages'
 
 const props = defineProps({
   stages: { type: Array, default: () => [] },
@@ -177,8 +177,37 @@ async function addAndBuild() {
   const idx = localStages.value.findIndex((s) => s.id === id);
   openBuilder(idx >= 0 ? idx : localStages.value.length - 1);
 }
-function remove(i) {
+async function remove(i) {
+  const stage = localStages.value[i];
+  if (!stage) return;
+
+  // Remove do estado local primeiro (UI otimista)
   localStages.value.splice(i, 1);
+
+  // Se não é um ID temporário, remove do backend
+  const isTemporaryId = stage.id && (
+    stage.id.startsWith('temp_') ||
+    stage.id.match(/^\d+$/) // timestamp simples
+  );
+
+  if (!isTemporaryId && isApiEnabled()) {
+    try {
+      await deleteStageApi(props.pipelineKey, stage.id);
+      showToast('Estágio removido com sucesso!');
+    } catch (error) {
+      console.error('Error deleting stage:', error);
+      // Rollback em caso de erro
+      localStages.value.splice(i, 0, stage);
+      showToast('Erro ao remover estágio. Tente novamente.', 'error');
+    }
+  }
+
+  // Remove dados de form do localStorage
+  const map = loadForms();
+  if (map[stage.id]) {
+    delete map[stage.id];
+    saveForms(map);
+  }
 }
 
 
@@ -296,20 +325,57 @@ async function saveBuilder() {
   map[st.id] = builderFields.value;
   saveForms(map);
 
-  // Save stage properties to backend (restaurar comportamento original)
+  // Save stage properties to backend preservando referências
   try {
     if (isApiEnabled()) {
-      // Save stage properties (title, slaDays, color, defaultStatus)
-      await saveStagesPreservingIdsApi(props.pipelineKey, localStages.value);
-
-      // Find the updated stage ID after saving
-      const remote = await fetchStagesApi(props.pipelineKey);
       let finalStageId = st.id;
 
-      // Find the updated stage by title match
-      const updatedStage = remote.find(r => (r.title || '').trim() === (st.title || '').trim());
-      if (updatedStage?.id) {
-        finalStageId = updatedStage.id;
+      // Verifica se é um ID temporário (novo estágio)
+      const isTemporaryId = st.id && (
+        st.id.startsWith('temp_') ||
+        st.id.match(/^\d+$/) // timestamp simples
+      );
+
+      if (isTemporaryId) {
+        // É um novo estágio - criar sem afetar existentes
+        const newStageData = {
+          title: st.title,
+          slaDays: st.slaDays,
+          color: st.color,
+          defaultStatus: st.defaultStatus
+        };
+
+        const createdStage = await createStageApi(props.pipelineKey, newStageData);
+        if (createdStage?.id) {
+          finalStageId = createdStage.id;
+
+          // Guarda o ID temporário original antes de alterar
+          const originalTempId = st.id;
+
+          // Atualiza o ID do estágio para o ID real do backend
+          st.id = finalStageId;
+
+          // Migra os dados do form do ID temporário para o ID real
+          const map = loadForms();
+          if (map[originalTempId]) {
+            map[finalStageId] = map[originalTempId];
+            delete map[originalTempId];
+          } else {
+            // Garante que os dados atuais sejam salvos com o novo ID
+            map[finalStageId] = builderFields.value;
+          }
+          saveForms(map);
+        }
+      } else {
+        // É um estágio existente - atualizar apenas este estágio
+        const updateData = {
+          title: st.title,
+          slaDays: st.slaDays,
+          color: st.color,
+          defaultStatus: st.defaultStatus
+        };
+
+        await updateStageApi(props.pipelineKey, st.id, updateData);
       }
 
       // Save stage fields if we have a valid MongoDB ID
@@ -318,9 +384,12 @@ async function saveBuilder() {
         const ordered = (builderFields.value || []).map((f, i) => ({ ...f, order: i }));
         await saveStageFieldsApi(finalStageId, ordered);
       }
+
+      showToast('Estágio salvo com sucesso!');
     }
   } catch (error) {
     console.error('Error saving stage:', error);
+    showToast('Erro ao salvar estágio. Tente novamente.', 'error');
   }
 
   showBuilder.value = false;
@@ -396,6 +465,10 @@ async function handleDrop(targetIndex, event) {
 // Toast helper
 const toast = ref({ show: false, text: "" });
 function notify(msg) {
+  toast.value = { show: true, text: msg };
+  setTimeout(() => (toast.value.show = false), 2200);
+}
+function showToast(msg, type = 'success') {
   toast.value = { show: true, text: msg };
   setTimeout(() => (toast.value.show = false), 2200);
 }
