@@ -32,11 +32,16 @@ public class ProcessService {
 
     @Transactional
     public Process create(String externalId, String name) {
+        return create(externalId, name, false);
+    }
+
+    @Transactional
+    public Process create(String externalId, String name, boolean isFinanceiro) {
         String ex = (externalId == null || externalId.isBlank()) ? java.util.UUID.randomUUID().toString() : externalId;
         if (repo.existsByExternalId(ex)) throw new IllegalArgumentException("process id already exists");
-        Process p = new Process(null, ex, name, true, Instant.now(), Instant.now());
+        Process p = new Process(null, ex, name, true, isFinanceiro, Instant.now(), Instant.now());
         Process saved = repo.save(p);
-        publisher.publish("process.created", Map.of("id", ex, "name", name));
+        publisher.publish("process.created", Map.of("id", ex, "name", name, "isFinanceiro", isFinanceiro));
         return saved;
     }
 

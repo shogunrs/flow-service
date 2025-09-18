@@ -13,7 +13,7 @@ function safeParse<T>(raw: string | null, fallback: T): T {
   try { return raw ? (JSON.parse(raw) as T) : fallback } catch { return fallback }
 }
 
-export type ProcessInfo = { key: string; name: string; active?: boolean }
+export type ProcessInfo = { key: string; name: string; active?: boolean; isFinanceiro?: boolean }
 
 let apiProcessCache: Array<ProcessInfo> = []
 let processesRefreshInFlight: Promise<void> | null = null
@@ -65,14 +65,14 @@ export function ensureDefaultProcess(defaultKey = 'quotaequity', defaultName = '
   }
 }
 
-export async function addProcess(key: string, name: string): Promise<boolean> {
+export async function addProcess(key: string, name: string, isFinanceiro: boolean = false): Promise<boolean> {
   if (!key) return
   if (isApiEnabled()) {
     // attempt API create first; if falhar, não espelha local para evitar inconsistência
     try {
-      await apiFetch('/api/v1/processes', { method: 'POST', body: { key, name } })
+      await apiFetch('/api/v1/processes', { method: 'POST', body: { key, name, isFinanceiro } })
       // update in-memory cache otimista
-      apiProcessCache = [...apiProcessCache.filter(p => p.key !== key), { key, name, active: true }]
+      apiProcessCache = [...apiProcessCache.filter(p => p.key !== key), { key, name, active: true, isFinanceiro }]
       try { localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(apiProcessCache)) } catch {}
       try { window.dispatchEvent(new Event('processes:changed')) } catch {}
       return true
@@ -83,7 +83,7 @@ export async function addProcess(key: string, name: string): Promise<boolean> {
   const k = sanitizeProcessKey(key)
   if (!k) return
   if (!arr.find(p => p.key === k)) {
-    arr.push({ key: k, name: name || k, active: true })
+    arr.push({ key: k, name: name || k, active: true, isFinanceiro })
     localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(arr))
     try { window.dispatchEvent(new Event('processes:changed')) } catch (_) {}
   }

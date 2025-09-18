@@ -52,11 +52,11 @@ public class ProcessController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    public record CreateRequest(@NotBlank String key, @NotBlank String name) {}
+    public record CreateRequest(@NotBlank String key, @NotBlank String name, boolean isFinanceiro) {}
 
     @PostMapping
     public ResponseEntity<ProcessDTO> create(@Valid @RequestBody CreateRequest req) {
-        Process created = service.create(req.key(), req.name());
+        Process created = service.create(req.key(), req.name(), req.isFinanceiro());
         return ResponseEntity.created(URI.create("/api/v1/processes/" + created.getExternalId()))
                 .body(ProcessMapper.toDto(created));
     }
