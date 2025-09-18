@@ -101,7 +101,8 @@ export async function saveProposalStageFormApi(processKey: string, proposalId: s
   try {
     return await apiFetch<Record<string, any>>(`/api/v1/processes/${encodeURIComponent(processKey)}/proposals/${encodeURIComponent(proposalId)}/forms/${encodeURIComponent(stageId)}`, {
       method: 'PUT',
-      body: { values: values || {} }
+      body: { values: values || {} },
+      silent: true
     })
   } catch { return values || {} }
 }
@@ -114,7 +115,7 @@ export async function updateProposalApi(processKey: string, proposalId: string, 
     if (typeof patch.amount === 'number') body.amount = patch.amount
     if (patch.status) body.status = patch.status
     if (patch.name) body.name = patch.name
-    const x = await apiFetch<any>(`/api/v1/processes/${encodeURIComponent(processKey)}/proposals/${encodeURIComponent(String(proposalId))}`, { method: 'PUT', body })
+    const x = await apiFetch<any>(`/api/v1/processes/${encodeURIComponent(processKey)}/proposals/${encodeURIComponent(String(proposalId))}`, { method: 'PUT', body, silent: true })
     return {
       id: x.id,
       name: x.name,
@@ -134,4 +135,51 @@ export async function deleteProposalApi(processKey: string, proposalId: string):
     await apiFetch<void>(`/api/v1/processes/${encodeURIComponent(processKey)}/proposals/${encodeURIComponent(String(proposalId))}`, { method: 'DELETE' })
     return true
   } catch { return false }
+}
+
+// Novo composable reativo usando useFetch com refs mutáveis
+export function useProposalsReactive(processKey: string) {
+  const { public: { FLOW_API_BASE } } = useRuntimeConfig()
+  const apiBase = FLOW_API_BASE
+
+  // Ref mutável para manipulações locais
+  const proposals = ref<Proposal[]>([])
+  const loading = ref(false)
+
+  // Função para carregar dados do servidor
+  const loadFromServer = async () => {
+    if (!apiBase || !processKey) {
+      proposals.value = []
+      return
+    }
+
+    loading.value = true
+    try {
+      const arr = await $fetch<any[]>(`${apiBase}/api/v1/processes/${encodeURIComponent(processKey)}/proposals`)
+      proposals.value = (arr || []).map(x => ({
+        id: x.id,
+        name: x.name,
+        amount: Number(x.amount || 0),
+        stageId: x.stageId,
+        status: x.status || 'Pendente',
+        isArchived: !!x.archived,
+        stageEnteredAt: x.stageEnteredAt,
+        details: x.details || {}
+      }))
+    } catch (error) {
+      console.error('Erro ao carregar propostas:', error)
+      proposals.value = []
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Carregar dados inicialmente
+  loadFromServer()
+
+  return {
+    proposals,
+    loading: readonly(loading),
+    refresh: loadFromServer
+  }
 }

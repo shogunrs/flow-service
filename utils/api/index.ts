@@ -16,8 +16,14 @@ export async function apiFetch<T>(path: string, opts: any = {}): Promise<T> {
   const base = getApiBase()
   if (!base) throw new Error('FLOW_API_BASE not set')
   const url = path.startsWith('http') ? path : `${base.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`
+
+  // Check if this should be a silent operation (no global loading)
+  const isSilent = opts.silent === true
+  delete opts.silent // Remove before sending to $fetch
+
   const { inc, dec } = useApiLoading()
-  inc()
+  if (!isSilent) inc()
+
   try {
     return await $fetch<T>(url, opts)
   } catch (e: any) {
@@ -36,6 +42,6 @@ export async function apiFetch<T>(path: string, opts: any = {}): Promise<T> {
     } catch {}
     throw e
   } finally {
-    dec()
+    if (!isSilent) dec()
   }
 }

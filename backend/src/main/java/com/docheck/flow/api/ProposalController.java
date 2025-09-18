@@ -121,6 +121,47 @@ public class ProposalController {
         }
     }
 
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getStatistics(@PathVariable("processKey") String processKey) {
+        List<Proposal> proposals = service.listByProcess(processKey);
+
+        // Filtrar apenas propostas ativas (não arquivadas)
+        List<Proposal> activeProposals = proposals.stream()
+                .filter(p -> !p.isArchived())
+                .toList();
+
+        // Calcular total monetário
+        double totalAmount = activeProposals.stream()
+                .filter(p -> p.getAmount() != null)
+                .mapToDouble(Proposal::getAmount)
+                .sum();
+
+        // Contar propostas por estágio
+        Map<String, Long> proposalsByStage = activeProposals.stream()
+                .filter(p -> p.getStageId() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        Proposal::getStageId,
+                        java.util.stream.Collectors.counting()
+                ));
+
+        // Calcular valor médio
+        double averageAmount = activeProposals.stream()
+                .filter(p -> p.getAmount() != null)
+                .mapToDouble(Proposal::getAmount)
+                .average()
+                .orElse(0.0);
+
+        Map<String, Object> stats = Map.of(
+                "totalProposals", activeProposals.size(),
+                "totalAmount", totalAmount,
+                "averageAmount", averageAmount,
+                "proposalsByStage", proposalsByStage,
+                "processKey", processKey
+        );
+
+        return ResponseEntity.ok(stats);
+    }
+
     private String getStageDefaultStatus(String stageId) {
         if (stageId == null || stageId.isBlank()) {
             return null;

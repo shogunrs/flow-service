@@ -28,7 +28,7 @@ app:
     mode: worker # 'worker' | 'cdc'
     poll-interval-ms: 1000
   cors:
-    origins: ${APP_CORS_ORIGINS:http://localhost:3000}
+    origins: ${APP_CORS_ORIGINS:http://localhost:3000,http://localhost:3001}
   storage:
     s3:
       enabled: ${APP_S3_ENABLED:true}

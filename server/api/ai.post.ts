@@ -64,6 +64,20 @@ export default defineEventHandler(async (event) => {
     provider = geminiKey ? "gemini" : bankUrl ? "bank" : "none";
   }
 
+  // Buscar base de conhecimento MD se disponível
+  let knowledgeContext = '';
+  try {
+    const knowledgeResponse = await $fetch('/api/ai-knowledge', {
+      method: 'POST',
+      body: { question: prompt }
+    }) as any;
+    if (knowledgeResponse?.context) {
+      knowledgeContext = `\n\n[Documentação de Referência - ${knowledgeResponse.fileName}]\n${knowledgeResponse.context}`;
+    }
+  } catch (error) {
+    // Se não conseguir acessar a base de conhecimento, continua sem ela
+  }
+
   // Build context from history + attachments (simple textual summary)
   const history = (body?.history || []).filter((m) => typeof m?.content === 'string' && m?.content);
   const historySummary = history.length
@@ -94,7 +108,7 @@ export default defineEventHandler(async (event) => {
     )}`;
     const systemPreamble =
       "Você é a ConsorIA, assistente focada em consórcio imobiliário. Responda de forma objetiva e útil. Não ultrapasse mais de 500 caracteres";
-    const userText = `${prompt}${historySummary}${attachSummary}`;
+    const userText = `${prompt}${historySummary}${attachSummary}${knowledgeContext}`;
     const payload = {
       contents: [
         { role: "user", parts: [{ text: systemPreamble }] },
@@ -135,7 +149,7 @@ export default defineEventHandler(async (event) => {
           "Content-Type": "application/json",
           ...(bankToken ? { Authorization: `Bearer ${bankToken}` } : {}),
         },
-        body: { prompt: `${prompt}${historySummary}${attachSummary}`, attachments },
+        body: { prompt: `${prompt}${historySummary}${attachSummary}${knowledgeContext}`, attachments },
       });
       let text: string = res?.text || res?.message || JSON.stringify(res);
       text = stripMarkdown(text);

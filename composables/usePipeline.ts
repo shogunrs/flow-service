@@ -65,6 +65,23 @@ export function ensureDefaultProcess(defaultKey = 'quotaequity', defaultName = '
   }
 }
 
+export async function getProcessInfo(key: string): Promise<ProcessInfo | null> {
+  if (!key) return null
+
+  if (isApiEnabled()) {
+    try {
+      const process = await apiFetch<ProcessInfo>(`/api/v1/processes/${encodeURIComponent(key)}`)
+      return process
+    } catch {
+      return null
+    }
+  }
+
+  // Fallback para localStorage
+  const processes = listProcesses()
+  return processes.find(p => p.key === key) || null
+}
+
 export async function addProcess(key: string, name: string, isFinanceiro: boolean = false): Promise<boolean> {
   if (!key) return
   if (isApiEnabled()) {
