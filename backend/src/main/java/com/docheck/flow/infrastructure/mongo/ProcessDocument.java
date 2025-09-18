@@ -14,6 +14,7 @@ public class ProcessDocument {
     public String externalId;
     public String name;
     public boolean active;
+    public boolean isFinanceiro;
     public Instant createdAt;
     public Instant updatedAt;
 }

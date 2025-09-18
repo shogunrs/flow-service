@@ -165,6 +165,16 @@
                   placeholder="ex.: ConsorEquity"
                 />
               </div>
+              <div class="flex items-center">
+                <label class="flex items-center space-x-2 text-sm text-slate-300 cursor-pointer">
+                  <input
+                    v-model="newProcFinanceiro"
+                    type="checkbox"
+                    class="rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900"
+                  />
+                  <span>Financeiro</span>
+                </label>
+              </div>
               <button
                 class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
                 :disabled="creatingProcess"
@@ -1091,6 +1101,7 @@ const currentProcessName = computed(() => {
 const processes = ref(listProcesses());
 const currentProcessKey = ref(processes.value[0]?.key || "");
 const newProcName = ref("");
+const newProcFinanceiro = ref(false);
 const creatingProcess = ref(false);
 
 async function createProcess() {
@@ -1103,12 +1114,13 @@ async function createProcess() {
   if (creatingProcess.value) return;
   creatingProcess.value = true;
   // Otimista: atualiza DOM primeiro
-  processes.value = [...processes.value, { key, name, active: true }];
-  const ok = await addProcess(key, name || key);
+  processes.value = [...processes.value, { key, name, active: true, isFinanceiro: newProcFinanceiro.value }];
+  const ok = await addProcess(key, name || key, newProcFinanceiro.value);
   if (ok) {
     currentProcessKey.value = key;
     setLastKey(key);
     newProcName.value = "";
+    newProcFinanceiro.value = false;
     toastSuccess("Processo criado");
   } else {
     // rollback visual

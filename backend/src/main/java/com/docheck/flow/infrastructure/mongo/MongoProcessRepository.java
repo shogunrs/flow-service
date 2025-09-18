@@ -16,7 +16,7 @@ public class MongoProcessRepository implements ProcessRepository {
 
     private static Process toDomain(ProcessDocument d) {
         if (d == null) return null;
-        return new Process(d.id, d.externalId, d.name, d.active, d.createdAt, d.updatedAt);
+        return new Process(d.id, d.externalId, d.name, d.active, d.isFinanceiro, d.createdAt, d.updatedAt);
     }
     private static ProcessDocument toDoc(Process p) {
         ProcessDocument d = new ProcessDocument();
@@ -24,6 +24,7 @@ public class MongoProcessRepository implements ProcessRepository {
         d.externalId = p.getExternalId();
         d.name = p.getName();
         d.active = p.isActive();
+        d.isFinanceiro = p.isFinanceiro();
         d.createdAt = p.getCreatedAt();
         d.updatedAt = p.getUpdatedAt();
         return d;

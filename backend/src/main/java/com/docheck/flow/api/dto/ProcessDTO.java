@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 public record ProcessDTO(
         @NotBlank String key,
         @NotBlank String name,
-        boolean active
+        boolean active,
+        boolean isFinanceiro
 ) {}
 
