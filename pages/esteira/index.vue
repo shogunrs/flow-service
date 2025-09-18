@@ -4,14 +4,22 @@
     <header
       class="header-glass fixed top-0 left-0 right-0 lg:left-64 z-30 h-16 px-3 border-b border-slate-800/60 bg-transparent backdrop-blur-md"
     >
-      <div class="w-full h-full grid grid-cols-2 items-center gap-2">
-        <!-- Brand icon -->
-        <div class="hidden sm:flex items-center">
-          <BrandMark size="sm" />
+      <div class="w-full h-full flex items-center justify-between gap-2">
+        <!-- Left: Brand + Financial Stats -->
+        <div class="flex items-center gap-4">
+          <div class="hidden sm:flex items-center">
+            <BrandMark size="sm" />
+          </div>
+          <FinancialStats
+            :pipeline-key="pipelineKey"
+            :is-financial-process="isFinancialProcess"
+            :proposals="proposals"
+            ref="financialStatsRef"
+          />
         </div>
 
         <!-- Right: controls -->
-        <div class="flex items-center gap-2 mt-0 justify-self-end">
+        <div class="flex items-center gap-2">
           <!-- View Mode Toggle -->
           <div class="bg-slate-800/80 p-0.5 rounded-md flex items-center">
             <button
@@ -37,6 +45,37 @@
               <i class="fa-solid fa-list"></i> Lista
             </button>
           </div>
+
+          <!-- Sort Options -->
+          <div class="bg-slate-800/80 rounded-md flex items-center">
+            <select
+              v-model="sortOption"
+              class="bg-transparent border-none text-slate-300 text-[11px] px-2 py-1 rounded-md focus:outline-none focus:ring-0 cursor-pointer"
+            >
+              <option value="default" class="bg-slate-800 text-slate-300">Padrão</option>
+              <option value="name-asc" class="bg-slate-800 text-slate-300">Nome (A-Z)</option>
+              <option value="name-desc" class="bg-slate-800 text-slate-300">Nome (Z-A)</option>
+              <option value="amount-asc" class="bg-slate-800 text-slate-300">Valor (Menor)</option>
+              <option value="amount-desc" class="bg-slate-800 text-slate-300">Valor (Maior)</option>
+              <option value="date-newest" class="bg-slate-800 text-slate-300">Mais Recente</option>
+              <option value="date-oldest" class="bg-slate-800 text-slate-300">Mais Antigo</option>
+            </select>
+          </div>
+
+          <!-- ConsorIA Chat Button -->
+          <button
+            @click="openAiChat"
+            class="consoria-btn bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-400 text-white font-medium px-2.5 py-1 rounded-md transition-all duration-300 flex items-center gap-1.5 text-xs relative overflow-hidden group"
+          >
+            <!-- Shimmer effect -->
+            <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700"></div>
+            <!-- Pulsing dot -->
+            <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+            <!-- Robot icon with animation -->
+            <i class="fa-solid fa-robot text-[11px] group-hover:scale-110 transition-transform duration-300"></i>
+            <span class="hidden sm:inline relative z-10">ConsorIA</span>
+          </button>
+
           <!-- New proposal -->
           <button
             @click="openGlobalNewRecordModal"
@@ -103,6 +142,10 @@
                 <span class="text-[11px] text-slate-400"
                   >SLA {{ stage.slaDays }}d</span
                 >
+                <!-- Stage Sum for Financial Processes -->
+                <span v-if="isFinancialProcess && formatStageSum(stage.id)" class="text-[10px] font-bold text-emerald-400">
+                  {{ formatStageSum(stage.id) }}
+                </span>
               </div>
               <span
                 :class="[
@@ -180,7 +223,7 @@
         <!-- Mobile: cards -->
         <div class="sm:hidden">
           <ul class="divide-y divide-slate-700">
-            <li v-for="p in filteredProposals" :key="p.id" class="p-3">
+            <li v-for="p in sortedFilteredProposals" :key="p.id" class="p-3">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="font-medium text-sm truncate">{{ p.name }}</div>
@@ -223,7 +266,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="p in filteredProposals"
+                v-for="p in sortedFilteredProposals"
                 :key="p.id"
                 class="border-b border-slate-700 hover:bg-slate-700/50"
               >
@@ -971,6 +1014,7 @@ import {
   nextTick,
 } from "vue";
 import BrandMark from "~/components/ui/BrandMark.vue";
+import FinancialStats from "~/components/esteira/FinancialStats.vue";
 
 definePageMeta({
   layout: 'sidebar'
@@ -983,6 +1027,7 @@ import {
   fetchProposalFormsApi,
   saveProposalStageFormApi,
   updateProposalApi,
+  useProposalsReactive,
 } from "~/composables/useProposals";
 import { useProcessSubmenu } from "~/composables/useProcessMenu";
 import ChatModal from "~/components/ui/ChatModal.vue";
@@ -1021,6 +1066,24 @@ const props = defineProps({
   pipelineKey: { type: String, default: "quotaequity" },
 });
 const pipelineKey = computed(() => props.pipelineKey || "quotaequity");
+
+// Verificar se o processo é financeiro
+const currentProcessInfo = ref(null);
+const isFinancialProcess = computed(() => currentProcessInfo.value?.isFinanceiro || false);
+const financialStatsRef = ref(null);
+let refreshTimeout;
+
+// Carregar informações do processo
+const loadProcessInfo = async () => {
+  if (pipelineKey.value) {
+    try {
+      const { getProcessInfo } = await import('~/composables/usePipeline')
+      currentProcessInfo.value = await getProcessInfo(pipelineKey.value)
+    } catch (error) {
+      console.error('Error loading process info:', error)
+    }
+  }
+}
 
 // Modal global de novo registro
 const { openModal: openGlobalModal } = useNewRecordModal();
@@ -1111,6 +1174,7 @@ async function syncProposalsFromApi() {
 
 onMounted(async () => {
   loadPipelineConfig();
+  loadProcessInfo(); // Carregar informações do processo
   syncProposalsFromApi();
   try {
     window.addEventListener("focus", syncProposalsFromApi);
@@ -1151,6 +1215,7 @@ watch(
   () => pipelineKey.value,
   () => {
     loadPipelineConfig();
+    loadProcessInfo(); // Recarregar informações do processo
     loadStageForms();
     initStageFields();
     if (isApiEnabled()) {
@@ -1163,8 +1228,34 @@ watch(
   }
 );
 
-// Propostas por processo (persistência local por enquanto)
-const proposals = ref(loadProposals(pipelineKey.value) || []);
+// Propostas por processo usando useFetch com reatividade automática
+const { proposals, loading: proposalsLoading, refresh: refreshProposals } = useProposalsReactive(pipelineKey.value);
+
+// Função para atualizar dados após operações (estatísticas + propostas)
+const refreshData = () => {
+  // Atualizar propostas apenas se usando API
+  if (isApiEnabled()) {
+    refreshProposals()
+  }
+  // Estatísticas são calculadas automaticamente e reativamente das propostas locais
+  // Não precisamos mais disparar refresh manual das estatísticas
+}
+
+// Watcher para atualizar estatísticas automaticamente quando propostas mudarem
+watch(
+  () => proposals.value,
+  () => {
+    // Debounce para evitar muitas atualizações desnecessárias das estatísticas
+    if (refreshTimeout) clearTimeout(refreshTimeout)
+    refreshTimeout = setTimeout(() => {
+      // Só atualizar estatísticas, não propostas (para evitar loop)
+      if (isFinancialProcess.value && financialStatsRef.value) {
+        financialStatsRef.value.refresh()
+      }
+    }, 300)
+  },
+  { deep: true }
+)
 watch(
   () => pipelineKey.value,
   (k) => {
@@ -1223,6 +1314,29 @@ const filterText = ref("");
 const filterStatus = ref("");
 const showArchived = ref(false);
 const viewMode = ref("kanban");
+const sortOption = ref("default");
+
+// Função para ordenar propostas
+const sortProposals = (proposals) => {
+  const sorted = [...proposals];
+
+  switch (sortOption.value) {
+    case 'name-asc':
+      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    case 'name-desc':
+      return sorted.sort((a, b) => b.name.localeCompare(a.name));
+    case 'amount-asc':
+      return sorted.sort((a, b) => (a.amount || 0) - (b.amount || 0));
+    case 'amount-desc':
+      return sorted.sort((a, b) => (b.amount || 0) - (a.amount || 0));
+    case 'date-newest':
+      return sorted.sort((a, b) => new Date(b.stageEnteredAt || b.createdAt || 0) - new Date(a.stageEnteredAt || a.createdAt || 0));
+    case 'date-oldest':
+      return sorted.sort((a, b) => new Date(a.stageEnteredAt || a.createdAt || 0) - new Date(b.stageEnteredAt || b.createdAt || 0));
+    default:
+      return sorted; // Ordem padrão (como inserido)
+  }
+};
 
 /* const statusList = [
   "Offline",
@@ -1243,6 +1357,11 @@ const filteredProposals = computed(() => {
     const archivedMatch = showArchived.value ? true : !p.isArchived;
     return nameMatch && statusMatch && archivedMatch;
   });
+});
+
+// Propostas ordenadas para a view de lista
+const sortedFilteredProposals = computed(() => {
+  return sortProposals(filteredProposals.value);
 });
 
 async function openCardForm(p) {
@@ -1327,6 +1446,7 @@ async function confirmDeleteProposal() {
     if (isApiEnabled()) {
       const ok = await deleteProposalApi(pipelineKey.value, String(p.id));
       if (!ok) proposals.value = prev;
+      else refreshData(); // Atualizar estatísticas após delete bem-sucedido
     } else {
       persistProposals();
     }
@@ -1363,6 +1483,7 @@ async function updateProposalStatus() {
       );
       // Show success toast
       success("Status atualizado com sucesso!");
+      refreshData(); // Atualizar estatísticas após update
     } else {
       // Save to localStorage
       persistProposals();
@@ -1452,9 +1573,34 @@ const {
 
 const processFilesCount = computed(() => processFiles.value.length);
 
-const filteredByStage = (stageId) =>
-  filteredProposals.value.filter((p) => p.stageId === stageId);
+const filteredByStage = (stageId) => {
+  const proposalsInStage = filteredProposals.value.filter((p) => p.stageId === stageId);
+  return sortProposals(proposalsInStage);
+};
 const stageTitle = (id) => stages.value.find((s) => s.id === id)?.title || id;
+
+// Calculate stage financial sum
+const getStageSum = (stageId) => {
+  if (!isFinancialProcess.value) return 0;
+
+  const stageProposals = filteredByStage(stageId);
+  return stageProposals.reduce((sum, proposal) => {
+    return sum + (Number(proposal.amount) || 0);
+  }, 0);
+};
+
+// Format currency for stage sum
+const formatStageSum = (stageId) => {
+  const sum = getStageSum(stageId);
+  if (sum === 0) return '';
+
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(sum);
+};
 
 const statusPillClass = (status) => {
   // Get color from database
@@ -1693,6 +1839,9 @@ const onDrop = (stageId) => {
     updateProposalApi(pipelineKey.value, pid, {
       stageId: stageId,
       status: newStatus,
+    }).then(() => {
+      // Estatísticas são atualizadas automaticamente via reatividade
+      // refreshData() não é mais necessário para mudanças de estágio
     }).catch(() => {
       // rollback on failure
       const arr = proposals.value.slice();
@@ -1981,6 +2130,7 @@ const handleGlobalModalSave = (recordData) => {
           if (localIndex >= 0) {
             proposals.value[localIndex].id = createdId;
             saveProposals(pipelineKey.value, proposals.value);
+            refreshData(); // Atualizar estatísticas após criar proposta
           }
 
           // Upload de arquivos se necessário
@@ -2121,6 +2271,7 @@ const saveNewProposal = () => {
             );
           } catch {}
           proposals.value = [created, ...proposals.value];
+          refreshData(); // Atualizar estatísticas após criar proposta
         }
       })
       .catch(() => {});
@@ -2137,6 +2288,7 @@ const saveNewProposal = () => {
       details: undefined,
     });
     persistProposals();
+    refreshData(); // Atualizar estatísticas após criar proposta local
   }
   closeNewProposalModal();
 };
@@ -2544,5 +2696,59 @@ watch(
 .new-proposal-modal option {
   color: #e5e7eb !important;
   background-color: #1f2937 !important;
+}
+
+/* ConsorIA Button Styles */
+.consoria-btn {
+  position: relative;
+  box-shadow: 0 4px 14px 0 rgba(147, 51, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.consoria-btn:hover {
+  box-shadow: 0 6px 20px 0 rgba(147, 51, 234, 0.5);
+  transform: translateY(-1px);
+}
+
+.consoria-btn:active {
+  transform: translateY(0);
+}
+
+/* Floating animation for the pulsing dot */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.consoria-btn .animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite, float 3s ease-in-out infinite;
+}
+
+/* Glowing effect on hover */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(147, 51, 234, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(147, 51, 234, 0.8), 0 0 25px rgba(147, 51, 234, 0.6);
+  }
+}
+
+.consoria-btn:hover {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Enhanced shimmer effect */
+.consoria-btn .group-hover\:translate-x-full {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
 }
 </style>

@@ -26,7 +26,7 @@
             v-show="!collapsed"
             class="text-lg font-bold text-white transition-opacity duration-300"
           >
-            ForCon
+            FourCon
           </h1>
         </div>
         <div class="flex items-center gap-2">
@@ -98,6 +98,24 @@
           :collapsed="collapsed"
           @click="openSettings"
         />
+
+        <!-- Chat IA Button -->
+        <button
+          @click="openChatModal"
+          :class="[
+            'w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-purple-600/20 rounded-md transition-all duration-300 text-sm border border-purple-500/30 hover:border-purple-400/50 relative overflow-hidden group',
+            collapsed ? 'justify-center' : '',
+          ]"
+          :title="collapsed ? 'ConsorIA' : ''"
+        >
+          <!-- Shimmer effect -->
+          <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-700"></div>
+          <!-- Pulsing dot -->
+          <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse absolute top-2 right-2" v-show="!collapsed"></div>
+          <i class="fa-solid fa-robot w-5 text-purple-400 group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
+          <span v-show="!collapsed" class="transition-opacity duration-300 relative z-10">ConsorIA</span>
+        </button>
+
         <button
           @click="logout"
           :class="[
@@ -122,6 +140,17 @@
     >
       <i class="fa-solid fa-bars text-lg"></i>
     </button>
+
+    <!-- Chat Modal -->
+    <ChatModal
+      v-model:show="showChatModal"
+      :messages="chatMessages"
+      :typing="chatTyping"
+      title="ConsorIA"
+      placeholder="Pergunte sobre seus consórcios, processos ou dados..."
+      size="md"
+      @send="handleChatSend"
+    />
   </div>
 </template>
 
@@ -130,6 +159,7 @@ import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "#imports";
 import BrandMark from "./BrandMark.vue";
 import SidebarItem from "./SidebarItem.vue";
+import ChatModal from "./ChatModal.vue";
 import { useProcesses } from "~/composables/useProcesses";
 
 // Props
@@ -154,6 +184,11 @@ const currentUser = ref({
 });
 
 const collapsed = ref(false);
+
+// Chat IA state
+const showChatModal = ref(false);
+const chatMessages = ref([]);
+const chatTyping = ref(false);
 
 // Composable para processos
 const {
@@ -305,6 +340,70 @@ function closeMobileMenu() {
 
 function openSettings() {
   navigateTo(settingsItem);
+}
+
+// Chat IA functions
+function openChatModal() {
+  showChatModal.value = true;
+  // Adicionar mensagem de boas-vindas se for primeira vez
+  if (chatMessages.value.length === 0) {
+    chatMessages.value.push({
+      role: 'assistant',
+      content: 'Olá! Sou a ConsorIA, sua assistente especializada em consórcios e gestão de processos. Posso ajudar com:\n\n• Análise de propostas e estágios\n• Informações sobre processos financeiros\n• Dúvidas sobre fluxo de trabalho\n• Interpretação de dados e estatísticas\n\nComo posso ajudá-lo hoje?'
+    });
+  }
+}
+
+async function handleChatSend(data) {
+  // Adicionar mensagem do usuário
+  chatMessages.value.push({
+    role: 'user',
+    content: data.text,
+    attachments: data.attachments
+  });
+
+  // Chamar API real de IA
+  chatTyping.value = true;
+  try {
+    // Criar contexto rico com informações do sistema
+    const currentPage = route.path;
+    let contextInfo = '';
+
+    if (currentPage.includes('/esteira')) {
+      const processKey = currentPage.split('/esteira/')[1];
+      contextInfo = processKey ? `Usuário está na esteira do processo: ${processKey}. ` : 'Usuário está visualizando uma esteira de processos. ';
+    } else if (currentPage.includes('/admin')) {
+      contextInfo = 'Usuário está na área administrativa. ';
+    }
+
+    // Construir prompt contextualizado
+    const contextualPrompt = `${contextInfo}${data.text}`;
+
+    const response = await $fetch('/api/ai', {
+      method: 'POST',
+      body: {
+        text: contextualPrompt,
+        attachments: data.attachments,
+        history: chatMessages.value.slice(-10).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })) // Últimas 10 mensagens para contexto
+      }
+    });
+
+    chatMessages.value.push({
+      role: 'assistant',
+      content: response.text || 'Desculpe, não consegui processar sua pergunta no momento.'
+    });
+  } catch (error) {
+    console.error('Erro ao chamar API de IA:', error);
+    chatMessages.value.push({
+      role: 'assistant',
+      content: 'Ops! Estou com dificuldades técnicas no momento. Tente novamente em instantes.'
+    });
+  } finally {
+    chatTyping.value = false;
+  }
 }
 
 function logout() {
