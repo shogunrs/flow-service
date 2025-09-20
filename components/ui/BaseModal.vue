@@ -35,7 +35,7 @@ const props = defineProps({
   size: { type: String, default: 'md' }, // xs|sm|md|lg|xl|xxl
   closeOnBackdrop: { type: Boolean, default: true },
   bodyClass: { type: String, default: '' },
-  zIndex: { type: Number, default: 50 }
+  zIndex: { type: Number, default: 2000 }
 })
 
 const emit = defineEmits(['update:modelValue'])

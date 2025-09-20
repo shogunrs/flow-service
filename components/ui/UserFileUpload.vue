@@ -134,11 +134,91 @@
         {{ success }}
       </div>
     </div>
+
+    <BaseModal
+      v-model="showCropper"
+      title="Ajustar foto"
+      size="lg"
+      :close-on-backdrop="false"
+      :z-index="2500"
+    >
+      <div class="space-y-3 cropper-wrapper">
+        <p class="text-xs text-slate-300">
+          Utilize os controles para ajustar o enquadramento. O recorte será aplicado antes do envio.
+        </p>
+        <div class="relative cropper-shell overflow-hidden rounded-2xl border border-slate-600 bg-slate-900/80">
+          <div v-if="cropperProcessing" class="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/70">
+            <i class="fa-solid fa-spinner fa-spin text-lg text-indigo-400"></i>
+          </div>
+          <img
+            v-if="cropperImageSrc"
+            ref="cropperImageRef"
+            :src="cropperImageSrc"
+            alt="Editor de recorte"
+            class="max-w-full"
+          />
+        </div>
+        <div class="flex flex-wrap justify-center gap-3 text-xs">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100"
+            @click="zoomOut"
+            :disabled="cropperProcessing"
+          >
+            <i class="fa-solid fa-magnifying-glass-minus"></i>
+            Zoom -
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100"
+            @click="zoomIn"
+            :disabled="cropperProcessing"
+          >
+            <i class="fa-solid fa-magnifying-glass-plus"></i>
+            Zoom +
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100"
+            @click="resetCrop"
+            :disabled="cropperProcessing"
+          >
+            <i class="fa-solid fa-arrows-rotate"></i>
+            Resetar
+          </button>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            class="px-3 py-2 text-xs font-semibold rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100"
+            @click="cancelCrop"
+            :disabled="cropperProcessing"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="px-3 py-2 text-xs font-semibold rounded-md bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1 disabled:opacity-60"
+            @click="confirmCrop"
+            :disabled="cropperProcessing"
+          >
+            <i v-if="cropperProcessing" class="fa-solid fa-spinner fa-spin text-xs"></i>
+            <span>Usar imagem</span>
+          </button>
+        </div>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue';
+import BaseModal from '~/components/ui/BaseModal.vue';
+import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
 import { useUserFileUpload } from '~/composables/useUserFileUpload';
 import { useOCR } from '~/composables/useOCR';
 
@@ -172,6 +252,22 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  enableCrop: {
+    type: Boolean,
+    default: false
+  },
+  cropAspectRatio: {
+    type: Number,
+    default: 1
+  },
+  cropWidth: {
+    type: Number,
+    default: 600
+  },
+  cropHeight: {
+    type: Number,
+    default: 600
+  },
   temporaryMode: {
     type: Boolean,
     default: false,
@@ -199,6 +295,13 @@ const ocrProcessing = ref(false);
 const ocrProgress = ref(0);
 const ocrResult = ref(null);
 
+const showCropper = ref(false);
+const cropperImageSrc = ref('');
+const cropperImageRef = ref(null);
+const cropper = ref(null);
+const pendingFile = ref(null);
+const cropperProcessing = ref(false);
+
 const { uploadUserFile } = useUserFileUpload();
 const { extractFromCPF, extractFromRG, extractText, validateDocumentData, extractPhotoFromDocument, isProcessing, progress } = useOCR();
 
@@ -210,6 +313,49 @@ watch(isProcessing, (processing) => {
 watch(progress, (newProgress) => {
   ocrProgress.value = newProgress
 })
+
+watch(showCropper, async (visible) => {
+  if (visible) {
+    await nextTick();
+    cropperProcessing.value = false;
+    if (cropper.value) {
+      cropper.value.destroy();
+      cropper.value = null;
+    }
+    if (cropperImageRef.value) {
+      cropper.value = new Cropper(cropperImageRef.value, {
+        aspectRatio: props.cropAspectRatio || 1,
+        viewMode: 1,
+        autoCropArea: 0.9,
+        responsive: true,
+        background: false,
+        dragMode: 'move',
+        movable: true,
+        zoomable: true,
+        scalable: false,
+        rotatable: false,
+        ready() {
+          this.cropper.setDragMode('move');
+        },
+      });
+    }
+  } else {
+    if (cropper.value) {
+      cropper.value.destroy();
+      cropper.value = null;
+    }
+    cropperImageSrc.value = '';
+    pendingFile.value = null;
+    cropperProcessing.value = false;
+  }
+});
+
+onBeforeUnmount(() => {
+  if (cropper.value) {
+    cropper.value.destroy();
+    cropper.value = null;
+  }
+});
 
 const acceptText = computed(() => {
   if (props.accept.includes('image/*')) {
@@ -265,6 +411,23 @@ async function validateAndSetFile(file) {
   }
 
   selectedFile.value = file;
+
+  const isImage = file.type.startsWith('image/');
+
+  if (props.enableCrop && isImage) {
+    pendingFile.value = file;
+    try {
+      cropperImageSrc.value = await readFileAsDataURL(file);
+      showCropper.value = true;
+    } catch (err) {
+      console.error('Crop preview error:', err);
+      error.value = err.message || 'Não foi possível carregar a imagem para recorte';
+      selectedFile.value = null;
+      pendingFile.value = null;
+    }
+    return;
+  }
+
   emit('file-selected', file);
 
   // Processamento OCR antes do upload
@@ -326,6 +489,97 @@ function formatFileSize(bytes) {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Formato de arquivo inválido'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function cancelCrop() {
+  if (cropperProcessing.value) return;
+  showCropper.value = false;
+  pendingFile.value = null;
+  selectedFile.value = null;
+  error.value = '';
+  success.value = '';
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
+}
+
+async function confirmCrop() {
+  if (!cropper.value || !pendingFile.value) return;
+
+  cropperProcessing.value = true;
+
+  try {
+    const canvas = cropper.value.getCroppedCanvas({
+      width: props.cropWidth || undefined,
+      height: props.cropHeight || undefined,
+      imageSmoothingQuality: 'high',
+    });
+
+    if (!canvas) {
+      throw new Error('Não foi possível gerar a imagem recortada');
+    }
+
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((blobResult) => {
+        if (blobResult) {
+          resolve(blobResult);
+        } else {
+          reject(new Error('Não foi possível gerar a imagem recortada'));
+        }
+      }, pendingFile.value.type || 'image/jpeg', 0.95);
+    });
+
+    const croppedFileName = pendingFile.value.name || 'profile-photo.jpg';
+    const croppedFileType = blob.type || pendingFile.value.type || 'image/jpeg';
+    const croppedFile = new File([blob], croppedFileName, {
+      type: croppedFileType,
+      lastModified: Date.now(),
+    });
+
+    showCropper.value = false;
+    selectedFile.value = croppedFile;
+    emit('file-selected', croppedFile);
+    pendingFile.value = null;
+
+    if (props.enableOcr && isDocumentFile(croppedFile)) {
+      await processOCR(croppedFile);
+    }
+
+    await uploadFile(croppedFile);
+  } catch (err) {
+    console.error('Crop error:', err);
+    error.value = err.message || 'Erro ao recortar a imagem';
+  } finally {
+    cropperProcessing.value = false;
+  }
+}
+
+function zoomIn() {
+  cropper.value?.zoom(0.1);
+}
+
+function zoomOut() {
+  cropper.value?.zoom(-0.1);
+}
+
+function resetCrop() {
+  if (!cropper.value) return;
+  cropper.value.reset();
 }
 
 // Helper function to check if file is a document that supports OCR
@@ -416,3 +670,39 @@ async function processOCR(file) {
   }
 }
 </script>
+
+<style scoped>
+.cropper-shell {
+  position: relative;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: clamp(320px, 70vw, 560px);
+  height: clamp(320px, 70vw, 560px);
+  margin: 0 auto;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+:deep(.cropper-container) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:deep(.cropper-container img) {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  display: block;
+}
+
+:deep(.cropper-view-box) {
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+:deep(.cropper-face) {
+  background-color: transparent;
+}
+</style>

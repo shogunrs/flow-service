@@ -542,18 +542,26 @@
                 :form-data="{ nome: userForm.name, email: userForm.email }"
                 @ocr-result="onOcrResult"
               />
-              <div class="rounded-lg border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-xs text-slate-300">
-                <p class="text-slate-200 font-semibold flex items-center gap-2">
-                  <i class="fa-solid fa-lightbulb text-amber-400"></i>
-                  Dica de validação
-                </p>
-                <p class="mt-2">
-                  Após o upload, o Tesseract fará a leitura automática do nome e CPF para comparar com as informações digitadas.
-                </p>
-                <p class="mt-2 text-slate-400">
-                  Utilize documentos legíveis, sem cortes, para maximizar a precisão da leitura.
-                </p>
-              </div>
+              <UserFileUpload
+                label="Comprovante de endereço"
+                accept="image/*,application/pdf"
+                v-model="userForm.enderecoImage"
+                :user-id="currentUserId || tempUploadSessionId"
+                file-type="ADDRESS_PROOF"
+                :temporary-mode="!currentUserId"
+              />
+            </div>
+            <div class="mt-4 rounded-lg border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-xs text-slate-300">
+              <p class="text-slate-200 font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                Dica de validação
+              </p>
+              <p class="mt-2">
+                Após o upload, o Tesseract fará a leitura automática do nome e CPF para comparar com as informações digitadas.
+              </p>
+              <p class="mt-2 text-slate-400">
+                Utilize documentos legíveis, sem cortes, para maximizar a precisão da leitura.
+              </p>
             </div>
           </div>
 
@@ -827,7 +835,7 @@
                   accept="image/*,application/pdf"
                   v-model="userForm.cartaoCnpjImage"
                   :user-id="currentUserId || tempUploadSessionId"
-                  file-type="cnpjImage"
+                  file-type="CARTAO_CNPJ"
                   :temporary-mode="!currentUserId"
                 />
               </div>
@@ -837,7 +845,7 @@
                   accept="image/*,application/pdf"
                   v-model="userForm.contratoSocialImage"
                   :user-id="currentUserId || tempUploadSessionId"
-                  file-type="enderecoImage"
+                  file-type="CONTRATO_SOCIAL"
                   :temporary-mode="!currentUserId"
                 />
               </div>
@@ -849,7 +857,7 @@
                   accept="image/*,application/pdf"
                   v-model="userForm.qualificacaoSociosImage"
                   :user-id="currentUserId || tempUploadSessionId"
-                  file-type="bancoImage"
+                  file-type="QUALIFICACAO_SOCIOS"
                   :temporary-mode="!currentUserId"
                 />
               </div>
@@ -1048,6 +1056,7 @@ import {
   checkEmailAvailabilityApi,
   createBasicUserApi,
 } from "~/composables/useUsersApi";
+import { getApiBase } from "~/utils/api/index";
 import { useGeolocation } from "~/composables/useGeolocation";
 import { useToast } from "~/composables/useToast";
 
@@ -1059,6 +1068,21 @@ definePageMeta({
 // Composables
 const { getCurrentLocation, formatLocation } = useGeolocation();
 const { success: toastSuccess, error: toastError } = useToast();
+const apiBaseUrl = getApiBase()?.replace(/\/$/, "") || "";
+
+const resolveStorageUrl = (rawUrl) => {
+  if (!rawUrl) return "";
+  if (typeof rawUrl !== "string") return "";
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return "";
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) {
+    return trimmed;
+  }
+  if (!apiBaseUrl) {
+    return trimmed;
+  }
+  return `${apiBaseUrl}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+};
 
 // Users state
 const usersList = ref([]);
@@ -1156,19 +1180,24 @@ const imageUploaded = ref(false);
 
 const profilePreview = computed(() => {
   const img = userForm.value.profileImage;
-  if (!img) return '';
+  if (!img) return "";
 
-  // Se é uma string (URL), usa diretamente
-  if (typeof img === 'string') {
-    return img;
+  if (typeof img === "string") {
+    return resolveStorageUrl(img);
   }
 
-  // Se é um objeto (resposta do upload), busca a URL
-  if (typeof img === 'object' && img !== null) {
-    return img.previewUrl || img.url || img.secure_url || img.publicUrl || img.thumbnailUrl || '';
+  if (typeof img === "object" && img !== null) {
+    const candidate =
+      img.previewUrl ||
+      img.url ||
+      img.secure_url ||
+      img.publicUrl ||
+      img.thumbnailUrl ||
+      "";
+    return resolveStorageUrl(candidate);
   }
 
-  return '';
+  return "";
 });
 
 // Função para lidar com erro de carregamento da imagem
@@ -1188,14 +1217,10 @@ function onProfileFileSelected(file) {
   if (file && file instanceof File) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      // Temporariamente atualizar o preview com o arquivo local
-      const tempPreview = {
-        previewUrl: e.target.result,
-        name: file.name,
-        size: file.size,
-        isTemp: true
-      };
-      userForm.value.profileImage = tempPreview;
+      const result = e.target?.result;
+      if (typeof result === "string") {
+        userForm.value.profileImage = result;
+      }
       imageLoading.value = false;
     };
     reader.readAsDataURL(file);
@@ -1211,7 +1236,8 @@ function onProfileFileUploaded(uploadData) {
   console.log('Upload concluído:', uploadData);
 
   // Atualizar com os dados reais do upload
-  userForm.value.profileImage = uploadData;
+  const absoluteUrl = resolveStorageUrl(uploadData?.publicUrl);
+  userForm.value.profileImage = absoluteUrl || null;
 
   // Mostrar notificação de sucesso
   toastSuccess('Foto de perfil enviada com sucesso!');
@@ -1220,15 +1246,11 @@ function onProfileFileUploaded(uploadData) {
 
 // Watch para resetar estados quando mudar a imagem
 watch(() => userForm.value.profileImage, (newValue) => {
-  // Se mudou para uma string/URL válida, resetar estados
-  if ((typeof newValue === 'string' && newValue) ||
-      (typeof newValue === 'object' && newValue && newValue.previewUrl)) {
+  if (typeof newValue === 'string' && newValue) {
     imageError.value = false;
     imageLoading.value = false;
     imageUploaded.value = true;
-  }
-  // Se foi limpo, resetar tudo
-  else if (!newValue) {
+  } else if (!newValue) {
     imageError.value = false;
     imageLoading.value = false;
     imageUploaded.value = false;
@@ -1540,7 +1562,7 @@ async function editUser(user) {
     tipoConta: user.tipoConta || "corrente",
     pixTipo: user.pixTipo || "cpf",
     pixChave: user.pixChave || "",
-    profileImage: user.fotoPerfilUrl || user.profileImage,
+    profileImage: resolveStorageUrl(user.fotoPerfilUrl || user.profileImage),
     cpfImage: user.cpfImage,
     rgImage: user.rgImage,
     cnpjImage: user.cnpjImage,
@@ -2176,22 +2198,10 @@ const formatCNPJ = (cnpj) => {
 async function loadUserProfilePhotoUrl(fotoPerfilUrl) {
   if (!fotoPerfilUrl) return;
 
-  try {
-    // Extrair a chave do objeto removendo o prefixo /api/v1/files/
-    const objectKey = fotoPerfilUrl.replace('/api/v1/files/', '');
+  const absoluteUrl = resolveStorageUrl(fotoPerfilUrl);
+  if (!absoluteUrl) return;
 
-    // Fazer requisição para obter URL presigned
-    const response = await $fetch('/api/v1/files/presign-download', {
-      method: 'GET',
-      query: { key: objectKey }
-    });
-
-    if (response && response.url) {
-      userForm.value.profileImage = response.url;
-    }
-  } catch (error) {
-    console.error('Erro ao carregar foto do perfil:', error);
-  }
+  userForm.value.profileImage = absoluteUrl;
 }
 
 // Load users on mount

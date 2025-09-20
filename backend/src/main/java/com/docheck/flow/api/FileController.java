@@ -1,6 +1,9 @@
 package com.docheck.flow.api;
 
 import com.docheck.flow.infrastructure.storage.FileStorageService;
+import com.docheck.flow.infrastructure.storage.UserFileStorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,8 +17,15 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/files")
 public class FileController {
+    private static final Logger log = LoggerFactory.getLogger(FileController.class);
+
     private final FileStorageService storage;
-    public FileController(FileStorageService storage) { this.storage = storage; }
+    private final UserFileStorageService userFileStorageService;
+
+    public FileController(FileStorageService storage, UserFileStorageService userFileStorageService) {
+        this.storage = storage;
+        this.userFileStorageService = userFileStorageService;
+    }
 
     public record PresignUploadRequest(String filename, String contentType, String prefix) {}
 
@@ -36,8 +46,14 @@ public class FileController {
             String requestURI = request.getRequestURI();
             String objectKey = requestURI.substring("/api/v1/files/".length());
 
-            // Obter o arquivo do storage
-            InputStream fileStream = storage.getFileStream(objectKey);
+            log.info("Serving user file: {}", objectKey);
+
+            InputStream fileStream;
+            if (objectKey.startsWith("users/") || objectKey.startsWith("temp/")) {
+                fileStream = userFileStorageService.getFileStream(objectKey);
+            } else {
+                fileStream = storage.getFileStream(objectKey);
+            }
 
             // Determinar o tipo de conteúdo baseado na extensão
             String contentType = determineContentType(objectKey);
@@ -48,6 +64,7 @@ public class FileController {
                     .body(new InputStreamResource(fileStream));
 
         } catch (Exception e) {
+            log.warn("Erro ao servir arquivo do usuário", e);
             return ResponseEntity.notFound().build();
         }
     }
@@ -67,4 +84,3 @@ public class FileController {
         }
     }
 }
-
