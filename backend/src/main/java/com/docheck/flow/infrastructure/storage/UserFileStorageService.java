@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
@@ -207,12 +208,25 @@ public class UserFileStorageService {
         return n.length() == 0 ? "file" : n;
     }
 
+    public InputStream getFileStream(String objectKey) {
+        if (s3 == null)
+            throw new IllegalStateException("S3 storage disabled");
+
+        GetObjectRequest request = GetObjectRequest.builder()
+                .bucket(userBucket)
+                .key(objectKey)
+                .build();
+
+        return s3.getObject(request);
+    }
+
     public enum FileType {
         PROFILE_PHOTO("profile-photos"),
         ADDRESS_PROOF("address-proofs"),
         DOCUMENT("documents"),
         CONTRATO_SOCIAL("contratos-sociais"),
         CARTAO_CNPJ("cartoes-cnpj"),
+        QUALIFICACAO_SOCIOS("qualificacao-socios"),
         FACE_RECOGNITION("face-recognition");
 
         private final String folder;
