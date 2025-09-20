@@ -1,14 +1,31 @@
 <template>
-  <div class="min-h-screen">
-    <header class="mb-4 flex items-center justify-between pt-6 px-6">
-      <h1 class="text-xl font-semibold">Processos Ativos</h1>
-      <NuxtLink
-        to="/admin?tab=pipeline"
-        class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-3 py-2 rounded-md text-sm"
-        >Gerenciar Processos</NuxtLink
-      >
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <!-- Modern Header with Glass Effect -->
+    <header class="app-header relative bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 p-4">
+      <div class="absolute inset-0 bg-white/[0.02] backdrop-blur-3xl"></div>
+      <div class="relative flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="p-2 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl shadow-lg">
+            <i class="fa-solid fa-clipboard-list text-white text-sm"></i>
+          </div>
+          <div>
+            <h1 class="app-header-title">Processos Ativos</h1>
+            <p class="app-header-subtitle">
+              Visualize e gerencie todos os processos em andamento
+            </p>
+          </div>
+        </div>
+        <NuxtLink
+          to="/admin?tab=pipeline"
+          class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-purple-500/25 hover:scale-105"
+        >
+          <i class="fa-solid fa-cog"></i>
+          Gerenciar Processos
+        </NuxtLink>
+      </div>
     </header>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 px-6">
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 px-6 py-6">
       <div
         v-for="p in processes"
         :key="p.key"

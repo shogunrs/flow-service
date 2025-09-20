@@ -1,36 +1,83 @@
 package com.docheck.flow.api.dto;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Set;
 
-public record CreateUserDTO(
-        @NotBlank String name,
-        @Email @NotBlank String email,
-        @NotBlank String password,
-        Set<String> roles,
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreateUserDTO {
+    @NotBlank
+    private String name;
 
-        // Documentos (opcionais)
-        String cpf,
-        String cnpj,
-        String rg,
+    @Email @NotBlank
+    private String email;
 
-        // Dados bancários (opcionais)
-        String banco,
-        String agencia,
-        String conta,
-        String tipoConta,
+    private String password;
+    private Set<String> roles;
+    private Boolean superUser;
 
-        // PIX (opcionais)
-        String pixTipo,
-        String pixChave,
+    // Documentos pessoais
+    private String cpf;
+    private String cnpj;
+    private String rg;
+    private String telefone;
 
-        // Arquivos (opcionais)
-        String fotoPerfilUrl,
-        String comprovanteEnderecoUrl,
+    // Endereço residencial
+    private String endereco;
+    private String enderecoRua;
+    private String enderecoNumero;
+    private String enderecoComplemento;
+    private String enderecoBairro;
+    private String enderecoCidade;
+    private String enderecoEstado;
+    private String cep;
 
-        // Dados de auditoria do cadastro
-        String ipCadastro,
-        String localizacaoCadastro
-) {}
+    // Dados bancários
+    private String banco;
+    private String agencia;
+    private String conta;
+    private String tipoConta;
 
+    // PIX
+    private String pixTipo;
+    private String pixChave;
+
+    // Arquivos
+    private String profileImage;
+    private String fotoPerfilUrl;
+    private String comprovanteEnderecoUrl;
+    private String documentoIdentidade;
+
+    // Dados pessoais adicionais
+    private String observacoes;
+    private String nomeCompleto;
+
+    // Dados da empresa
+    private Integer quantidadeSocios;
+    private String enderecoEmpresa;
+    private String enderecoEmpresaRua;
+    private String enderecoEmpresaNumero;
+    private String enderecoEmpresaComplemento;
+    private String enderecoEmpresaBairro;
+    private String enderecoEmpresaCidade;
+    private String enderecoEmpresaEstado;
+    private String cepEmpresa;
+    private String observacoesEmpresa;
+    private String razaoSocial;
+    private String nomeFantasia;
+    private String cartaoCnpjImage;
+    private String contratoSocialImage;
+    private String qualificacaoSociosImage;
+
+    // Dados de auditoria do cadastro
+    private String ipCadastro;
+    private String localizacaoCadastro;
+}

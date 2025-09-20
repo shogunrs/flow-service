@@ -1,10 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-green-900 to-green-800 flex flex-col">
-    <!-- Header -->
-    <div class="bg-green-800 px-4 py-3 shadow-lg">
-      <h1 class="text-xl font-semibold text-white text-center">
-        Processo Concluído
-      </h1>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
+    <!-- Modern Header -->
+    <div class="relative bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 px-4 py-4 shadow-lg">
+      <div class="absolute inset-0 bg-gradient-to-r from-green-600/10 to-emerald-600/10"></div>
+      <div class="relative flex items-center justify-center gap-3">
+        <div class="p-2 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl shadow-lg">
+          <i class="fa-solid fa-check text-white text-sm"></i>
+        </div>
+        <h1 class="text-xl font-bold text-white">
+          Processo Concluído
+        </h1>
+      </div>
     </div>
 
     <!-- Main Content -->

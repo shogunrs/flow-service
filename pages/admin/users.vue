@@ -1,130 +1,123 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Page header -->
+  <div
+    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+  >
+    <!-- Modern Header with Glass Effect -->
     <header
-      class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4"
+      class="app-header relative bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 p-4"
     >
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Usuários
-          </h1>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Gerencie usuários do sistema
-          </p>
+      <div class="absolute inset-0 bg-white/[0.02] backdrop-blur-3xl"></div>
+      <div class="relative flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="relative group">
+            <div
+              class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"
+            ></div>
+            <div>
+              <i class="fa-solid fa-user-group text-white text-lg"></i>
+            </div>
+          </div>
+          <div>
+            <p class="app-header-subtitle">Gerencie usuários do sistema</p>
+          </div>
         </div>
-        <button
-          class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
-          @click="openNewUserModal"
-        >
-          <i class="fa-solid fa-user-plus"></i>
-          Novo Usuário
+        <button class="p-2 rounded-xl" @click="openNewUserModal">
+          <i class="fa-solid fa-user-plus text-purple-300"></i>
         </button>
       </div>
     </header>
 
-    <main class="p-6">
-      <div class="bg-gray-800 rounded-lg overflow-hidden">
-        <div v-if="usersList.length === 0" class="p-8 text-center">
-          <i class="fa-solid fa-users text-4xl text-slate-400 mb-3"></i>
-          <p class="text-slate-300">Nenhum usuário cadastrado</p>
-          <p class="text-slate-400 text-sm">
+    <main class="p-3">
+      <div
+        class="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-lg shadow-lg"
+      >
+        <div v-if="usersList.length === 0" class="p-6 text-center">
+          <i class="fa-solid fa-users text-sm text-slate-400 mb-2"></i>
+          <p class="text-slate-300 text-sm">Nenhum usuário cadastrado</p>
+          <p class="text-slate-400 text-xs">
             Clique em "Novo Usuário" para começar
           </p>
         </div>
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm text-left min-w-[800px]">
-            <thead class="bg-gray-700/60 text-xs text-slate-300 uppercase">
-              <tr>
-                <th class="px-3 md:px-6 py-3 min-w-[120px]">Nome</th>
-                <th class="px-3 md:px-6 py-3 min-w-[150px]">Email</th>
-                <th class="px-3 md:px-6 py-3 min-w-[100px]">Roles</th>
-                <th class="px-3 md:px-6 py-3 min-w-[140px]">Documentos</th>
-                <th class="px-3 md:px-6 py-3 min-w-[140px]">Dados Bancários</th>
-                <th class="px-3 md:px-6 py-3 min-w-[120px]">PIX</th>
-                <th class="px-3 md:px-6 py-3 min-w-[100px]">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="user in usersList"
-                :key="user.id"
-                class="border-b border-gray-700 hover:bg-slate-700/30"
-              >
-                <td class="px-3 md:px-6 py-3 font-medium">{{ user.name }}</td>
-                <td class="px-3 md:px-6 py-3 text-slate-300">
-                  {{ user.email }}
-                </td>
-                <td class="px-3 md:px-6 py-3">
-                  <div class="flex gap-1 flex-wrap">
-                    <span
-                      v-for="role in user.roles"
-                      :key="role"
-                      class="text-[10px] px-2 py-0.5 bg-slate-700/60 text-slate-300 rounded-md"
-                    >
-                      {{ role }}
-                    </span>
-                  </div>
-                </td>
-                <td class="px-3 md:px-6 py-3">
-                  <div class="text-xs text-slate-400">
-                    <div v-if="user.cpf">CPF: {{ formatCPF(user.cpf) }}</div>
-                    <div v-if="user.cnpj">
-                      CNPJ: {{ formatCNPJ(user.cnpj) }}
-                    </div>
-                    <div v-if="user.rg">RG: {{ user.rg }}</div>
-                    <div
-                      v-if="!user.cpf && !user.cnpj && !user.rg"
-                      class="text-slate-500"
-                    >
-                      -
-                    </div>
-                  </div>
-                </td>
-                <td class="px-3 md:px-6 py-3">
-                  <div class="text-xs text-slate-400">
-                    <div v-if="user.banco">{{ user.banco }}</div>
-                    <div v-if="user.agencia && user.conta">
-                      Ag: {{ user.agencia }} / CC: {{ user.conta }}
-                    </div>
-                    <div v-if="user.tipoConta">{{ user.tipoConta }}</div>
-                    <div
-                      v-if="!user.banco && !user.agencia && !user.conta"
-                      class="text-slate-500"
-                    >
-                      -
-                    </div>
-                  </div>
-                </td>
-                <td class="px-3 md:px-6 py-3">
-                  <div class="text-xs text-slate-400">
-                    <div v-if="user.pixTipo && user.pixChave">
-                      {{ user.pixTipo }}: {{ user.pixChave }}
-                    </div>
-                    <div v-else class="text-slate-500">-</div>
-                  </div>
-                </td>
-                <td class="px-3 md:px-6 py-3">
-                  <div class="flex items-center gap-1 md:gap-2">
-                    <button
-                      class="text-slate-400 hover:text-white p-1.5 md:p-2 rounded-md hover:bg-slate-600 transition-colors"
-                      @click="editUser(user)"
-                      title="Editar"
-                    >
-                      <i class="fa-solid fa-pen text-sm"></i>
-                    </button>
-                    <button
-                      class="text-red-400 hover:text-red-300 p-1.5 md:p-2 rounded-md hover:bg-red-900/20 transition-colors"
-                      @click="deleteUser(user.id || '')"
-                      title="Excluir"
-                    >
-                      <i class="fa-solid fa-trash text-sm"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else class="p-4">
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+          >
+            <div
+              v-for="(user, index) in usersList"
+              :key="user.id || index"
+              class="group relative overflow-hidden rounded-xl border border-slate-800/60 bg-slate-900/80 p-3 transition-all duration-300 hover:border-emerald-500/50 hover:shadow-[0_10px_25px_rgba(16,185,129,0.25)] cursor-pointer"
+              :style="{ animationDelay: `${index * 25}ms` }"
+              @click="editUser(user)"
+            >
+              <div
+                class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                :style="{
+                  background:
+                    'radial-gradient(circle at top right, rgba(16, 185, 129, 0.15), transparent 55%)',
+                }"
+              ></div>
+
+              <div class="relative flex items-start justify-between">
+                <div class="space-y-1">
+                  <h3 class="text-sm font-semibold text-white truncate">
+                    {{ user.name || 'Usuário' }}
+                  </h3>
+                  <p class="text-xs text-slate-400 truncate">
+                    {{ user.email || 'sem email' }}
+                  </p>
+                </div>
+                <div class="flex items-center">
+                  <button
+                    class="rounded-md border border-slate-700/70 bg-slate-900/80 p-2 text-red-300 hover:text-red-200 hover:border-red-400/60 transition"
+                    @click.stop="deleteUser(user.id || '')"
+                    title="Excluir"
+                  >
+                    <i class="fa-solid fa-trash text-[11px]"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="relative mt-3 flex flex-wrap gap-1.5">
+                <!-- Super User Badge -->
+                <span
+                  v-if="user.superUser"
+                  class="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 flex items-center gap-1"
+                >
+                  <i class="fa-solid fa-crown text-[8px]"></i>
+                  Super User
+                </span>
+                <!-- Roles -->
+                <span
+                  v-for="role in (user.roles?.slice(0, user.superUser ? 1 : 2) || [])"
+                  :key="role"
+                  class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700/70"
+                >
+                  {{ role }}
+                </span>
+                <span
+                  v-if="(user.roles?.length || 0) > (user.superUser ? 1 : 2)"
+                  class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/60 text-slate-400 border border-slate-700/60"
+                >
+                  +{{ user.roles.length - (user.superUser ? 1 : 2) }}
+                </span>
+              </div>
+
+              <div class="relative mt-3 space-y-1 text-xs text-slate-300">
+                <div class="flex items-center gap-2 truncate">
+                  <i class="fa-solid fa-id-card text-slate-500 text-[10px]"></i>
+                  <span>
+                    {{ user.cpf ? `CPF: ${formatCPF(user.cpf)}` : user.cnpj ? `CNPJ: ${formatCNPJ(user.cnpj)}` : 'Documento não informado' }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 truncate">
+                  <i class="fa-solid fa-wallet text-slate-500 text-[10px]"></i>
+                  <span>
+                    {{ user.pixTipo && user.pixChave ? `${user.pixTipo}: ${user.pixChave}` : 'PIX não informado' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -136,69 +129,78 @@
       size="lg"
       :z-index="70"
     >
-      <div class="space-y-6 max-h-[70vh] md:max-h-[80vh] overflow-y-auto pr-1">
+      <div class="space-y-8 max-h-[75vh] md:max-h-[82vh] overflow-y-auto pr-1">
         <!-- ========== SEÇÃO 1: DADOS PESSOAIS ========== -->
-        <div class="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
-          <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
-            <i class="fa-solid fa-user mr-2 text-blue-400"></i>
-            Dados Pessoais
-          </h3>
+        <div class="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/85 p-5">
+          <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/12 via-slate-900/0 to-slate-900/0 pointer-events-none"></div>
+          <div class="relative space-y-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                <i class="fa-solid fa-user text-emerald-300"></i>
+                Informações pessoais
+              </h3>
+              <p class="text-xs text-slate-400">Dados básicos e de contato do usuário.</p>
+            </div>
+          </div>
 
           <!-- Dados básicos -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div class="md:col-span-2">
-              <label class="text-[12px] text-slate-300">Nome Completo *</label>
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Nome completo *</label>
               <input
                 v-model="userForm.name"
-                class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                 placeholder="Nome completo"
               />
             </div>
             <div>
-              <div class="flex items-center justify-between">
-                <label class="text-[12px] text-slate-300">Email *</label>
-                <div v-if="editingUser" class="flex items-center">
-                  <button
-                    type="button"
-                    @click="allowEmailEdit = !allowEmailEdit"
-                    class="p-1.5 rounded-md hover:bg-slate-700/50 transition-all duration-200"
-                    :class="allowEmailEdit ? 'text-indigo-400 hover:text-indigo-300' : 'text-slate-400 hover:text-slate-300'"
-                    :title="allowEmailEdit ? 'Bloquear edição do email' : 'Permitir edição do email'"
-                  >
-                    <i
-                      :class="allowEmailEdit ? 'fa-solid fa-unlock' : 'fa-solid fa-lock'"
-                      class="text-sm"
-                    ></i>
-                  </button>
-                </div>
-              </div>
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Email *</label>
               <div class="relative">
                 <input
                   v-model="userForm.email"
                   type="email"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm pr-10"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none pr-10"
                   placeholder="email@exemplo.com"
-                  :disabled="(editingUser && !allowEmailEdit) || (!editingUser && currentUserId)"
+                  :disabled="
+                    (editingUser && !allowEmailEdit) ||
+                    (!editingUser && currentUserId)
+                  "
                   @blur="checkEmailAvailability"
                   @input="onEmailInput"
                 />
-                <div v-if="emailCheckLoading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div
+                  v-if="emailCheckLoading"
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
                   <i class="fa-solid fa-spinner fa-spin text-orange-500"></i>
                 </div>
-                <div v-else-if="emailAvailable === true" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div
+                  v-else-if="emailAvailable === true"
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
                   <i class="fa-solid fa-check text-green-500"></i>
                 </div>
-                <div v-else-if="emailAvailable === false" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div
+                  v-else-if="emailAvailable === false"
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
                   <i class="fa-solid fa-times text-red-500"></i>
                 </div>
               </div>
               <div v-if="emailError" class="text-[11px] text-red-400 mt-1">
                 {{ emailError }}
               </div>
-              <div v-else-if="emailAvailable === true" class="text-[11px] text-green-400 mt-1">
+              <div
+                v-else-if="emailAvailable === true"
+                class="text-[11px] text-green-400 mt-1"
+              >
                 Email disponível
               </div>
-              <div v-else-if="emailAvailable === false" class="text-[11px] text-red-400 mt-1">
+              <div
+                v-else-if="emailAvailable === false"
+                class="text-[11px] text-red-400 mt-1"
+              >
                 Email já está em uso
               </div>
             </div>
@@ -206,24 +208,28 @@
               <label class="text-[12px] text-slate-300">Telefone</label>
               <input
                 v-model="userForm.telefone"
-                class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                 placeholder="(00) 00000-0000"
                 v-telefone
               />
             </div>
             <div>
-              <label class="text-[12px] text-slate-300">Data de Nascimento</label>
+              <label class="text-[12px] text-slate-300"
+                >Data de Nascimento</label
+              >
               <input
                 v-model="userForm.dataNascimento"
                 type="date"
-                class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
               />
             </div>
             <div>
-              <label class="text-[12px] text-slate-300">Tipo de Documento de Identidade</label>
+              <label class="text-[12px] text-slate-300"
+                >Tipo de Documento de Identidade</label
+              >
               <select
                 v-model="userForm.tipoDocumento"
-                class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
               >
                 <option value="">Selecione o tipo</option>
                 <option value="rg">RG</option>
@@ -233,104 +239,433 @@
             </div>
           </div>
 
-          <!-- Endereço -->
+          <div class="grid grid-cols-1 md:grid-cols-[auto,1fr] items-start gap-6 mb-4">
+            <div class="flex flex-col items-center gap-3 mx-auto md:mx-0">
+              <div class="relative group">
+                <!-- Avatar Preview -->
+                <div class="relative">
+                  <div
+                    :class="[
+                      'w-24 h-24 sm:w-28 sm:h-28 rounded-full border-3 transition-all duration-300',
+                      profilePreview
+                        ? 'border-emerald-400/60 shadow-lg shadow-emerald-500/25'
+                        : 'border-slate-600/40',
+                      'bg-gradient-to-br from-slate-800/90 to-slate-900/90 flex items-center justify-center overflow-hidden'
+                    ]"
+                  >
+                    <!-- Image Preview -->
+                    <img
+                      v-if="profilePreview"
+                      :src="profilePreview"
+                      alt="Prévia da foto de perfil"
+                      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      @error="onImageError"
+                    />
+                    <!-- Placeholder Icon -->
+                    <div v-else class="flex flex-col items-center gap-1">
+                      <i class="fa-solid fa-user text-slate-500 text-3xl"></i>
+                      <span class="text-[10px] text-slate-500 font-medium">Sem foto</span>
+                    </div>
+
+                    <!-- Loading Overlay -->
+                    <div
+                      v-if="imageLoading"
+                      class="absolute inset-0 bg-slate-900/80 flex items-center justify-center"
+                    >
+                      <div class="animate-spin rounded-full h-6 w-6 border-2 border-emerald-400 border-t-transparent"></div>
+                    </div>
+                  </div>
+
+                  <!-- Status Badge -->
+                  <div class="absolute -bottom-1 -right-1">
+                    <div
+                      v-if="profilePreview"
+                      class="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-slate-900"
+                      title="Foto carregada"
+                    >
+                      <i class="fa-solid fa-check text-white text-xs"></i>
+                    </div>
+                    <div
+                      v-else
+                      class="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center border-2 border-slate-900"
+                      title="Nenhuma foto"
+                    >
+                      <i class="fa-solid fa-camera text-slate-400 text-xs"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Preview Label -->
+                <div class="text-center mt-2">
+                  <span class="text-[11px] text-slate-400 font-medium">
+                    {{ profilePreview ? 'Foto carregada' : 'Aguardando foto' }}
+                  </span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 text-center max-w-[8rem]">
+                Utilize uma foto frontal e bem iluminada.
+              </p>
+            </div>
+
+            <div class="w-full md:max-w-xs">
+              <UserFileUpload
+                label="Foto de perfil"
+                accept="image/*"
+                v-model="userForm.profileImage"
+                :user-id="currentUserId || tempUploadSessionId"
+                file-type="PROFILE_PHOTO"
+                :temporary-mode="!currentUserId"
+                @file-selected="onProfileFileSelected"
+                @file-uploaded="onProfileFileUploaded"
+              />
+            </div>
+          </div>
+
+          <div
+            v-if="userForm.nomeCompleto && userForm.nomeCompleto !== userForm.name"
+            class="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200"
+          >
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>
+                Tesseract sugeriu: <strong class="text-emerald-100">{{ userForm.nomeCompleto }}</strong>
+              </span>
+            </div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-3 py-1 font-semibold hover:bg-emerald-500/30"
+              @click.stop="applyOcrSuggestion"
+            >
+              Aplicar sugestão
+            </button>
+          </div>
+
+          <div class="mt-4">
+            <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Observações</label>
+            <textarea
+              v-model="userForm.observacoes"
+              class="mt-2 w-full h-24 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none"
+              placeholder="Notas internas sobre o usuário, validações adicionais, contexto do cadastro..."
+            ></textarea>
+          </div>
+
+          <!-- Dados de Documentos -->
           <div class="border-t border-slate-700/50 pt-4 mb-4">
-            <h4 class="text-sm font-medium text-slate-300 mb-3">Endereço Residencial</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="md:col-span-2">
-                <label class="text-[12px] text-slate-300">Endereço Completo</label>
-                <textarea
-                  v-model="userForm.endereco"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
-                  placeholder="Rua, número, bairro, cidade, estado"
-                  rows="2"
-                ></textarea>
+            <h4 class="text-sm font-medium text-slate-300 mb-3">Documentos</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">CPF</label>
+                <input
+                  v-model="userForm.cpf"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="000.000.000-00"
+                  v-cpf
+                />
               </div>
               <div>
-                <label class="text-[12px] text-slate-300">CEP</label>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">RG</label>
                 <input
-                  v-model="userForm.cep"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
-                  placeholder="00000-000"
-                  v-cep
+                  v-model="userForm.rg"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="00.000.000-0"
                 />
               </div>
             </div>
           </div>
 
-          <!-- Upload de Documentos Pessoais -->
           <div class="border-t border-slate-700/50 pt-4 mb-4">
-            <h4 class="text-sm font-medium text-slate-300 mb-3">Documentos Pessoais</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h4 class="text-sm font-medium text-slate-300 mb-3">Dados bancários</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <UserFileUpload
-                  label="Documento de Identidade (RG/CNH/Passaporte)"
-                  accept="image/*,application/pdf"
-                  v-model="userForm.documentoIdentidade"
-                  :user-id="currentUserId || tempUploadSessionId"
-                  file-type="DOCUMENT"
-                  :is-temporary="!currentUserId"
-                  :enable-ocr="true"
-                  :form-data="{ nome: userForm.name, email: userForm.email }"
-                  @ocr-result="onOcrResult"
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Banco</label>
+                <input
+                  v-model="userForm.banco"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="Banco"
                 />
               </div>
               <div>
-                <UserFileUpload
-                  label="Foto de Perfil"
-                  accept="image/*"
-                  v-model="userForm.profileImage"
-                  :user-id="currentUserId || tempUploadSessionId"
-                  file-type="PROFILE_PHOTO"
-                  :is-temporary="!currentUserId"
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Agência</label>
+                <input
+                  v-model="userForm.agencia"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="0000"
                 />
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Conta</label>
+                <input
+                  v-model="userForm.conta"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="000000-0"
+                />
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Tipo de conta</label>
+                <select
+                  v-model="userForm.tipoConta"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                >
+                  <option v-for="opt in accountTypeOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Tipo de PIX</label>
+                <select
+                  v-model="userForm.pixTipo"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                >
+                  <option v-for="opt in pixTypeOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Chave PIX</label>
+                <input
+                  v-model="userForm.pixChave"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="CPF, email, telefone..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Endereço -->
+          <div class="border-t border-slate-700/50 pt-4 mb-4">
+            <h4 class="text-sm font-medium text-slate-300 mb-3">
+              Endereço Residencial
+            </h4>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">CEP</label>
+              <div class="relative">
+                <input
+                  v-model="userForm.cep"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 pr-10 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="00000-000"
+                  v-cep
+                />
+                <span
+                  v-if="personalCepLoading"
+                  class="absolute inset-y-0 right-3 flex items-center text-xs text-indigo-400"
+                >
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                </span>
+                <span
+                  v-else-if="personalCepError"
+                  class="absolute inset-y-0 right-3 flex items-center text-xs text-red-400"
+                >
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                </span>
+                <span
+                  v-else-if="personalCepValid"
+                  class="absolute inset-y-0 right-3 flex items-center text-xs text-emerald-400"
+                >
+                  <i class="fa-solid fa-check"></i>
+                </span>
+              </div>
+              <p v-if="personalCepError" class="mt-1 text-[11px] text-red-400">
+                {{ personalCepError }}
+              </p>
+            </div>
+            <div class="md:col-span-3">
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Rua</label>
+              <input
+                v-model="userForm.enderecoRua"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                placeholder="Rua"
+              />
+            </div>
+            <div>
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Número</label>
+              <input
+                v-model="userForm.enderecoNumero"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                placeholder="123"
+              />
+            </div>
+            <div>
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Complemento</label>
+              <input
+                v-model="userForm.enderecoComplemento"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                placeholder="Apto, bloco..."
+              />
+            </div>
+            <div>
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Bairro</label>
+              <input
+                v-model="userForm.enderecoBairro"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                placeholder="Bairro"
+              />
+            </div>
+            <div>
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Município</label>
+              <input
+                v-model="userForm.enderecoCidade"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                placeholder="Cidade"
+              />
+            </div>
+            <div>
+              <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">UF</label>
+              <input
+                v-model="userForm.enderecoEstado"
+                maxlength="2"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none uppercase"
+                placeholder="UF"
+              />
+            </div>
+          </div>
+          </div>
+
+          <!-- Upload de Documentos Pessoais -->
+          <div class="border-t border-slate-700/50 pt-4 mb-4">
+            <h4 class="text-sm font-medium text-slate-300 mb-3">
+              Documentos Pessoais
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <UserFileUpload
+                label="Documento de identidade (RG/CNH/Passaporte)"
+                accept="image/*,application/pdf"
+                v-model="userForm.documentoIdentidade"
+                :user-id="currentUserId || tempUploadSessionId"
+                file-type="DOCUMENT"
+                :temporary-mode="!currentUserId"
+                :enable-ocr="true"
+                :form-data="{ nome: userForm.name, email: userForm.email }"
+                @ocr-result="onOcrResult"
+              />
+              <div class="rounded-lg border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-xs text-slate-300">
+                <p class="text-slate-200 font-semibold flex items-center gap-2">
+                  <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                  Dica de validação
+                </p>
+                <p class="mt-2">
+                  Após o upload, o Tesseract fará a leitura automática do nome e CPF para comparar com as informações digitadas.
+                </p>
+                <p class="mt-2 text-slate-400">
+                  Utilize documentos legíveis, sem cortes, para maximizar a precisão da leitura.
+                </p>
               </div>
             </div>
           </div>
 
           <!-- Acesso ao Sistema -->
           <div class="border-t border-slate-700/50 pt-4">
-            <h4 class="text-sm font-medium text-slate-300 mb-3">Acesso ao Sistema</h4>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-medium text-slate-300">
+                Acesso ao Sistema
+              </h4>
+              <button
+                @click="toggleSuperUser"
+                :class="[
+                  'group relative px-3 py-2 rounded-lg border-2 transition-all duration-300 hover:scale-105',
+                  userForm.superUser
+                    ? 'border-yellow-500 bg-yellow-500/10 shadow-lg shadow-yellow-500/25'
+                    : 'border-slate-600/30 bg-slate-800/40',
+                ]"
+                :title="userForm.superUser ? 'Super User Ativo' : 'Ativar Super User'"
+              >
+                <div class="flex flex-col items-center text-center">
+                  <i :class="[
+                    'fa-solid fa-crown text-base mb-1',
+                    userForm.superUser ? 'text-white' : 'text-slate-400'
+                  ]"></i>
+                  <div :class="[
+                    'text-xs font-medium leading-tight',
+                    userForm.superUser ? 'text-white' : 'text-slate-300'
+                  ]">
+                    Super User
+                  </div>
+                </div>
+                <div
+                  v-if="userForm.superUser"
+                  class="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full flex items-center justify-center"
+                >
+                  <i class="fa-solid fa-check text-white text-[6px]"></i>
+                </div>
+              </button>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="text-[12px] text-slate-300">
-                  Senha {{ editingUser ? '(deixe em branco para manter)' : '*' }}
+                  Senha
+                  {{ editingUser ? "(deixe em branco para manter)" : "*" }}
                 </label>
                 <input
                   v-model="userForm.password"
                   type="password"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                   placeholder="Digite a senha"
                 />
               </div>
-              <div>
-                <label class="text-[12px] text-slate-300">Permissões</label>
-                <div class="mt-1 space-y-2">
-                  <label
-                    v-for="role in roleOptions"
-                    :key="role.value"
-                    class="flex items-center gap-2 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      :value="role.value"
-                      v-model="userForm.roles"
-                      class="accent-indigo-500"
-                    />
-                    <span class="text-xs text-slate-300">{{ role.label }}</span>
-                  </label>
-                </div>
-              </div>
             </div>
           </div>
+
+          <!-- Permissões -->
+          <div class="border-t border-slate-700/50 pt-4">
+            <h4 class="text-sm font-medium text-slate-300 mb-3">Permissões</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                v-for="role in roleOptions"
+                :key="role.value"
+                @click="toggleRole(role.value)"
+                :class="[
+                  'group relative px-3 py-2 rounded-lg border-2 transition-all duration-300 hover:scale-105',
+                  userForm.roles.includes(role.value)
+                    ? role.activeClass
+                    : 'border-slate-600/30 bg-slate-800/40',
+                ]"
+                :title="userForm.roles.includes(role.value) ? `${role.label} Ativo` : `Ativar ${role.label}`"
+              >
+                <div class="flex flex-col items-center text-center">
+                  <i :class="[
+                    'fa-solid',
+                    role.icon,
+                    'text-base mb-1',
+                    userForm.roles.includes(role.value) ? 'text-white' : 'text-slate-400'
+                  ]"></i>
+                  <div :class="[
+                    'text-xs font-medium leading-tight',
+                    userForm.roles.includes(role.value) ? 'text-white' : 'text-slate-300'
+                  ]">
+                    {{ role.label }}
+                  </div>
+                </div>
+                <div
+                  v-if="userForm.roles.includes(role.value)"
+                  :class="['absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center', role.checkClass]"
+                >
+                  <i class="fa-solid fa-check text-white text-[6px]"></i>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Espaçamento adicional -->
+          <div class="pt-6"></div>
         </div>
 
         <!-- ========== SEÇÃO 2: DADOS DA EMPRESA ========== -->
-        <div class="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
-          <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
-            <i class="fa-solid fa-building mr-2 text-green-400"></i>
-            Dados da Empresa
-          </h3>
+        <div class="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/85 p-5">
+          <div class="absolute inset-0 bg-gradient-to-br from-sky-500/12 via-slate-900/0 to-slate-900/0 pointer-events-none"></div>
+          <div class="relative">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                <i class="fa-solid fa-building text-sky-300"></i>
+                Dados da empresa
+              </h3>
+              <p class="text-xs text-slate-400">Informações jurídicas e endereço empresarial.</p>
+            </div>
+          </div>
 
           <!-- Informações da Empresa -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -338,7 +673,7 @@
               <label class="text-[12px] text-slate-300">Razão Social</label>
               <input
                 v-model="userForm.razaoSocial"
-                class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                 placeholder="Razão social da empresa"
               />
             </div>
@@ -346,7 +681,7 @@
               <label class="text-[12px] text-slate-300">Nome Fantasia</label>
               <input
                 v-model="userForm.nomeFantasia"
-                class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                 placeholder="Nome fantasia"
               />
             </div>
@@ -354,53 +689,138 @@
               <label class="text-[12px] text-slate-300">CNPJ</label>
               <input
                 v-model="userForm.cnpj"
-                class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                 placeholder="00.000.000/0000-00"
                 v-cnpj
               />
             </div>
             <div>
-              <label class="text-[12px] text-slate-300">Quantidade de Sócios</label>
+              <label class="text-[12px] text-slate-300"
+                >Quantidade de Sócios</label
+              >
               <select
                 v-model="userForm.quantidadeSocios"
                 @change="onQuantidadeSociosChange"
-                class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
               >
                 <option value="">Selecione</option>
-                <option v-for="n in 10" :key="n" :value="n">{{ n }} sócio{{ n > 1 ? 's' : '' }}</option>
+                <option v-for="n in 10" :key="n" :value="n">
+                  {{ n }} sócio{{ n > 1 ? "s" : "" }}
+                </option>
               </select>
             </div>
           </div>
 
           <!-- Endereço da Empresa -->
           <div class="border-t border-slate-700/50 pt-4 mb-4">
-            <h4 class="text-sm font-medium text-slate-300 mb-3">Endereço da Empresa</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <h4 class="text-sm font-medium text-slate-300 mb-3">
+              Endereço da Empresa
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div class="md:col-span-2">
-                <label class="text-[12px] text-slate-300">Endereço Completo</label>
-                <textarea
-                  v-model="userForm.enderecoEmpresa"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
-                  placeholder="Endereço da empresa"
-                  rows="2"
-                ></textarea>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Rua</label>
+                <input
+                  v-model="userForm.enderecoEmpresaRua"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="Rua"
+                />
               </div>
               <div>
-                <label class="text-[12px] text-slate-300">CEP</label>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Número</label>
                 <input
-                  v-model="userForm.cepEmpresa"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
-                  placeholder="00000-000"
-                  v-cep
+                  v-model="userForm.enderecoEmpresaNumero"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="123"
                 />
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Complemento</label>
+                <input
+                  v-model="userForm.enderecoEmpresaComplemento"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="Sala, conjunto..."
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Bairro</label>
+                <input
+                  v-model="userForm.enderecoEmpresaBairro"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="Bairro"
+                />
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">Município</label>
+                <input
+                  v-model="userForm.enderecoEmpresaCidade"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="Cidade"
+                />
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">UF</label>
+                <input
+                  v-model="userForm.enderecoEmpresaEstado"
+                  maxlength="2"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none uppercase"
+                  placeholder="UF"
+                />
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">CEP</label>
+                <div class="relative">
+                  <input
+                    v-model="userForm.cepEmpresa"
+                    class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 pr-10 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                    placeholder="00000-000"
+                    v-cep
+                  />
+                  <span
+                    v-if="companyCepLoading"
+                    class="absolute inset-y-0 right-3 flex items-center text-xs text-indigo-400"
+                  >
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                  </span>
+                  <span
+                    v-else-if="companyCepError"
+                    class="absolute inset-y-0 right-3 flex items-center text-xs text-red-400"
+                  >
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                  </span>
+                  <span
+                    v-else-if="companyCepValid"
+                    class="absolute inset-y-0 right-3 flex items-center text-xs text-emerald-400"
+                  >
+                    <i class="fa-solid fa-check"></i>
+                  </span>
+                </div>
+                <p v-if="companyCepError" class="mt-1 text-[11px] text-red-400">
+                  {{ companyCepError }}
+                </p>
               </div>
             </div>
           </div>
 
+          <div class="mt-4">
+            <label class="text-[11px] font-medium text-slate-300 uppercase tracking-wide">
+              Observações internas
+            </label>
+            <textarea
+              v-model="userForm.observacoesEmpresa"
+              class="mt-2 w-full h-24 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none"
+              placeholder="Observações sobre o relacionamento com a empresa, condições comerciais, etc."
+            ></textarea>
+          </div>
+
           <!-- Documentos da Empresa -->
           <div class="border-t border-slate-700/50 pt-4">
-            <h4 class="text-sm font-medium text-slate-300 mb-3">Documentos da Empresa</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <h4 class="text-sm font-medium text-slate-300 mb-3">
+              Documentos da Empresa
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <UserFileUpload
                   label="Cartão CNPJ"
@@ -408,7 +828,7 @@
                   v-model="userForm.cartaoCnpjImage"
                   :user-id="currentUserId || tempUploadSessionId"
                   file-type="cnpjImage"
-                  :is-temporary="!currentUserId"
+                  :temporary-mode="!currentUserId"
                 />
               </div>
               <div>
@@ -418,36 +838,51 @@
                   v-model="userForm.contratoSocialImage"
                   :user-id="currentUserId || tempUploadSessionId"
                   file-type="enderecoImage"
-                  :is-temporary="!currentUserId"
+                  :temporary-mode="!currentUserId"
                 />
               </div>
-              <div v-if="userForm.quantidadeSocios > 1">
+            </div>
+            <div v-if="userForm.quantidadeSocios > 1" class="mt-4">
+              <div class="max-w-md">
                 <UserFileUpload
                   label="Qualificação dos Sócios"
                   accept="image/*,application/pdf"
                   v-model="userForm.qualificacaoSociosImage"
                   :user-id="currentUserId || tempUploadSessionId"
                   file-type="bancoImage"
-                  :is-temporary="!currentUserId"
+                  :temporary-mode="!currentUserId"
                 />
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- ========== SEÇÃO 3: DADOS DOS SÓCIOS (DINÂMICA) ========== -->
-        <div v-if="userForm.quantidadeSocios > 1" class="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
-          <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center">
-            <i class="fa-solid fa-users mr-2 text-purple-400"></i>
-            Dados dos Demais Sócios ({{ userForm.quantidadeSocios - 1 }})
-          </h3>
+        <div
+          v-if="userForm.quantidadeSocios > 1"
+          class="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/85 p-5"
+        >
+          <div class="absolute inset-0 bg-gradient-to-br from-purple-500/12 via-slate-900/0 to-slate-900/0 pointer-events-none"></div>
+          <div class="relative">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                <i class="fa-solid fa-users text-purple-300"></i>
+                Sócios adicionais ({{ userForm.quantidadeSocios - 1 }})
+              </h3>
+              <p class="text-xs text-slate-400">Cadastre os dados e documentos dos demais sócios.</p>
+            </div>
+          </div>
 
           <div
             v-for="(socio, index) in socios"
             :key="index"
             class="border border-slate-700/50 rounded-lg p-4 mb-4"
           >
-            <h4 class="text-md font-medium text-slate-300 mb-3 flex items-center justify-between">
+            <h4
+              class="text-md font-medium text-slate-300 mb-3 flex items-center justify-between"
+            >
               <span>
                 <i class="fa-solid fa-user-tie mr-2 text-purple-400"></i>
                 Sócio {{ index + 2 }}
@@ -464,10 +899,12 @@
             <!-- Dados pessoais do sócio -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div class="md:col-span-2">
-                <label class="text-[12px] text-slate-300">Nome Completo *</label>
+                <label class="text-[12px] text-slate-300"
+                  >Nome Completo *</label
+                >
                 <input
                   v-model="socio.nome"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                   placeholder="Nome completo do sócio"
                 />
               </div>
@@ -476,7 +913,7 @@
                 <input
                   v-model="socio.email"
                   type="email"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                   placeholder="email@exemplo.com"
                 />
               </div>
@@ -484,24 +921,28 @@
                 <label class="text-[12px] text-slate-300">Telefone</label>
                 <input
                   v-model="socio.telefone"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                   placeholder="(00) 00000-0000"
                   v-telefone
                 />
               </div>
               <div>
-                <label class="text-[12px] text-slate-300">Data de Nascimento</label>
+                <label class="text-[12px] text-slate-300"
+                  >Data de Nascimento</label
+                >
                 <input
                   v-model="socio.dataNascimento"
                   type="date"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label class="text-[12px] text-slate-300">Tipo de Documento</label>
+                <label class="text-[12px] text-slate-300"
+                  >Tipo de Documento</label
+                >
                 <select
                   v-model="socio.tipoDocumento"
-                  class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                  class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="">Selecione o tipo</option>
                   <option value="rg">RG</option>
@@ -513,22 +954,25 @@
 
             <!-- Endereço do sócio -->
             <div class="border-t border-slate-700/50 pt-4 mb-4">
-              <h5 class="text-sm font-medium text-slate-300 mb-3">Endereço do Sócio</h5>
+              <h5 class="text-sm font-medium text-slate-300 mb-3">
+                Endereço do Sócio
+              </h5>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="md:col-span-2">
-                  <label class="text-[12px] text-slate-300">Endereço Completo</label>
+                  <label class="text-[12px] text-slate-300"
+                    >Endereço Completo</label
+                  >
                   <textarea
                     v-model="socio.endereco"
-                    class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                    class="mt-2 w-full h-20 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none"
                     placeholder="Endereço do sócio"
-                    rows="2"
                   ></textarea>
                 </div>
                 <div>
                   <label class="text-[12px] text-slate-300">CEP</label>
                   <input
                     v-model="socio.cep"
-                    class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
+                    class="mt-2 w-full h-10 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                     placeholder="00000-000"
                     v-cep
                   />
@@ -538,7 +982,9 @@
 
             <!-- Documentos do sócio -->
             <div class="border-t border-slate-700/50 pt-4">
-              <h5 class="text-sm font-medium text-slate-300 mb-3">Documentos do Sócio</h5>
+              <h5 class="text-sm font-medium text-slate-300 mb-3">
+                Documentos do Sócio
+              </h5>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <UserFileUpload
@@ -547,7 +993,7 @@
                     v-model="socio.documentoIdentidade"
                     :user-id="currentUserId || tempUploadSessionId"
                     file-type="DOCUMENT"
-                    :is-temporary="!currentUserId"
+                    :temporary-mode="!currentUserId"
                     :enable-ocr="true"
                     :form-data="{ nome: socio.nome, email: socio.email }"
                     @ocr-result="(result) => onSocioOcrResult(result, index)"
@@ -560,13 +1006,15 @@
                     v-model="socio.profileImage"
                     :user-id="currentUserId || tempUploadSessionId"
                     file-type="PROFILE_PHOTO"
-                    :is-temporary="!currentUserId"
+                    :temporary-mode="!currentUserId"
                   />
                 </div>
               </div>
             </div>
           </div>
+          </div>
         </div>
+      </div>
       </div>
 
       <template #footer>
@@ -590,7 +1038,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import BaseModal from "~/components/ui/BaseModal.vue";
 import UserFileUpload from "~/components/ui/UserFileUpload.vue";
 import {
@@ -626,6 +1074,12 @@ const userForm = ref({
   rg: "",
   telefone: "",
   endereco: "",
+  enderecoRua: "",
+  enderecoNumero: "",
+  enderecoComplemento: "",
+  enderecoBairro: "",
+  enderecoCidade: "",
+  enderecoEstado: "",
   banco: "",
   agencia: "",
   conta: "",
@@ -641,6 +1095,7 @@ const userForm = ref({
   bancoImage: null,
   pixImage: null,
   location: null,
+  observacoes: "",
 
   // Novos campos para OCR
   sobrenome: "",
@@ -663,11 +1118,19 @@ const userForm = ref({
   nomeFantasia: "",
   quantidadeSocios: "",
   enderecoEmpresa: "",
+  enderecoEmpresaRua: "",
+  enderecoEmpresaNumero: "",
+  enderecoEmpresaComplemento: "",
+  enderecoEmpresaBairro: "",
+  enderecoEmpresaCidade: "",
+  enderecoEmpresaEstado: "",
   cepEmpresa: "",
+  observacoesEmpresa: "",
   documentoIdentidade: null,
   cartaoCnpjImage: null,
   contratoSocialImage: null,
   qualificacaoSociosImage: null,
+  superUser: false,
 });
 
 const editingUser = ref(false);
@@ -686,15 +1149,250 @@ const currentUserId = computed(() => {
 // Session ID para uploads temporários durante criação de usuário
 const tempUploadSessionId = ref(null);
 
+// Estados para preview da imagem
+const imageLoading = ref(false);
+const imageError = ref(false);
+const imageUploaded = ref(false);
+
+const profilePreview = computed(() => {
+  const img = userForm.value.profileImage;
+  if (!img) return '';
+
+  // Se é uma string (URL), usa diretamente
+  if (typeof img === 'string') {
+    return img;
+  }
+
+  // Se é um objeto (resposta do upload), busca a URL
+  if (typeof img === 'object' && img !== null) {
+    return img.previewUrl || img.url || img.secure_url || img.publicUrl || img.thumbnailUrl || '';
+  }
+
+  return '';
+});
+
+// Função para lidar com erro de carregamento da imagem
+function onImageError() {
+  imageError.value = true;
+  imageLoading.value = false;
+  console.warn('Erro ao carregar preview da imagem de perfil');
+}
+
+// Função chamada quando arquivo é selecionado (antes do upload)
+function onProfileFileSelected(file) {
+  imageLoading.value = true;
+  imageError.value = false;
+  imageUploaded.value = false;
+
+  // Criar preview temporário com File objeto
+  if (file && file instanceof File) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      // Temporariamente atualizar o preview com o arquivo local
+      const tempPreview = {
+        previewUrl: e.target.result,
+        name: file.name,
+        size: file.size,
+        isTemp: true
+      };
+      userForm.value.profileImage = tempPreview;
+      imageLoading.value = false;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Função chamada quando upload é concluído
+function onProfileFileUploaded(uploadData) {
+  imageLoading.value = false;
+  imageError.value = false;
+  imageUploaded.value = true;
+
+  console.log('Upload concluído:', uploadData);
+
+  // Atualizar com os dados reais do upload
+  userForm.value.profileImage = uploadData;
+
+  // Mostrar notificação de sucesso
+  toastSuccess('Foto de perfil enviada com sucesso!');
+}
+
+
+// Watch para resetar estados quando mudar a imagem
+watch(() => userForm.value.profileImage, (newValue) => {
+  // Se mudou para uma string/URL válida, resetar estados
+  if ((typeof newValue === 'string' && newValue) ||
+      (typeof newValue === 'object' && newValue && newValue.previewUrl)) {
+    imageError.value = false;
+    imageLoading.value = false;
+    imageUploaded.value = true;
+  }
+  // Se foi limpo, resetar tudo
+  else if (!newValue) {
+    imageError.value = false;
+    imageLoading.value = false;
+    imageUploaded.value = false;
+  }
+});
+
+const personalCepLoading = ref(false);
+const personalCepError = ref('');
+const lastPersonalCep = ref('');
+
+const companyCepLoading = ref(false);
+const companyCepError = ref('');
+const lastCompanyCep = ref('');
+
+watch(
+  () => userForm.value.cep,
+  (val) => {
+    const digits = String(val || '').replace(/\D/g, '');
+    if (
+      digits.length === 8 &&
+      digits !== lastPersonalCep.value &&
+      !personalCepLoading.value
+    ) {
+      lastPersonalCep.value = digits;
+      fetchPersonalCep();
+    }
+    if (digits.length < 8) {
+      personalCepError.value = '';
+      lastPersonalCep.value = '';
+    }
+  }
+);
+
+watch(
+  () => userForm.value.cepEmpresa,
+  (val) => {
+    const digits = String(val || '').replace(/\D/g, '');
+    if (
+      digits.length === 8 &&
+      digits !== lastCompanyCep.value &&
+      !companyCepLoading.value
+    ) {
+      lastCompanyCep.value = digits;
+      fetchCompanyCep();
+    }
+    if (digits.length < 8) {
+      companyCepError.value = '';
+      lastCompanyCep.value = '';
+    }
+  }
+);
+
+const personalCepValid = computed(() => {
+  const digits = String(userForm.value.cep || '').replace(/\D/g, '');
+  return digits.length === 8 && !personalCepLoading.value && !personalCepError.value;
+});
+
+const companyCepValid = computed(() => {
+  const digits = String(userForm.value.cepEmpresa || '').replace(/\D/g, '');
+  return digits.length === 8 && !companyCepLoading.value && !companyCepError.value;
+});
+
+const applyAddressData = (target, res, base = 'endereco') => {
+  if (!target || !base) return;
+  const set = (suffix, value) => {
+    const key = `${base}${suffix}`;
+    if (suffix === '') {
+      target[base] = value;
+    } else {
+      target[key] = value;
+    }
+  };
+
+  set('Rua', res.street || '');
+  set('Bairro', res.neighborhood || '');
+  set('Cidade', res.city || '');
+  set('Estado', res.state || '');
+
+  const numeroKey = `${base}Numero`;
+  const complementoKey = `${base}Complemento`;
+  if (target[numeroKey] === undefined) target[numeroKey] = '';
+  if (target[complementoKey] === undefined) target[complementoKey] = '';
+
+  const composed = [res.street, res.neighborhood, res.city && res.state ? `${res.city}/${res.state}` : res.city, !res.city && res.state ? res.state : '']
+    .filter(Boolean)
+    .join(', ');
+  set('', composed);
+};
+
+const fetchPersonalCep = async () => {
+  personalCepError.value = '';
+  const digits = String(userForm.value.cep || '').replace(/\D/g, '');
+  if (digits.length !== 8) {
+    personalCepError.value = 'Informe os 8 dígitos do CEP';
+    return;
+  }
+  personalCepLoading.value = true;
+  try {
+    const res = await $fetch(`/api/cep?cep=${digits}`);
+    if (res) {
+      applyAddressData(userForm.value, res, 'endereco');
+    }
+  } catch (error) {
+    personalCepError.value =
+      error?.statusMessage || error?.message || 'CEP não encontrado';
+  } finally {
+    personalCepLoading.value = false;
+  }
+};
+
+const fetchCompanyCep = async () => {
+  companyCepError.value = '';
+  const digits = String(userForm.value.cepEmpresa || '').replace(/\D/g, '');
+  if (digits.length !== 8) {
+    companyCepError.value = 'Informe os 8 dígitos do CEP';
+    return;
+  }
+  companyCepLoading.value = true;
+  try {
+    const res = await $fetch(`/api/cep?cep=${digits}`);
+    if (res) {
+      applyAddressData(userForm.value, res, 'enderecoEmpresa');
+    }
+  } catch (error) {
+    companyCepError.value =
+      error?.statusMessage || error?.message || 'CEP não encontrado';
+  } finally {
+    companyCepLoading.value = false;
+  }
+};
+
 // Array de sócios dinâmicos
 const socios = ref([]);
 
 // Role options
 const roleOptions = [
-  { value: "admin", label: "Administrador" },
-  { value: "user", label: "Usuário" },
-  { value: "manager", label: "Gerente" },
-  { value: "analyst", label: "Analista" },
+  {
+    value: "admin",
+    label: "Administrador",
+    icon: "fa-shield-halved",
+    activeClass: "border-red-500 bg-red-500/10 shadow-lg shadow-red-500/25",
+    checkClass: "bg-red-500"
+  },
+  {
+    value: "user",
+    label: "Usuário",
+    icon: "fa-user",
+    activeClass: "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/25",
+    checkClass: "bg-blue-500"
+  },
+  {
+    value: "manager",
+    label: "Gerente",
+    icon: "fa-briefcase",
+    activeClass: "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/25",
+    checkClass: "bg-emerald-500"
+  },
+  {
+    value: "analyst",
+    label: "Analista",
+    icon: "fa-chart-line",
+    activeClass: "border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/25",
+    checkClass: "bg-purple-500"
+  },
 ];
 
 // PIX type options
@@ -749,6 +1447,12 @@ async function openNewUserModal() {
     rg: "",
     telefone: "",
     endereco: "",
+    enderecoRua: "",
+    enderecoNumero: "",
+    enderecoComplemento: "",
+    enderecoBairro: "",
+    enderecoCidade: "",
+    enderecoEstado: "",
     banco: "",
     agencia: "",
     conta: "",
@@ -764,15 +1468,54 @@ async function openNewUserModal() {
     bancoImage: null,
     pixImage: null,
     location,
+    observacoes: "",
+    nomeCompleto: "",
+    observacoesEmpresa: "",
+    enderecoEmpresaRua: "",
+    enderecoEmpresaNumero: "",
+    enderecoEmpresaComplemento: "",
+    enderecoEmpresaBairro: "",
+    enderecoEmpresaCidade: "",
+    enderecoEmpresaEstado: "",
+    enderecoEmpresa: "",
+    cepEmpresa: "",
+    quantidadeSocios: "",
+    razaoSocial: "",
+    nomeFantasia: "",
+    cartaoCnpjImage: null,
+    contratoSocialImage: null,
+    qualificacaoSociosImage: null,
+    documentoIdentidade: null,
+    superUser: false,
   };
   editingUser.value = false;
   allowEmailEdit.value = false;
   emailAvailable.value = null;
   emailError.value = "";
+  personalCepError.value = '';
+  companyCepError.value = '';
+  personalCepLoading.value = false;
+  companyCepLoading.value = false;
+  lastPersonalCep.value = '';
+  lastCompanyCep.value = '';
+
+  // Resetar estados da imagem para novo usuário
+  imageError.value = false;
+  imageLoading.value = false;
+  imageUploaded.value = false;
+
   showUserModal.value = true;
 }
 
-function editUser(user) {
+function applyOcrSuggestion() {
+  if (!userForm.value.nomeCompleto) return;
+  const suggestion = userForm.value.nomeCompleto.trim();
+  userForm.value.name = suggestion;
+  userForm.value.nomeCompleto = suggestion;
+  toastSuccess('Nome atualizado com sugestão do OCR');
+}
+
+async function editUser(user) {
   userForm.value = {
     id: user.id,
     name: user.name,
@@ -784,13 +1527,20 @@ function editUser(user) {
     rg: user.rg || "",
     telefone: user.telefone || "",
     endereco: user.endereco || "",
+    enderecoRua: user.enderecoRua || "",
+    enderecoNumero: user.enderecoNumero || "",
+    enderecoComplemento: user.enderecoComplemento || "",
+    enderecoBairro: user.enderecoBairro || "",
+    enderecoCidade: user.enderecoCidade || "",
+    enderecoEstado: user.enderecoEstado || "",
+    cep: user.cep || "",
     banco: user.banco || "",
     agencia: user.agencia || "",
     conta: user.conta || "",
     tipoConta: user.tipoConta || "corrente",
     pixTipo: user.pixTipo || "cpf",
     pixChave: user.pixChave || "",
-    profileImage: user.profileImage,
+    profileImage: user.fotoPerfilUrl || user.profileImage,
     cpfImage: user.cpfImage,
     rgImage: user.rgImage,
     cnpjImage: user.cnpjImage,
@@ -799,11 +1549,38 @@ function editUser(user) {
     bancoImage: user.bancoImage,
     pixImage: user.pixImage,
     location: user.location,
+    observacoes: user.observacoes || "",
+    nomeCompleto: user.nomeCompleto || "",
+    documentoIdentidade: user.documentoIdentidade || null,
+    quantidadeSocios: user.quantidadeSocios || "",
+    enderecoEmpresa: user.enderecoEmpresa || "",
+    enderecoEmpresaRua: user.enderecoEmpresaRua || "",
+    enderecoEmpresaNumero: user.enderecoEmpresaNumero || "",
+    enderecoEmpresaComplemento: user.enderecoEmpresaComplemento || "",
+    enderecoEmpresaBairro: user.enderecoEmpresaBairro || "",
+    enderecoEmpresaCidade: user.enderecoEmpresaCidade || "",
+    enderecoEmpresaEstado: user.enderecoEmpresaEstado || "",
+    cepEmpresa: user.cepEmpresa || "",
+    observacoesEmpresa: user.observacoesEmpresa || "",
+    razaoSocial: user.razaoSocial || "",
+    nomeFantasia: user.nomeFantasia || "",
+    cartaoCnpjImage: user.cartaoCnpjImage || null,
+    contratoSocialImage: user.contratoSocialImage || null,
+    qualificacaoSociosImage: user.qualificacaoSociosImage || null,
+    superUser: user.superUser || false,
   };
   editingUser.value = true;
   allowEmailEdit.value = false;
   emailAvailable.value = null;
   emailError.value = "";
+  personalCepError.value = '';
+  companyCepError.value = '';
+  lastPersonalCep.value = '';
+  lastCompanyCep.value = '';
+
+  // Buscar URL presigned para a foto se existir
+  await loadUserProfilePhotoUrl(user.fotoPerfilUrl);
+
   showUserModal.value = true;
 }
 
@@ -819,23 +1596,49 @@ async function saveUser() {
       cnpj,
       rg,
       telefone,
-      endereco,
-      banco,
-      agencia,
-      conta,
-      tipoConta,
-      pixTipo,
-      pixChave,
-      profileImage,
-      cpfImage,
-      rgImage,
-      cnpjImage,
-      enderecoImage,
-      telefoneImage,
-      bancoImage,
-      pixImage,
-      location,
-    } = userForm.value;
+    endereco,
+    enderecoRua,
+    enderecoNumero,
+    enderecoComplemento,
+    enderecoBairro,
+    enderecoCidade,
+    enderecoEstado,
+    banco,
+    agencia,
+    conta,
+    tipoConta,
+    pixTipo,
+    pixChave,
+    profileImage,
+    cpfImage,
+    rgImage,
+    cnpjImage,
+    enderecoImage,
+    telefoneImage,
+    bancoImage,
+    pixImage,
+    location,
+    cep,
+    observacoes,
+    nomeCompleto,
+    quantidadeSocios,
+    enderecoEmpresa,
+    enderecoEmpresaRua,
+    enderecoEmpresaNumero,
+    enderecoEmpresaComplemento,
+    enderecoEmpresaBairro,
+    enderecoEmpresaCidade,
+    enderecoEmpresaEstado,
+    cepEmpresa,
+    observacoesEmpresa,
+    razaoSocial,
+    nomeFantasia,
+    cartaoCnpjImage,
+    contratoSocialImage,
+    qualificacaoSociosImage,
+    documentoIdentidade,
+    superUser,
+  } = userForm.value;
 
     // Validação básica
     if (!name.trim() || !email.trim()) {
@@ -854,30 +1657,96 @@ async function saveUser() {
       return;
     }
 
+    const enderecoCompleto = [
+      enderecoRua,
+      enderecoNumero,
+      enderecoComplemento,
+      enderecoBairro,
+      enderecoCidade && enderecoEstado ? `${enderecoCidade}/${enderecoEstado}` : enderecoCidade,
+      !enderecoCidade && enderecoEstado ? enderecoEstado : ''
+    ].filter(Boolean).join(', ');
+
+    const enderecoEmpresaCompleto = [
+      enderecoEmpresaRua,
+      enderecoEmpresaNumero,
+      enderecoEmpresaComplemento,
+      enderecoEmpresaBairro,
+      enderecoEmpresaCidade && enderecoEmpresaEstado ? `${enderecoEmpresaCidade}/${enderecoEmpresaEstado}` : enderecoEmpresaCidade,
+      !enderecoEmpresaCidade && enderecoEmpresaEstado ? enderecoEmpresaEstado : ''
+    ].filter(Boolean).join(', ');
+
+    const toNullableString = (value) => {
+      if (typeof value !== 'string') {
+        return value ?? null;
+      }
+      const trimmed = value.trim();
+      return trimmed.length ? trimmed : null;
+    };
+
+    const normalizedRoles = Array.isArray(roles)
+      ? roles
+          .map((role) => (role == null ? null : String(role).trim()))
+          .filter((role) => role && role.length > 0)
+      : [];
+
+    const sociosNumber =
+      quantidadeSocios && !Number.isNaN(Number(quantidadeSocios))
+        ? Number(quantidadeSocios)
+        : null;
+
     const userData = {
       name: name.trim(),
-      email: email.trim(),
-      roles: roles || ["user"],
-      cpf: cpf?.trim() || null,
-      cnpj: cnpj?.trim() || null,
-      rg: rg?.trim() || null,
-      telefone: telefone?.trim() || null,
-      endereco: endereco?.trim() || null,
-      banco: banco?.trim() || null,
-      agencia: agencia?.trim() || null,
-      conta: conta?.trim() || null,
-      tipoConta: tipoConta || null,
-      pixTipo: pixTipo || null,
-      pixChave: pixChave?.trim() || null,
-      profileImage,
-      cpfImage,
-      rgImage,
-      cnpjImage,
-      enderecoImage,
-      telefoneImage,
-      bancoImage,
-      pixImage,
-      location,
+      email: email.trim().toLowerCase(),
+      roles: normalizedRoles.length ? normalizedRoles : ["user"],
+      superUser: Boolean(superUser),
+      cpf: toNullableString(cpf),
+      cnpj: toNullableString(cnpj),
+      rg: toNullableString(rg),
+      telefone: toNullableString(telefone),
+      endereco: toNullableString(enderecoCompleto || endereco),
+      enderecoRua: toNullableString(enderecoRua),
+      enderecoNumero: toNullableString(enderecoNumero),
+      enderecoComplemento: toNullableString(enderecoComplemento),
+      enderecoBairro: toNullableString(enderecoBairro),
+      enderecoCidade: toNullableString(enderecoCidade),
+      enderecoEstado: toNullableString(enderecoEstado),
+      cep: toNullableString(cep),
+      banco: toNullableString(banco),
+      agencia: toNullableString(agencia),
+      conta: toNullableString(conta),
+      tipoConta: toNullableString(tipoConta),
+      pixTipo: toNullableString(pixTipo),
+      pixChave: toNullableString(pixChave),
+      profileImage: profileImage || null,
+      fotoPerfilUrl: profileImage || null,
+      comprovanteEnderecoUrl: enderecoImage || null,
+      documentoIdentidade: documentoIdentidade || null,
+      cpfImage: cpfImage || null,
+      rgImage: rgImage || null,
+      cnpjImage: cnpjImage || null,
+      enderecoImage: enderecoImage || null,
+      telefoneImage: telefoneImage || null,
+      bancoImage: bancoImage || null,
+      pixImage: pixImage || null,
+      location: toNullableString(location),
+      observacoes: toNullableString(observacoes),
+      nomeCompleto: toNullableString(nomeCompleto),
+      quantidadeSocios: sociosNumber,
+      enderecoEmpresa: toNullableString(enderecoEmpresaCompleto || enderecoEmpresa),
+      enderecoEmpresaRua: toNullableString(enderecoEmpresaRua),
+      enderecoEmpresaNumero: toNullableString(enderecoEmpresaNumero),
+      enderecoEmpresaComplemento: toNullableString(enderecoEmpresaComplemento),
+      enderecoEmpresaBairro: toNullableString(enderecoEmpresaBairro),
+      enderecoEmpresaCidade: toNullableString(enderecoEmpresaCidade),
+      enderecoEmpresaEstado: toNullableString(enderecoEmpresaEstado),
+      cepEmpresa: toNullableString(cepEmpresa),
+      observacoesEmpresa: toNullableString(observacoesEmpresa),
+      razaoSocial: toNullableString(razaoSocial),
+      nomeFantasia: toNullableString(nomeFantasia),
+      cartaoCnpjImage: cartaoCnpjImage || null,
+      contratoSocialImage: contratoSocialImage || null,
+      qualificacaoSociosImage: qualificacaoSociosImage || null,
+      localizacaoCadastro: toNullableString(location),
     };
 
     // Adiciona senha apenas se fornecida
@@ -1276,6 +2145,23 @@ function onOcrResult(result) {
   }
 }
 
+// Toggle role function
+function toggleRole(roleValue) {
+  const index = userForm.value.roles.indexOf(roleValue);
+  if (index > -1) {
+    // Remove role
+    userForm.value.roles.splice(index, 1);
+  } else {
+    // Add role
+    userForm.value.roles.push(roleValue);
+  }
+}
+
+// Toggle super user function
+function toggleSuperUser() {
+  userForm.value.superUser = !userForm.value.superUser;
+}
+
 // Format functions
 const formatCPF = (cpf) => {
   if (!cpf) return "";
@@ -1286,6 +2172,27 @@ const formatCNPJ = (cnpj) => {
   if (!cnpj) return "";
   return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
 };
+
+async function loadUserProfilePhotoUrl(fotoPerfilUrl) {
+  if (!fotoPerfilUrl) return;
+
+  try {
+    // Extrair a chave do objeto removendo o prefixo /api/v1/files/
+    const objectKey = fotoPerfilUrl.replace('/api/v1/files/', '');
+
+    // Fazer requisição para obter URL presigned
+    const response = await $fetch('/api/v1/files/presign-download', {
+      method: 'GET',
+      query: { key: objectKey }
+    });
+
+    if (response && response.url) {
+      userForm.value.profileImage = response.url;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar foto do perfil:', error);
+  }
+}
 
 // Load users on mount
 onMounted(() => {

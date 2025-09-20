@@ -151,7 +151,10 @@
 
           <!-- Acesso ao Sistema -->
           <div class="border-t border-slate-700/50 pt-4">
-            <h4 class="text-sm font-medium text-slate-300 mb-3">Acesso ao Sistema</h4>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+              <h4 class="text-sm font-medium text-slate-300">Acesso ao Sistema</h4>
+              <h4 class="hidden md:block text-sm font-medium text-slate-300 md:text-right">Permissões</h4>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="text-[12px] text-slate-300">
@@ -165,20 +168,58 @@
                 />
               </div>
               <div>
-                <label class="text-[12px] text-slate-300">Permissões</label>
-                <div class="mt-1 space-y-2">
+                <h4 class="text-sm font-medium text-slate-300 mb-2 md:hidden">Permissões</h4>
+                <div class="space-y-2">
                   <label
                     v-for="role in roleOptions"
                     :key="role.value"
-                    class="flex items-center gap-2 cursor-pointer"
+                    class="group relative w-full px-3 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer hover:scale-[1.01]"
+                    :class="userForm.roles.includes(role.value)
+                      ? (role.activeClass || 'border-indigo-500/70 bg-indigo-500/15 shadow-lg shadow-indigo-500/10')
+                      : 'border-slate-600/40 bg-slate-800/40 hover:border-indigo-500/40'"
                   >
                     <input
                       type="checkbox"
+                      class="sr-only"
                       :value="role.value"
                       v-model="userForm.roles"
-                      class="accent-indigo-500"
                     />
-                    <span class="text-xs text-slate-300">{{ role.label }}</span>
+                    <div class="flex items-center gap-3">
+                      <div class="flex-shrink-0">
+                        <i :class="[
+                          'fa-solid',
+                          role.icon,
+                          'text-base',
+                          userForm.roles.includes(role.value) ? 'text-white' : 'text-slate-400'
+                        ]"></i>
+                      </div>
+                      <div class="flex-1 text-left">
+                        <div :class="[
+                          'text-sm font-semibold',
+                          userForm.roles.includes(role.value) ? 'text-white' : 'text-slate-200'
+                        ]">
+                          {{ role.label }}
+                        </div>
+                        <div :class="[
+                          'text-xs mt-0.5 leading-snug',
+                          userForm.roles.includes(role.value) ? 'text-slate-200/90' : 'text-slate-400'
+                        ]">
+                          {{ role.description }}
+                        </div>
+                      </div>
+                      <div class="flex-shrink-0">
+                        <div
+                          v-if="userForm.roles.includes(role.value)"
+                          :class="['w-4 h-4 rounded-full flex items-center justify-center', role.checkClass || 'bg-indigo-500']"
+                        >
+                          <i class="fa-solid fa-check text-white text-[8px]"></i>
+                        </div>
+                        <div
+                          v-else
+                          class="w-4 h-4 rounded-full border-2 border-slate-500"
+                        ></div>
+                      </div>
+                    </div>
                   </label>
                 </div>
               </div>

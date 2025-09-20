@@ -1,15 +1,19 @@
 <template>
-  <div class="min-h-screen">
+  <div
+    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+  >
     <!-- Header (sem busca/IA; serão acionados pela sidebar) -->
     <header
-      class="header-glass fixed top-0 left-0 right-0 lg:left-64 z-30 h-16 px-3 border-b border-slate-800/60 bg-transparent backdrop-blur-md"
+      class="app-header relative bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 px-4 py-4"
     >
-      <div class="w-full h-full flex items-center justify-between gap-2">
-        <!-- Left: Brand + Financial Stats -->
+      <div
+        class="absolute inset-0 bg-white/[0.02] backdrop-blur-3xl"
+      ></div>
+      <div
+        class="relative w-full flex items-center justify-between gap-3 flex-wrap"
+      >
+        <!--    <!-- Left: Brand + Financial Stats -->
         <div class="flex items-center gap-4">
-          <div class="hidden sm:flex items-center">
-            <BrandMark size="sm" />
-          </div>
           <FinancialStats
             :pipeline-key="pipelineKey"
             :is-financial-process="isFinancialProcess"
@@ -52,13 +56,27 @@
               v-model="sortOption"
               class="bg-transparent border-none text-slate-300 text-[11px] px-2 py-1 rounded-md focus:outline-none focus:ring-0 cursor-pointer"
             >
-              <option value="default" class="bg-slate-800 text-slate-300">Padrão</option>
-              <option value="name-asc" class="bg-slate-800 text-slate-300">Nome (A-Z)</option>
-              <option value="name-desc" class="bg-slate-800 text-slate-300">Nome (Z-A)</option>
-              <option value="amount-asc" class="bg-slate-800 text-slate-300">Valor (Menor)</option>
-              <option value="amount-desc" class="bg-slate-800 text-slate-300">Valor (Maior)</option>
-              <option value="date-newest" class="bg-slate-800 text-slate-300">Mais Recente</option>
-              <option value="date-oldest" class="bg-slate-800 text-slate-300">Mais Antigo</option>
+              <option value="default" class="bg-slate-800 text-slate-300">
+                Padrão
+              </option>
+              <option value="name-asc" class="bg-slate-800 text-slate-300">
+                Nome (A-Z)
+              </option>
+              <option value="name-desc" class="bg-slate-800 text-slate-300">
+                Nome (Z-A)
+              </option>
+              <option value="amount-asc" class="bg-slate-800 text-slate-300">
+                Valor (Menor)
+              </option>
+              <option value="amount-desc" class="bg-slate-800 text-slate-300">
+                Valor (Maior)
+              </option>
+              <option value="date-newest" class="bg-slate-800 text-slate-300">
+                Mais Recente
+              </option>
+              <option value="date-oldest" class="bg-slate-800 text-slate-300">
+                Mais Antigo
+              </option>
             </select>
           </div>
 
@@ -68,11 +86,17 @@
             class="consoria-btn bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-400 text-white font-medium px-2.5 py-1 rounded-md transition-all duration-300 flex items-center gap-1.5 text-xs relative overflow-hidden group"
           >
             <!-- Shimmer effect -->
-            <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700"></div>
+            <div
+              class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700"
+            ></div>
             <!-- Pulsing dot -->
-            <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+            <div
+              class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"
+            ></div>
             <!-- Robot icon with animation -->
-            <i class="fa-solid fa-robot text-[11px] group-hover:scale-110 transition-transform duration-300"></i>
+            <i
+              class="fa-solid fa-robot text-[11px] group-hover:scale-110 transition-transform duration-300"
+            ></i>
             <span class="hidden sm:inline relative z-10">ConsorIA</span>
           </button>
 
@@ -89,7 +113,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="page-content p-3 sm:p-6">
+    <main class="p-3 sm:p-6">
       <!-- Kanban View -->
       <div v-if="viewMode === 'kanban'" class="overflow-x-auto kanban-scroll">
         <transition-group
@@ -143,7 +167,10 @@
                   >SLA {{ stage.slaDays }}d</span
                 >
                 <!-- Stage Sum for Financial Processes -->
-                <span v-if="isFinancialProcess && formatStageSum(stage.id)" class="text-[10px] font-bold text-emerald-400">
+                <span
+                  v-if="isFinancialProcess && formatStageSum(stage.id)"
+                  class="text-[10px] font-bold text-emerald-400"
+                >
                   {{ formatStageSum(stage.id) }}
                 </span>
               </div>
@@ -156,11 +183,11 @@
               >
             </div>
             <!-- Cards -->
-            <div class="space-y-1.5 min-h-10">
+            <div class="space-y-2.5 min-h-10">
               <div
                 v-for="p in filteredByStage(stage.id)"
                 :key="p.id"
-                class="bg-slate-700 rounded-md p-1.5 shadow-sm cursor-move border-l-4"
+                class="bg-slate-700 rounded-lg p-3 shadow-sm cursor-move border-l-4 hover:bg-slate-600/50 transition-colors"
                 :class="[
                   draggedId === p.id ? 'opacity-60' : '',
                   stageBorderClass(p.stageId),
@@ -170,40 +197,48 @@
                 @click="openCardForm(p)"
                 @dragend="onDragEnd"
               >
-                <div class="flex items-start justify-between">
-                  <div>
-                    <div class="font-medium leading-tight text-xs">
-                      {{ p.name }}
-                    </div>
-                    <div class="text-[11px] text-slate-300">
-                      R$ {{ p.amount.toLocaleString("pt-BR") }}
-                    </div>
+                <!-- Nome do cliente -->
+                <div class="mb-3">
+                  <div class="font-medium leading-tight text-sm text-white">
+                    {{ p.name }}
                   </div>
+                  <div class="text-xs text-slate-300 mt-1">
+                    R$ {{ p.amount.toLocaleString("pt-BR") }}
+                  </div>
+                </div>
+
+                <!-- Bottom row: SLA esquerda, Status direita -->
+                <div class="flex items-center justify-between">
+                  <!-- SLA tags à esquerda -->
+                  <div class="flex items-center gap-1">
+                    <span
+                      :class="[
+                        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[8px] font-medium',
+                        slaBadgeClass(p),
+                      ]"
+                    >
+                      <i class="fa-regular fa-calendar text-[7px]"></i>
+                      {{ slaLabel(p) }}
+                    </span>
+                    <span
+                      v-if="getSlaInfo(p).status === 'overdue'"
+                      class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[8px] font-medium bg-red-900/60 text-red-300"
+                    >
+                      <i class="fa-solid fa-flag text-[7px]"></i>
+                      Atraso
+                    </span>
+                  </div>
+
+                  <!-- Status tag à direita (Kanban) -->
                   <span
                     :class="statusPillClass(p.status)"
                     :style="getStatusStyle(p.status)"
-                    class="text-[10px] font-semibold px-2 py-1 rounded-md"
+                    class="inline-flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded-md transition-all duration-300 hover:scale-105 whitespace-nowrap cursor-pointer hover:brightness-110"
+                    @click="openStatusDropdown(p, $event)"
+                    title="Clique para alterar o status"
                   >
-                    {{ p.status }}
-                  </span>
-                </div>
-                <!-- SLA row -->
-                <div class="mt-1 flex items-center gap-1.5">
-                  <span
-                    :class="[
-                      'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold',
-                      slaBadgeClass(p),
-                    ]"
-                  >
-                    <i class="fa-regular fa-calendar"></i>
-                    {{ slaLabel(p) }}
-                  </span>
-                  <span
-                    v-if="getSlaInfo(p).status === 'overdue'"
-                    class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold bg-red-900/60 text-red-300"
-                  >
-                    <i class="fa-solid fa-flag"></i>
-                    Atraso
+                    <div class="w-1 h-1 rounded-full bg-current opacity-70 flex-shrink-0"></div>
+                    <span class="truncate">{{ p.status }}</span>
                   </span>
                 </div>
               </div>
@@ -223,24 +258,36 @@
         <!-- Mobile: cards -->
         <div class="sm:hidden">
           <ul class="divide-y divide-slate-700">
-            <li v-for="p in sortedFilteredProposals" :key="p.id" class="p-3">
-              <div class="flex items-start justify-between gap-2">
-                <div class="min-w-0">
-                  <div class="font-medium text-sm truncate">{{ p.name }}</div>
-                  <div class="mt-0.5 text-[12px] text-slate-300">
-                    Valor: R$ {{ p.amount.toLocaleString("pt-BR") }}
-                  </div>
-                  <div class="text-[12px] text-slate-300">
-                    Etapa: {{ stageTitle(p.stageId) }}
+            <li v-for="p in sortedFilteredProposals" :key="p.id" class="p-4">
+              <div class="space-y-3">
+                <!-- Nome e valor -->
+                <div>
+                  <div class="font-medium text-sm text-white">{{ p.name }}</div>
+                  <div class="mt-1 text-xs text-slate-300">
+                    R$ {{ p.amount.toLocaleString("pt-BR") }}
                   </div>
                 </div>
-                <span
-                  :class="statusPillClass(p.status)"
-                  :style="getStatusStyle(p.status)"
-                  class="flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-md"
-                >
-                  {{ p.status }}
-                </span>
+
+                <!-- Bottom row: Etapa esquerda, Status direita -->
+                <div class="flex items-center justify-between">
+                  <!-- Info da etapa à esquerda -->
+                  <div class="text-[8px] text-slate-500">
+                    <i class="fa-solid fa-layer-group text-[7px]"></i>
+                    {{ stageTitle(p.stageId) }}
+                  </div>
+
+                  <!-- Status tag à direita (Mobile) -->
+                  <span
+                    :class="statusPillClass(p.status)"
+                    :style="getStatusStyle(p.status)"
+                    class="inline-flex items-center gap-1 text-[9px] font-medium px-2 py-0.5 rounded-md transition-all duration-300 hover:scale-105 whitespace-nowrap cursor-pointer hover:brightness-110"
+                    @click="openStatusDropdown(p, $event)"
+                    title="Clique para alterar o status"
+                  >
+                    <div class="w-1 h-1 rounded-full bg-current opacity-70 flex-shrink-0"></div>
+                    <span class="truncate">{{ p.status }}</span>
+                  </span>
+                </div>
               </div>
             </li>
           </ul>
@@ -281,9 +328,12 @@
                   <span
                     :class="statusPillClass(p.status)"
                     :style="getStatusStyle(p.status)"
-                    class="text-xs font-semibold px-2 py-1 rounded-md"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all duration-300 hover:scale-105 whitespace-nowrap cursor-pointer hover:brightness-110"
+                    @click="openStatusDropdown(p, $event)"
+                    title="Clique para alterar o status"
                   >
-                    {{ p.status }}
+                    <div class="w-2 h-2 rounded-full bg-current opacity-70 flex-shrink-0"></div>
+                    <span class="truncate">{{ p.status }}</span>
                   </span>
                 </td>
                 <td class="px-3 sm:px-6 py-2 sm:py-3">
@@ -1000,6 +1050,74 @@
       @reject-file="onRejectFile"
       @download-file="onDownloadFile"
     />
+
+    <!-- Quick Status Change Dropdown with Glassmorphism -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 scale-95 translate-y-2"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-95 translate-y-2"
+      >
+        <div
+          v-if="showStatusDropdown"
+          class="fixed inset-0 z-50"
+          @click="closeStatusDropdown"
+        >
+          <div
+            class="absolute bg-slate-900/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-xl w-auto min-w-[140px] touch-manipulation"
+            :style="{
+              top: statusDropdownPosition.top + 'px',
+              left: statusDropdownPosition.left + 'px'
+            }"
+            @click.stop
+            @touchstart.passive
+          >
+            <!-- Minimal glass morphism background -->
+            <div class="absolute inset-0 bg-gradient-to-br from-slate-800/40 to-slate-900/60 rounded-lg"></div>
+
+            <!-- Compact dropdown content -->
+            <div class="relative p-2">
+              <!-- Status options list - minimalist -->
+              <div class="space-y-0.5">
+                <button
+                  v-for="status in statusOptionsWithColors"
+                  :key="status.name"
+                  :disabled="status.name === statusDropdownProposal?.status || quickStatusLoading"
+                  class="group relative w-full px-2 py-1.5 rounded transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[32px] active:scale-95 flex items-center justify-start"
+                  :class="[
+                    status.name === statusDropdownProposal?.status
+                      ? 'bg-white/10 cursor-not-allowed'
+                      : 'hover:bg-white/10 active:bg-white/15'
+                  ]"
+                  @click="updateQuickStatus(status.name)"
+                  @touchstart.passive
+                >
+                  <!-- Neon status dot -->
+                  <div
+                    class="w-2 h-2 rounded-full mr-2 flex-shrink-0 transition-all duration-300"
+                    :style="{
+                      backgroundColor: status.color,
+                      boxShadow: `0 0 6px ${status.color}, 0 0 12px ${status.color}40, inset 0 0 3px ${status.color}80`
+                    }"
+                  ></div>
+
+                  <!-- Status name with tag font size - aligned left -->
+                  <span
+                    class="text-[9px] font-medium text-white whitespace-nowrap"
+                    :class="status.name === statusDropdownProposal?.status ? 'opacity-60' : ''"
+                  >
+                    {{ status.name }}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1013,11 +1131,10 @@ import {
   onActivated,
   nextTick,
 } from "vue";
-import BrandMark from "~/components/ui/BrandMark.vue";
 import FinancialStats from "~/components/esteira/FinancialStats.vue";
 
 definePageMeta({
-  layout: 'sidebar'
+  layout: "sidebar",
 });
 import {
   loadProposals,
@@ -1069,7 +1186,9 @@ const pipelineKey = computed(() => props.pipelineKey || "quotaequity");
 
 // Verificar se o processo é financeiro
 const currentProcessInfo = ref(null);
-const isFinancialProcess = computed(() => currentProcessInfo.value?.isFinanceiro || false);
+const isFinancialProcess = computed(
+  () => currentProcessInfo.value?.isFinanceiro || false
+);
 const financialStatsRef = ref(null);
 let refreshTimeout;
 
@@ -1077,13 +1196,13 @@ let refreshTimeout;
 const loadProcessInfo = async () => {
   if (pipelineKey.value) {
     try {
-      const { getProcessInfo } = await import('~/composables/usePipeline')
-      currentProcessInfo.value = await getProcessInfo(pipelineKey.value)
+      const { getProcessInfo } = await import("~/composables/usePipeline");
+      currentProcessInfo.value = await getProcessInfo(pipelineKey.value);
     } catch (error) {
-      console.error('Error loading process info:', error)
+      console.error("Error loading process info:", error);
     }
   }
-}
+};
 
 // Modal global de novo registro
 const { openModal: openGlobalModal } = useNewRecordModal();
@@ -1144,7 +1263,6 @@ async function loadPipelineConfig() {
   // Fallback local (somente se API off)
   try {
     const raw = localStorage.getItem(`pipeline_config__${pipelineKey.value}`);
-    console.log(">>>>>>>>", raw);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
@@ -1229,33 +1347,37 @@ watch(
 );
 
 // Propostas por processo usando useFetch com reatividade automática
-const { proposals, loading: proposalsLoading, refresh: refreshProposals } = useProposalsReactive(pipelineKey.value);
+const {
+  proposals,
+  loading: proposalsLoading,
+  refresh: refreshProposals,
+} = useProposalsReactive(pipelineKey.value);
 
 // Função para atualizar dados após operações (estatísticas + propostas)
 const refreshData = () => {
   // Atualizar propostas apenas se usando API
   if (isApiEnabled()) {
-    refreshProposals()
+    refreshProposals();
   }
   // Estatísticas são calculadas automaticamente e reativamente das propostas locais
   // Não precisamos mais disparar refresh manual das estatísticas
-}
+};
 
 // Watcher para atualizar estatísticas automaticamente quando propostas mudarem
 watch(
   () => proposals.value,
   () => {
     // Debounce para evitar muitas atualizações desnecessárias das estatísticas
-    if (refreshTimeout) clearTimeout(refreshTimeout)
+    if (refreshTimeout) clearTimeout(refreshTimeout);
     refreshTimeout = setTimeout(() => {
       // Só atualizar estatísticas, não propostas (para evitar loop)
       if (isFinancialProcess.value && financialStatsRef.value) {
-        financialStatsRef.value.refresh()
+        financialStatsRef.value.refresh();
       }
-    }, 300)
+    }, 300);
   },
   { deep: true }
-)
+);
 watch(
   () => pipelineKey.value,
   (k) => {
@@ -1321,18 +1443,26 @@ const sortProposals = (proposals) => {
   const sorted = [...proposals];
 
   switch (sortOption.value) {
-    case 'name-asc':
+    case "name-asc":
       return sorted.sort((a, b) => a.name.localeCompare(b.name));
-    case 'name-desc':
+    case "name-desc":
       return sorted.sort((a, b) => b.name.localeCompare(a.name));
-    case 'amount-asc':
+    case "amount-asc":
       return sorted.sort((a, b) => (a.amount || 0) - (b.amount || 0));
-    case 'amount-desc':
+    case "amount-desc":
       return sorted.sort((a, b) => (b.amount || 0) - (a.amount || 0));
-    case 'date-newest':
-      return sorted.sort((a, b) => new Date(b.stageEnteredAt || b.createdAt || 0) - new Date(a.stageEnteredAt || a.createdAt || 0));
-    case 'date-oldest':
-      return sorted.sort((a, b) => new Date(a.stageEnteredAt || a.createdAt || 0) - new Date(b.stageEnteredAt || b.createdAt || 0));
+    case "date-newest":
+      return sorted.sort(
+        (a, b) =>
+          new Date(b.stageEnteredAt || b.createdAt || 0) -
+          new Date(a.stageEnteredAt || a.createdAt || 0)
+      );
+    case "date-oldest":
+      return sorted.sort(
+        (a, b) =>
+          new Date(a.stageEnteredAt || a.createdAt || 0) -
+          new Date(b.stageEnteredAt || b.createdAt || 0)
+      );
     default:
       return sorted; // Ordem padrão (como inserido)
   }
@@ -1529,18 +1659,35 @@ function getStatusColor(statusName) {
   return null;
 }
 
-// Function to get dynamic status style based on color
+// Enhanced function to get dynamic status style with modern glassmorphism effects
 function getStatusStyle(statusName) {
   if (!statusName || !statusOptionsWithColors.value.length) return "";
 
   const exactMatch = statusOptionsWithColors.value.find(
     (s) => s.name === statusName
   );
+
   if (exactMatch?.color) {
     const baseColor = exactMatch.color;
-    return `background-color: ${hexToRgba(baseColor, 0.1)}; color: ${baseColor}; --tw-ring-color: ${hexToRgba(baseColor, 0.3)};`;
+
+    // Modern glassmorphism effect with enhanced styling
+    return `
+      background: linear-gradient(135deg, ${hexToRgba(baseColor, 0.15)}, ${hexToRgba(baseColor, 0.05)});
+      color: ${baseColor};
+      border: 1px solid ${hexToRgba(baseColor, 0.3)};
+      box-shadow: 0 2px 8px ${hexToRgba(baseColor, 0.15)};
+      backdrop-filter: blur(4px);
+    `.replace(/\s+/g, ' ').trim();
   }
-  return "";
+
+  // Fallback for status without color
+  return `
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.15), rgba(156, 163, 175, 0.05));
+    color: #9ca3af;
+    border: 1px solid rgba(156, 163, 175, 0.3);
+    box-shadow: 0 2px 8px rgba(156, 163, 175, 0.15);
+    backdrop-filter: blur(4px);
+  `.replace(/\s+/g, ' ').trim();
 }
 
 function openMoveModal(p) {
@@ -1557,6 +1704,12 @@ const showDeleteProposalModal = ref(false);
 const deleteProposalTarget = ref(null);
 const showPessoaFisicaModal = ref(false);
 const currentPessoaFisicaFieldId = ref(null);
+
+// Quick Status Change Dropdown
+const showStatusDropdown = ref(false);
+const statusDropdownProposal = ref(null);
+const statusDropdownPosition = ref({ top: 0, left: 0 });
+const quickStatusLoading = ref(false);
 const showProcessFilesApprovalModal = ref(false);
 const selectedProposalStatus = ref("");
 const statusOptions = ref([]);
@@ -1574,7 +1727,9 @@ const {
 const processFilesCount = computed(() => processFiles.value.length);
 
 const filteredByStage = (stageId) => {
-  const proposalsInStage = filteredProposals.value.filter((p) => p.stageId === stageId);
+  const proposalsInStage = filteredProposals.value.filter(
+    (p) => p.stageId === stageId
+  );
   return sortProposals(proposalsInStage);
 };
 const stageTitle = (id) => stages.value.find((s) => s.id === id)?.title || id;
@@ -1592,13 +1747,13 @@ const getStageSum = (stageId) => {
 // Format currency for stage sum
 const formatStageSum = (stageId) => {
   const sum = getStageSum(stageId);
-  if (sum === 0) return '';
+  if (sum === 0) return "";
 
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(sum);
 };
 
@@ -1839,15 +1994,17 @@ const onDrop = (stageId) => {
     updateProposalApi(pipelineKey.value, pid, {
       stageId: stageId,
       status: newStatus,
-    }).then(() => {
-      // Estatísticas são atualizadas automaticamente via reatividade
-      // refreshData() não é mais necessário para mudanças de estágio
-    }).catch(() => {
-      // rollback on failure
-      const arr = proposals.value.slice();
-      arr[idx] = { ...prev };
-      proposals.value = arr;
-    });
+    })
+      .then(() => {
+        // Estatísticas são atualizadas automaticamente via reatividade
+        // refreshData() não é mais necessário para mudanças de estágio
+      })
+      .catch(() => {
+        // rollback on failure
+        const arr = proposals.value.slice();
+        arr[idx] = { ...prev };
+        proposals.value = arr;
+      });
   } else {
     persistProposals();
   }
@@ -2460,6 +2617,138 @@ function onStageFormFile(id, files) {
 //   () => newProposal.value.stageId,
 //   () => initStageFields()
 // );
+// Quick Status Change Functions
+function openStatusDropdown(proposal, event) {
+  // Evita abrir o form principal
+  event.stopPropagation();
+
+  // Calcula posição do dropdown com verificação de viewport
+  const rect = event.target.getBoundingClientRect();
+  const dropdownWidth = 140; // width mínimo do dropdown compacto
+  const dropdownHeight = 160; // altura estimada reduzida
+
+  let top = rect.bottom + window.scrollY + 8;
+  let left = rect.left + window.scrollX;
+
+  // Mobile-specific adjustments
+  const isMobile = window.innerWidth < 768;
+
+  if (isMobile) {
+    // Em mobile, centraliza o dropdown
+    left = Math.max(16, (window.innerWidth - dropdownWidth) / 2);
+    // Posiciona mais baixo para não interferir com o toque
+    top = rect.bottom + window.scrollY + 12;
+  } else {
+    // Ajusta posição horizontal se sair da tela
+    if (left + dropdownWidth > window.innerWidth) {
+      left = rect.right + window.scrollX - dropdownWidth;
+    }
+
+    // Ajusta posição vertical se sair da tela
+    if (top + dropdownHeight > window.innerHeight + window.scrollY) {
+      top = rect.top + window.scrollY - dropdownHeight - 8;
+    }
+
+    // Garante que não sai das bordas da tela
+    left = Math.max(16, Math.min(left, window.innerWidth - dropdownWidth - 16));
+    top = Math.max(16, top);
+  }
+
+  statusDropdownPosition.value = { top, left };
+  statusDropdownProposal.value = proposal;
+  showStatusDropdown.value = true;
+
+  // Fecha dropdown ao clicar fora (removido para usar o Teleport click handler)
+}
+
+async function updateQuickStatus(newStatus) {
+  if (!statusDropdownProposal.value || quickStatusLoading.value) return;
+
+  quickStatusLoading.value = true;
+  const originalStatus = statusDropdownProposal.value.status;
+
+  try {
+    const proposal = statusDropdownProposal.value;
+
+    // Update locally first for immediate UI feedback
+    proposal.status = newStatus;
+
+    if (isApiEnabled()) {
+      // Update via API with PUT request to the correct endpoint
+      // URL: http://localhost:8080/api/v1/processes/{processId}/proposals/{proposalId}
+      await updateProposalApi(pipelineKey.value, proposal.id, {
+        status: newStatus
+      });
+    } else {
+      // Update in localStorage
+      const allProposals = await loadProposals();
+      const index = allProposals.findIndex(p => p.id === proposal.id);
+      if (index !== -1) {
+        allProposals[index] = {
+          ...allProposals[index],
+          status: newStatus,
+          updatedAt: new Date().toISOString()
+        };
+        await saveProposals(allProposals);
+      }
+    }
+
+    // Update the proposal in the current stage as well for real-time UI sync
+    const currentStage = stages.value.find(stage =>
+      stage.proposals?.some(p => p.id === proposal.id)
+    );
+    if (currentStage) {
+      const proposalIndex = currentStage.proposals.findIndex(p => p.id === proposal.id);
+      if (proposalIndex !== -1) {
+        currentStage.proposals[proposalIndex] = {
+          ...currentStage.proposals[proposalIndex],
+          status: newStatus,
+          updatedAt: new Date().toISOString()
+        };
+      }
+    }
+
+    closeStatusDropdown();
+
+    // Show success feedback
+    useToast().add({
+      title: 'Status atualizado!',
+      description: `Status alterado para "${newStatus}"`,
+      color: 'green'
+    });
+
+  } catch (error) {
+    console.error('Erro ao atualizar status:', error);
+
+    // Revert local change on error
+    statusDropdownProposal.value.status = originalStatus;
+
+    // Revert in stages array as well
+    const currentStage = stages.value.find(stage =>
+      stage.proposals?.some(p => p.id === statusDropdownProposal.value.id)
+    );
+    if (currentStage) {
+      const proposalIndex = currentStage.proposals.findIndex(p => p.id === statusDropdownProposal.value.id);
+      if (proposalIndex !== -1) {
+        currentStage.proposals[proposalIndex].status = originalStatus;
+      }
+    }
+
+    useToast().add({
+      title: 'Erro',
+      description: 'Não foi possível atualizar o status. Tente novamente.',
+      color: 'red'
+    });
+  } finally {
+    quickStatusLoading.value = false;
+  }
+}
+
+function closeStatusDropdown() {
+  showStatusDropdown.value = false;
+  statusDropdownProposal.value = null;
+}
+
 onMounted(() => {
   loadStageForms();
   initStageFields();
@@ -2561,38 +2850,6 @@ watch(
   }
 );
 </script>
-
-<style scoped>
-.header-glass {
-  position: fixed;
-  --header-h: 64px; /* sync with h-16 */
-  height: var(--header-h);
-  background: linear-gradient(
-    to bottom,
-    rgba(7, 12, 22, 0.55),
-    rgba(7, 12, 22, 0.1)
-  );
-}
-.header-glass::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(0, 229, 255, 0),
-    rgba(0, 229, 255, 0.35),
-    rgba(0, 229, 255, 0)
-  );
-  pointer-events: none;
-}
-
-.page-content {
-  padding-top: calc(var(--header-h, 64px) + 20px);
-}
-</style>
 
 <style scoped>
 /* Smooth column reordering */
@@ -2716,7 +2973,8 @@ watch(
 
 /* Floating animation for the pulsing dot */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -2725,16 +2983,21 @@ watch(
 }
 
 .consoria-btn .animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite, float 3s ease-in-out infinite;
+  animation:
+    pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite,
+    float 3s ease-in-out infinite;
 }
 
 /* Glowing effect on hover */
 @keyframes glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 5px rgba(147, 51, 234, 0.5);
   }
   50% {
-    box-shadow: 0 0 15px rgba(147, 51, 234, 0.8), 0 0 25px rgba(147, 51, 234, 0.6);
+    box-shadow:
+      0 0 15px rgba(147, 51, 234, 0.8),
+      0 0 25px rgba(147, 51, 234, 0.6);
   }
 }
 

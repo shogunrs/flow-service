@@ -118,6 +118,12 @@ function handleClick() {
     emit('fetch-esteira')
   }
 
+  // Se tem onClick personalizado, executar
+  if (props.item.onClick && typeof props.item.onClick === 'function') {
+    props.item.onClick()
+    return
+  }
+
   if (hasChildren.value && !props.collapsed) {
     isExpanded.value = !isExpanded.value
   } else {

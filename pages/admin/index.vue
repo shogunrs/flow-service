@@ -1,40 +1,72 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Page header -->
-    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Painel Administrativo</h1>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Gerencie usuários, configurações e sistema
-          </p>
+  <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+    <!-- Animated background particles -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s"></div>
+      <div class="absolute top-1/2 left-1/3 w-60 h-60 bg-cyan-500/3 rounded-full blur-3xl animate-pulse" style="animation-delay: 4s"></div>
+    </div>
+
+    <!-- Modern Header with Enhanced Glass Effect -->
+    <header class="app-header relative backdrop-blur-2xl border-b border-white/5 p-4 shadow-2xl">
+      <!-- Glass morphism background with gradient -->
+      <div class="absolute inset-0 bg-gradient-to-r from-slate-900/40 via-slate-800/50 to-slate-900/40 backdrop-blur-3xl"></div>
+      <!-- Shimmer effect -->
+      <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent animate-shimmer"></div>
+
+      <div class="relative flex items-center justify-between">
+        <div class="flex items-center gap-6">
+          <!-- Enhanced icon with glow -->
+          <div class="relative group">
+            <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+            <div class="relative p-4 bg-gradient-to-br from-purple-600 via-purple-500 to-indigo-600 rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-300">
+              <i class="fa-solid fa-cog text-white text-lg"></i>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <h1 class="app-header-title">
+              Painel Administrativo
+            </h1>
+            <p class="app-header-subtitle">
+              Gerencie usuários, configurações e sistema com total controle
+            </p>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- Admin navigation tabs -->
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-      <nav class="px-6">
+    <!-- Enhanced Admin navigation tabs -->
+    <div class="relative backdrop-blur-xl border-b border-white/10">
+      <!-- Glass morphism background -->
+      <div class="absolute inset-0 bg-gradient-to-r from-slate-900/30 via-slate-800/40 to-slate-900/30"></div>
+
+      <nav class="relative px-6">
         <div class="flex space-x-8 overflow-x-auto">
           <button
             v-for="tab in tabs"
             :key="tab.value"
-            class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap"
+            class="relative py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap transition-all duration-300"
             :class="
               activeTab === tab.value
-                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'border-purple-500 text-purple-400'
+                : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-600'
             "
             @click="activeTab = tab.value"
           >
             <i :class="tab.icon" class="mr-2"></i>
             {{ tab.label }}
+            <!-- Active tab glow -->
+            <div
+              v-if="activeTab === tab.value"
+              class="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-indigo-600/10 rounded-t-lg -z-10"
+            ></div>
           </button>
         </div>
       </nav>
     </div>
 
-    <main class="p-6">
+    <main class="relative z-10 p-6">
       <section v-if="activeTab === 'users'">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
           <h2 class="text-xl font-semibold">Usuários</h2>
@@ -344,10 +376,11 @@
               <div class="flex items-center gap-3">
                 <!-- Status Tag (dynamic color effect) -->
                 <span
-                  class="text-[10px] font-semibold px-2 py-1 rounded-md ring-1 ring-inset transition-colors"
+                  class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg transition-all duration-300 hover:scale-105 whitespace-nowrap"
                   :style="getStatusStyle(status)"
                 >
-                  {{ status.name }}
+                  <div class="w-1.5 h-1.5 rounded-full bg-current opacity-60 flex-shrink-0"></div>
+                  <span class="truncate">{{ status.name }}</span>
                 </span>
 
                 <div class="text-xs text-slate-400">{{ status.color }}</div>
@@ -1583,11 +1616,36 @@ function hexToRgba(hex, alpha = 0.2) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// Function to get dynamic status style based on color
+// Enhanced function to get dynamic status style with modern glassmorphism effects
 function getStatusStyle(status) {
-  if (!status?.color) return "";
+  if (!status?.color) {
+    // Fallback style for status without color
+    return `
+      background: linear-gradient(135deg, rgba(156, 163, 175, 0.15), rgba(156, 163, 175, 0.05));
+      color: #9ca3af;
+      border: 1px solid rgba(156, 163, 175, 0.3);
+      box-shadow: 0 2px 8px rgba(156, 163, 175, 0.15);
+      backdrop-filter: blur(4px);
+    `.replace(/\s+/g, ' ').trim();
+  }
+
   const baseColor = status.color;
-  return `background-color: ${hexToRgba(baseColor, 0.1)}; color: ${baseColor}; --tw-ring-color: ${hexToRgba(baseColor, 0.3)};`;
+
+  // Helper function to convert hex to rgba
+  const hexToRgba = (hex, alpha = 0.2) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  return `
+    background: linear-gradient(135deg, ${hexToRgba(baseColor, 0.15)}, ${hexToRgba(baseColor, 0.05)});
+    color: ${baseColor};
+    border: 1px solid ${hexToRgba(baseColor, 0.3)};
+    box-shadow: 0 2px 8px ${hexToRgba(baseColor, 0.15)};
+    backdrop-filter: blur(4px);
+  `.replace(/\s+/g, ' ').trim();
 }
 
 // User management functions
@@ -2080,6 +2138,108 @@ async function createBasicUser() {
 </script>
 
 <style scoped>
+/* Modern Animations and Effects */
+
+/* Shimmer animation for header */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Pulse animation for background particles */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+  }
+}
+
+/* Enhanced scroll behavior */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(51, 65, 85, 0.2);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.4));
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(99, 102, 241, 0.6));
+}
+
+/* Glassmorphism effects */
+.backdrop-blur-2xl {
+  backdrop-filter: blur(24px);
+}
+
+.backdrop-blur-3xl {
+  backdrop-filter: blur(32px);
+}
+
+/* Enhanced button hover effects */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+/* Card glow effects */
+.hover\:shadow-purple-500\/25:hover {
+  box-shadow:
+    0 10px 15px -3px rgba(139, 92, 246, 0.25),
+    0 4px 6px -2px rgba(139, 92, 246, 0.05);
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive animations - reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer,
+  .animate-pulse {
+    animation: none;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.3);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .border-white\/5 {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .border-white\/10 {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
 body {
   font-family:
     Inter,

@@ -4,92 +4,187 @@ import com.docheck.flow.application.port.UserRepository;
 import com.docheck.flow.domain.model.User;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public class MongoUserRepository implements UserRepository {
     private final SpringDataUserRepository repo;
 
-    public MongoUserRepository(SpringDataUserRepository repo) { this.repo = repo; }
-
-    private static User toDomain(UserDocument d) {
-        if (d == null) return null;
-        User u = new User(d.id, d.name, d.email, d.passwordHash, d.roles, d.createdAt, d.updatedAt);
-
-        // Documentos
-        u.setCpf(d.cpf);
-        u.setCnpj(d.cnpj);
-        u.setRg(d.rg);
-
-        // Dados bancários
-        u.setBanco(d.banco);
-        u.setAgencia(d.agencia);
-        u.setConta(d.conta);
-        u.setTipoConta(d.tipoConta);
-
-        // PIX
-        u.setPixTipo(d.pixTipo);
-        u.setPixChave(d.pixChave);
-
-        // Arquivos e biometria
-        u.setFotoPerfilUrl(d.fotoPerfilUrl);
-        u.setComprovanteEnderecoUrl(d.comprovanteEnderecoUrl);
-        u.setFaceEmbedding(d.faceEmbedding);
-        u.setUltimoIpAcesso(d.ultimoIpAcesso);
-        u.setUltimaLocalizacao(d.ultimaLocalizacao);
-
-        // Dados de auditoria
-        u.setIpCadastro(d.ipCadastro);
-        u.setLocalizacaoCadastro(d.localizacaoCadastro);
-
-        return u;
+    public MongoUserRepository(SpringDataUserRepository repo) {
+        this.repo = repo;
     }
 
-    private static UserDocument toDoc(User u) {
-        UserDocument d = new UserDocument();
-        d.id = u.getId();
-        d.name = u.getName();
-        d.email = u.getEmail();
-        d.passwordHash = u.getPasswordHash();
-        d.roles = u.getRoles();
-        d.createdAt = u.getCreatedAt();
-        d.updatedAt = u.getUpdatedAt();
+    private static User toDomain(UserDocument doc) {
+        if (doc == null) {
+            return null;
+        }
 
-        // Documentos
-        d.cpf = u.getCpf();
-        d.cnpj = u.getCnpj();
-        d.rg = u.getRg();
-
-        // Dados bancários
-        d.banco = u.getBanco();
-        d.agencia = u.getAgencia();
-        d.conta = u.getConta();
-        d.tipoConta = u.getTipoConta();
-
-        // PIX
-        d.pixTipo = u.getPixTipo();
-        d.pixChave = u.getPixChave();
-
-        // Arquivos e biometria
-        d.fotoPerfilUrl = u.getFotoPerfilUrl();
-        d.comprovanteEnderecoUrl = u.getComprovanteEnderecoUrl();
-        d.faceEmbedding = u.getFaceEmbedding();
-        d.ultimoIpAcesso = u.getUltimoIpAcesso();
-        d.ultimaLocalizacao = u.getUltimaLocalizacao();
-
-        // Dados de auditoria
-        d.ipCadastro = u.getIpCadastro();
-        d.localizacaoCadastro = u.getLocalizacaoCadastro();
-
-        return d;
+        return User.builder()
+                .id(doc.getId())
+                .name(doc.getName())
+                .email(doc.getEmail())
+                .passwordHash(doc.getPasswordHash())
+                .roles(copyRoles(doc.getRoles()))
+                .superUser(doc.isSuperUser())
+                .cpf(doc.getCpf())
+                .cnpj(doc.getCnpj())
+                .rg(doc.getRg())
+                .telefone(doc.getTelefone())
+                .endereco(doc.getEndereco())
+                .enderecoRua(doc.getEnderecoRua())
+                .enderecoNumero(doc.getEnderecoNumero())
+                .enderecoComplemento(doc.getEnderecoComplemento())
+                .enderecoBairro(doc.getEnderecoBairro())
+                .enderecoCidade(doc.getEnderecoCidade())
+                .enderecoEstado(doc.getEnderecoEstado())
+                .cep(doc.getCep())
+                .banco(doc.getBanco())
+                .agencia(doc.getAgencia())
+                .conta(doc.getConta())
+                .tipoConta(doc.getTipoConta())
+                .pixTipo(doc.getPixTipo())
+                .pixChave(doc.getPixChave())
+                .fotoPerfilUrl(doc.getFotoPerfilUrl())
+                .comprovanteEnderecoUrl(doc.getComprovanteEnderecoUrl())
+                .documentoIdentidade(doc.getDocumentoIdentidade())
+                .faceEmbedding(doc.getFaceEmbedding())
+                .ultimoIpAcesso(doc.getUltimoIpAcesso())
+                .ultimaLocalizacao(doc.getUltimaLocalizacao())
+                .observacoes(doc.getObservacoes())
+                .nomeCompleto(doc.getNomeCompleto())
+                .quantidadeSocios(doc.getQuantidadeSocios())
+                .enderecoEmpresa(doc.getEnderecoEmpresa())
+                .enderecoEmpresaRua(doc.getEnderecoEmpresaRua())
+                .enderecoEmpresaNumero(doc.getEnderecoEmpresaNumero())
+                .enderecoEmpresaComplemento(doc.getEnderecoEmpresaComplemento())
+                .enderecoEmpresaBairro(doc.getEnderecoEmpresaBairro())
+                .enderecoEmpresaCidade(doc.getEnderecoEmpresaCidade())
+                .enderecoEmpresaEstado(doc.getEnderecoEmpresaEstado())
+                .cepEmpresa(doc.getCepEmpresa())
+                .observacoesEmpresa(doc.getObservacoesEmpresa())
+                .razaoSocial(doc.getRazaoSocial())
+                .nomeFantasia(doc.getNomeFantasia())
+                .cartaoCnpjImage(doc.getCartaoCnpjImage())
+                .contratoSocialImage(doc.getContratoSocialImage())
+                .qualificacaoSociosImage(doc.getQualificacaoSociosImage())
+                .ipCadastro(doc.getIpCadastro())
+                .localizacaoCadastro(doc.getLocalizacaoCadastro())
+                .tags(copyStrings(doc.getTags()))
+                .fotoPerfilReference(doc.getFotoPerfilReference())
+                .comprovanteEnderecoReference(doc.getComprovanteEnderecoReference())
+                .documentoIdentidadeReference(doc.getDocumentoIdentidadeReference())
+                .outrosArquivos(copyFileReferences(doc.getOutrosArquivos()))
+                .createdAt(doc.getCreatedAt())
+                .updatedAt(doc.getUpdatedAt())
+                .build();
     }
 
-    @Override public Optional<User> findById(String id) { return repo.findById(id).map(MongoUserRepository::toDomain); }
-    @Override public Optional<User> findByEmail(String email) { return repo.findByEmail(email).map(MongoUserRepository::toDomain); }
-    @Override public List<User> findAll() { return repo.findAll().stream().map(MongoUserRepository::toDomain).collect(Collectors.toList()); }
-    @Override public User save(User user) { return toDomain(repo.save(toDoc(user))); }
-    @Override public void deleteById(String id) { repo.deleteById(id); }
+    private static UserDocument toDoc(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        return UserDocument.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .passwordHash(user.getPasswordHash())
+                .roles(copyRoles(user.getRoles()))
+                .superUser(user.isSuperUser())
+                .cpf(user.getCpf())
+                .cnpj(user.getCnpj())
+                .rg(user.getRg())
+                .telefone(user.getTelefone())
+                .endereco(user.getEndereco())
+                .enderecoRua(user.getEnderecoRua())
+                .enderecoNumero(user.getEnderecoNumero())
+                .enderecoComplemento(user.getEnderecoComplemento())
+                .enderecoBairro(user.getEnderecoBairro())
+                .enderecoCidade(user.getEnderecoCidade())
+                .enderecoEstado(user.getEnderecoEstado())
+                .cep(user.getCep())
+                .banco(user.getBanco())
+                .agencia(user.getAgencia())
+                .conta(user.getConta())
+                .tipoConta(user.getTipoConta())
+                .pixTipo(user.getPixTipo())
+                .pixChave(user.getPixChave())
+                .fotoPerfilUrl(user.getFotoPerfilUrl())
+                .comprovanteEnderecoUrl(user.getComprovanteEnderecoUrl())
+                .documentoIdentidade(user.getDocumentoIdentidade())
+                .faceEmbedding(user.getFaceEmbedding())
+                .ultimoIpAcesso(user.getUltimoIpAcesso())
+                .ultimaLocalizacao(user.getUltimaLocalizacao())
+                .observacoes(user.getObservacoes())
+                .nomeCompleto(user.getNomeCompleto())
+                .quantidadeSocios(user.getQuantidadeSocios())
+                .enderecoEmpresa(user.getEnderecoEmpresa())
+                .enderecoEmpresaRua(user.getEnderecoEmpresaRua())
+                .enderecoEmpresaNumero(user.getEnderecoEmpresaNumero())
+                .enderecoEmpresaComplemento(user.getEnderecoEmpresaComplemento())
+                .enderecoEmpresaBairro(user.getEnderecoEmpresaBairro())
+                .enderecoEmpresaCidade(user.getEnderecoEmpresaCidade())
+                .enderecoEmpresaEstado(user.getEnderecoEmpresaEstado())
+                .cepEmpresa(user.getCepEmpresa())
+                .observacoesEmpresa(user.getObservacoesEmpresa())
+                .razaoSocial(user.getRazaoSocial())
+                .nomeFantasia(user.getNomeFantasia())
+                .cartaoCnpjImage(user.getCartaoCnpjImage())
+                .contratoSocialImage(user.getContratoSocialImage())
+                .qualificacaoSociosImage(user.getQualificacaoSociosImage())
+                .ipCadastro(user.getIpCadastro())
+                .localizacaoCadastro(user.getLocalizacaoCadastro())
+                .tags(copyStrings(user.getTags()))
+                .fotoPerfilReference(user.getFotoPerfilReference())
+                .comprovanteEnderecoReference(user.getComprovanteEnderecoReference())
+                .documentoIdentidadeReference(user.getDocumentoIdentidadeReference())
+                .outrosArquivos(copyFileReferences(user.getOutrosArquivos()))
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+    }
+
+    private static Set<String> copyRoles(Set<String> roles) {
+        return roles == null ? new HashSet<>() : new HashSet<>(roles);
+    }
+
+    private static List<String> copyStrings(List<String> values) {
+        return values == null ? new ArrayList<>() : new ArrayList<>(values);
+    }
+
+    private static List<User.UserFileReference> copyFileReferences(List<User.UserFileReference> refs) {
+        return refs == null ? new ArrayList<>() : new ArrayList<>(refs);
+    }
+
+    @Override
+    public Optional<User> findById(String id) {
+        return repo.findById(id).map(MongoUserRepository::toDomain);
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return repo.findByEmail(email).map(MongoUserRepository::toDomain);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return repo.findAll().stream()
+                .map(MongoUserRepository::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public User save(User user) {
+        return toDomain(repo.save(toDoc(user)));
+    }
+
+    @Override
+    public void deleteById(String id) {
+        repo.deleteById(id);
+    }
 }
-

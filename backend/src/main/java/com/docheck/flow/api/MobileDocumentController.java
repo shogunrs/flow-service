@@ -22,18 +22,24 @@ public class MobileDocumentController {
 
     @PostMapping("/users/{userId}/documents/upload-url")
     public ResponseEntity<?> getMobileDocumentUploadUrl(@PathVariable("userId") String userId,
-                                                       @RequestParam(value = "filename") String filename,
-                                                       @RequestParam(value = "contentType") String contentType,
-                                                       @RequestParam(value = "documentType") String documentType) {
+            @RequestParam(value = "filename") String filename,
+            @RequestParam(value = "contentType") String contentType,
+            @RequestParam(value = "documentType") String documentType) {
         try {
             // Validar tipo de documento
             UserFileStorageService.FileType fileType;
             switch (documentType.toUpperCase()) {
+
+                case "CONTRATO_SOCIAL":
+                    fileType = UserFileStorageService.FileType.CONTRATO_SOCIAL;
+                    break;
                 case "IDENTITY":
-                case "RG":
-                case "CPF":
+
+                case "CARTAO_CNPJ":
+                    fileType = UserFileStorageService.FileType.CARTAO_CNPJ;
+                    break;
                 case "FACE_RECOGNITION":
-                    fileType = UserFileStorageService.FileType.DOCUMENT;
+                    fileType = UserFileStorageService.FileType.FACE_RECOGNITION;
                     break;
                 case "PROFILE_PHOTO":
                     fileType = UserFileStorageService.FileType.PROFILE_PHOTO;
@@ -43,34 +49,31 @@ public class MobileDocumentController {
                     break;
                 default:
                     return ResponseEntity.badRequest().body(
-                        Map.of("error", "Invalid document type. Allowed: IDENTITY, RG, CPF, FACE_RECOGNITION, PROFILE_PHOTO, ADDRESS_PROOF")
-                    );
+                            Map.of("error",
+                                    "Invalid document type. Allowed: IDENTITY, RG, CPF, FACE_RECOGNITION, PROFILE_PHOTO, ADDRESS_PROOF"));
             }
 
             Map<String, Object> uploadData = userFileStorageService.presignUserFileUpload(
-                userId,
-                filename,
-                contentType,
-                fileType
-            );
+                    userId,
+                    filename,
+                    contentType,
+                    fileType);
 
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "data", uploadData,
-                "uploadType", "mobile"
-            ));
+                    "success", true,
+                    "data", uploadData,
+                    "uploadType", "mobile"));
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                Map.of("error", "Error generating mobile upload URL: " + e.getMessage())
-            );
+                    Map.of("error", "Error generating mobile upload URL: " + e.getMessage()));
         }
     }
 
     @PostMapping("/users/{userId}/documents/confirm-upload")
     public ResponseEntity<?> confirmMobileDocumentUpload(@PathVariable("userId") String userId,
-                                                        @RequestBody Map<String, Object> confirmData,
-                                                        HttpServletRequest request) {
+            @RequestBody Map<String, Object> confirmData,
+            HttpServletRequest request) {
         try {
             String objectKey = (String) confirmData.get("objectKey");
             String publicUrl = (String) confirmData.get("publicUrl");
@@ -85,23 +88,21 @@ public class MobileDocumentController {
 
             // Salvar referência do documento no banco (sempre marcado como mobile)
             userService.addFileReference(
-                userId, objectKey, publicUrl, filename, documentType.toUpperCase(),
-                contentType, fileSize, ipAddress, location, true // isMobileUpload = true
+                    userId, objectKey, publicUrl, filename, documentType.toUpperCase(),
+                    contentType, fileSize, ipAddress, location, true // isMobileUpload = true
             );
 
             // Adicionar tags específicas baseadas no tipo de documento
             addDocumentTags(userId, documentType);
 
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Mobile document upload confirmed successfully",
-                "documentType", documentType
-            ));
+                    "success", true,
+                    "message", "Mobile document upload confirmed successfully",
+                    "documentType", documentType));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(
-                Map.of("error", "Error confirming mobile document upload: " + e.getMessage())
-            );
+                    Map.of("error", "Error confirming mobile document upload: " + e.getMessage()));
         }
     }
 
@@ -113,23 +114,21 @@ public class MobileDocumentController {
             String faceRecognitionLink = baseUrl + "/mobile/face-recognition/" + userId;
 
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "faceRecognitionLink", faceRecognitionLink,
-                "qrCode", generateQRCodeData(faceRecognitionLink),
-                "expiresIn", "24h"
-            ));
+                    "success", true,
+                    "faceRecognitionLink", faceRecognitionLink,
+                    "qrCode", generateQRCodeData(faceRecognitionLink),
+                    "expiresIn", "24h"));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(
-                Map.of("error", "Error generating face recognition link: " + e.getMessage())
-            );
+                    Map.of("error", "Error generating face recognition link: " + e.getMessage()));
         }
     }
 
     @PostMapping("/users/{userId}/face-recognition/process")
     public ResponseEntity<?> processFaceRecognition(@PathVariable("userId") String userId,
-                                                   @RequestBody Map<String, Object> faceData,
-                                                   HttpServletRequest request) {
+            @RequestBody Map<String, Object> faceData,
+            HttpServletRequest request) {
         try {
             String faceEmbedding = (String) faceData.get("faceEmbedding");
             String location = (String) faceData.get("location");
@@ -145,14 +144,12 @@ public class MobileDocumentController {
             userService.addUserTag(userId, "FACE_RECOGNITION_COMPLETED");
 
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Face recognition completed successfully"
-            ));
+                    "success", true,
+                    "message", "Face recognition completed successfully"));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(
-                Map.of("error", "Error processing face recognition: " + e.getMessage())
-            );
+                    Map.of("error", "Error processing face recognition: " + e.getMessage()));
         }
     }
 

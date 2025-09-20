@@ -48,8 +48,12 @@
       >
         <!-- Custom column templates -->
         <template #status="{ item }">
-          <span class="status-badge" :class="getStatusClass(item.status)">
-            {{ getStatusLabel(item.status) }}
+          <span
+            class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all duration-300 hover:scale-105 whitespace-nowrap"
+            :style="getModernStatusStyle(item.status)"
+          >
+            <div class="w-2 h-2 rounded-full bg-current opacity-70 flex-shrink-0"></div>
+            <span class="truncate">{{ getStatusLabel(item.status) }}</span>
           </span>
         </template>
         
@@ -252,15 +256,33 @@ const deleteItem = (item: ListItem) => {
 }
 
 // Utility methods
-const getStatusClass = (status: string) => {
-  const statusClasses: Record<string, string> = {
-    'backlog': 'status-badge--gray',
-    'todo': 'status-badge--blue',
-    'in-progress': 'status-badge--yellow',
-    'review': 'status-badge--purple',
-    'done': 'status-badge--green'
+const getModernStatusStyle = (status: string) => {
+  // Helper function to convert hex to rgba
+  const hexToRgba = (hex: string, alpha = 0.2) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // Map status to colors with modern glassmorphism effect
+  const statusColors: Record<string, string> = {
+    'backlog': '#64748b',      // slate-500
+    'todo': '#3b82f6',         // blue-500
+    'in-progress': '#f59e0b',  // amber-500
+    'review': '#8b5cf6',       // violet-500
+    'done': '#10b981'          // emerald-500
   }
-  return statusClasses[status] || 'status-badge--gray'
+
+  const color = statusColors[status] || '#64748b';
+
+  return `
+    background: linear-gradient(135deg, ${hexToRgba(color, 0.15)}, ${hexToRgba(color, 0.05)});
+    color: ${color};
+    border: 1px solid ${hexToRgba(color, 0.3)};
+    box-shadow: 0 2px 8px ${hexToRgba(color, 0.15)};
+    backdrop-filter: blur(4px);
+  `.replace(/\s+/g, ' ').trim();
 }
 
 const getStatusLabel = (status: string) => {

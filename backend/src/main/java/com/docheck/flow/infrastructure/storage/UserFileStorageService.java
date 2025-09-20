@@ -25,28 +25,36 @@ public class UserFileStorageService {
     private final S3Client s3;
     private final S3Presigner presigner;
     private final String userBucket;
+    private final String publicUrlPrefix;
 
     public UserFileStorageService(S3Client s3, S3Presigner presigner,
-                                  @Value("${app.storage.s3.user-bucket:flow-users}") String userBucket) {
+            @Value("${app.storage.s3.user-bucket:flow-users}") String userBucket,
+            @Value("${app.files.public-base-url:}") String publicBaseUrl) {
         this.s3 = s3;
         this.presigner = presigner;
         this.userBucket = userBucket;
+        this.publicUrlPrefix = resolvePublicUrlPrefix(publicBaseUrl);
         ensureBucket();
     }
 
     private void ensureBucket() {
-        if (s3 == null) return; // storage disabled
+        if (s3 == null)
+            return; // storage disabled
         try {
             s3.headBucket(HeadBucketRequest.builder().bucket(userBucket).build());
         } catch (NoSuchBucketException e) {
             try {
                 s3.createBucket(CreateBucketRequest.builder().bucket(userBucket).build());
-            } catch (Exception ignored) {}
-        } catch (AwsServiceException | SdkClientException ignored) {}
+            } catch (Exception ignored) {
+            }
+        } catch (AwsServiceException | SdkClientException ignored) {
+        }
     }
 
-    public Map<String, Object> presignUserFileUpload(String userId, String filename, String contentType, FileType fileType) {
-        if (presigner == null) throw new IllegalStateException("S3 storage disabled");
+    public Map<String, Object> presignUserFileUpload(String userId, String filename, String contentType,
+            FileType fileType) {
+        if (presigner == null)
+            throw new IllegalStateException("S3 storage disabled");
 
         String safe = sanitize(filename == null ? "file" : filename);
         String userFolder = "users/" + sanitize(userId);
@@ -78,8 +86,10 @@ public class UserFileStorageService {
         return out;
     }
 
-    public Map<String, Object> presignTemporaryFileUpload(String sessionId, String filename, String contentType, FileType fileType) {
-        if (presigner == null) throw new IllegalStateException("S3 storage disabled");
+    public Map<String, Object> presignTemporaryFileUpload(String sessionId, String filename, String contentType,
+            FileType fileType) {
+        if (presigner == null)
+            throw new IllegalStateException("S3 storage disabled");
 
         String safe = sanitize(filename == null ? "file" : filename);
         String tempFolder = "temp/" + sanitize(sessionId);
@@ -113,7 +123,8 @@ public class UserFileStorageService {
     }
 
     public Map<String, Object> presignUserFileDownload(String objectKey) {
-        if (presigner == null) throw new IllegalStateException("S3 storage disabled");
+        if (presigner == null)
+            throw new IllegalStateException("S3 storage disabled");
 
         GetObjectRequest get = GetObjectRequest.builder()
                 .bucket(userBucket)
@@ -135,8 +146,10 @@ public class UserFileStorageService {
         return out;
     }
 
-    public Map<String, Object> migrateTemporaryFileToUser(String userId, String tempObjectKey, String filename, FileType fileType) {
-        if (s3 == null) throw new IllegalStateException("S3 storage disabled");
+    public Map<String, Object> migrateTemporaryFileToUser(String userId, String tempObjectKey, String filename,
+            FileType fileType) {
+        if (s3 == null)
+            throw new IllegalStateException("S3 storage disabled");
 
         String safe = sanitize(filename == null ? "file" : filename);
         String userFolder = "users/" + sanitize(userId);
@@ -152,14 +165,12 @@ public class UserFileStorageService {
                     .sourceBucket(userBucket)
                     .sourceKey(tempObjectKey)
                     .destinationBucket(userBucket)
-                    .destinationKey(newKey)
-            );
+                    .destinationKey(newKey));
 
             // Excluir arquivo temporário
             s3.deleteObject(request -> request
                     .bucket(userBucket)
-                    .key(tempObjectKey)
-            );
+                    .key(tempObjectKey));
 
             Map<String, Object> out = new HashMap<>();
             out.put("objectKey", newKey);
@@ -175,8 +186,19 @@ public class UserFileStorageService {
     }
 
     private String buildPublicUrl(String objectKey) {
-        // Constrói a URL pública para o arquivo (será usada para referência)
-        return String.format("/api/v1/files/users/%s", objectKey);
+        return publicUrlPrefix + objectKey;
+    }
+
+    private static String resolvePublicUrlPrefix(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return "/api/v1/files/";
+        }
+
+        String normalized = baseUrl.trim();
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized + "/api/v1/files/";
     }
 
     private static String sanitize(String name) {
@@ -188,7 +210,10 @@ public class UserFileStorageService {
     public enum FileType {
         PROFILE_PHOTO("profile-photos"),
         ADDRESS_PROOF("address-proofs"),
-        DOCUMENT("documents");
+        DOCUMENT("documents"),
+        CONTRATO_SOCIAL("contratos-sociais"),
+        CARTAO_CNPJ("cartoes-cnpj"),
+        FACE_RECOGNITION("face-recognition");
 
         private final String folder;
 
