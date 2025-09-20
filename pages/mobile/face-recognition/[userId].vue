@@ -1,13 +1,21 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex flex-col">
-    <!-- Header -->
-    <div class="bg-slate-800 px-4 py-3 shadow-lg">
-      <h1 class="text-xl font-semibold text-white text-center">
-        Reconhecimento Facial
-      </h1>
-      <p class="text-sm text-slate-300 text-center mt-1">
-        Posicione seu rosto na área indicada
-      </p>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
+    <!-- Modern Header -->
+    <div class="relative bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 px-4 py-4 shadow-lg">
+      <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10"></div>
+      <div class="relative flex flex-col items-center">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg">
+            <i class="fa-solid fa-user-check text-white text-lg"></i>
+          </div>
+          <h1 class="text-xl font-bold text-white">
+            Reconhecimento Facial
+          </h1>
+        </div>
+        <p class="text-sm text-slate-400 text-center">
+          Posicione seu rosto na área indicada
+        </p>
+      </div>
     </div>
 
     <!-- Main Content -->

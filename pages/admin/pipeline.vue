@@ -1,140 +1,230 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Page header -->
-    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Configurações da Esteira</h1>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Gerencie processos e configurações da esteira
-          </p>
+  <div
+    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+  >
+    <!-- Header -->
+    <header
+      class="app-header bg-slate-900 border-b border-slate-800/70 px-6 py-4"
+    >
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div
+            class="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-800 text-slate-200"
+          >
+            <i class="fa-solid fa-sitemap"></i>
+          </div>
+          <div>
+            <h1 class="app-header-title">Configuração da Esteira</h1>
+            <p class="app-header-subtitle">
+              Cadastre processos e mantenha o fluxo operacional organizado
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            class="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 transition hover:border-indigo-500 hover:text-white"
+            @click="openCreateProcessModal"
+          >
+            <i class="fa-solid fa-plus text-xs"></i>
+            Novo processo
+          </button>
+
+          <button
+            class="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-200 transition hover:border-indigo-500 hover:text-white"
+            @click="openCreateProcessModal"
+            :aria-label="'Criar processo'"
+          >
+            <i class="fa-solid fa-sitemap"></i>
+          </button>
         </div>
       </div>
     </header>
 
-    <main class="p-6">
-      <div class="bg-gray-800 rounded-lg p-4 space-y-3">
-        <div class="space-y-3">
-          <div class="flex items-end gap-2 flex-wrap">
-            <div class="min-w-[16rem]">
-              <label class="text-[12px] text-slate-300">Novo processo (nome)</label>
-              <input
-                v-model="newProcName"
-                class="mt-1 bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
-                placeholder="ex.: ConsorEquity"
-              />
-            </div>
-            <div class="flex items-center">
-              <button
-                type="button"
-                @click="newProcFinanceiro = !newProcFinanceiro"
-                :class="[
-                  'flex items-center justify-center w-9 h-9 rounded-md transition-all duration-200 border',
-                  newProcFinanceiro
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-lg shadow-emerald-500/25'
-                    : 'bg-slate-800/70 hover:bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-500'
-                ]"
-                :title="newProcFinanceiro ? 'Processo Financeiro (clique para desativar)' : 'Marcar como processo financeiro'"
-              >
-                <i :class="[
-                  'fa-solid transition-all duration-200',
-                  newProcFinanceiro ? 'fa-dollar-sign text-white animate-pulse' : 'fa-dollar-sign text-slate-400'
-                ]"
-                :style="newProcFinanceiro ? 'filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.8));' : ''"
-                ></i>
-              </button>
-            </div>
-            <button
-              class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
-              :disabled="creatingProcess"
-              @click="createProcess"
-              title="Adicionar processo"
-              aria-label="Adicionar processo"
-            >
-              <i
-                v-if="creatingProcess"
-                class="fa-solid fa-spinner fa-spin"
-              ></i>
-              <i v-else class="fa-solid fa-plus"></i>
-            </button>
-            <button
-              class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-md text-sm w-9 h-9 flex items-center justify-center"
-              @click="openResetModal"
-              title="Zerar dados locais"
-              aria-label="Zerar dados locais"
-            >
-              <i class="fa-solid fa-rotate-left"></i>
-            </button>
-          </div>
+    <main class="px-6 py-5 space-y-6">
+      <section
+        class="rounded-xl border border-slate-800 bg-slate-900/80 px-5 py-4"
+      >
+        <p class="text-sm text-slate-400">
+          Utilize o botão <span class="text-slate-200">Novo processo</span> para
+          registrar fluxos adicionais. Os processos existentes estão listados
+          abaixo.
+        </p>
+      </section>
+
+      <!-- Card: Lista de Processos -->
+      <section
+        class="rounded-xl border border-slate-800 bg-slate-900/80 px-5 py-5"
+        aria-labelledby="pipeline-list-header"
+      >
+        <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
           <div>
-            <label class="text-[12px] text-slate-300">Processos</label>
-            <div class="mt-1 space-y-2">
-              <div
-                v-for="p in processes"
-                :key="p.key"
-                class="flex items-center justify-between bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2"
+            <h2
+              id="pipeline-list-header"
+              class="text-base font-semibold text-slate-100"
+            >
+              Processos existentes
+            </h2>
+            <p class="text-sm text-slate-400">
+              Selecione um processo para editar etapas e configurações
+            </p>
+          </div>
+        </div>
+
+        <div class="p-2">
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+          >
+            <div
+              v-for="(p, index) in processes"
+              :key="p.key"
+              class="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-800/70 bg-slate-900/80 p-3 transition-all duration-300 hover:border-slate-700 hover:shadow-lg"
+              :class="
+                p.key === currentProcessKey
+                  ? 'border-emerald-500/60 shadow-[0_0_25px_rgba(16,185,129,0.25)]'
+                  : ''
+              "
+              :style="{ animationDelay: `${index * 25}ms` }"
+              @click="editProcess(p)"
+            >
+              <button
+                class="absolute top-1.5 left-1.5 text-[11px] px-2 py-0.5 rounded-full border border-slate-700 text-slate-400 uppercase tracking-wide"
+                @click.stop="currentProcessKey = p.key"
               >
-                <label
-                  class="inline-flex items-center gap-2 cursor-pointer"
-                  @click="currentProcessKey = p.key"
-                >
-                  <input
-                    type="radio"
-                    class="accent-indigo-500"
-                    :checked="currentProcessKey === p.key"
-                  />
-                  <span class="text-sm font-medium">{{ p.name }}</span>
-                  <span class="text-[11px] text-slate-400">({{ p.key }})</span>
-                </label>
-                <div class="flex items-center gap-2">
-                  <span
-                    class="text-[11px]"
-                    :class="
-                      p.active !== false ? 'text-green-300' : 'text-slate-400'
-                    "
-                  >{{ p.active !== false ? "Ativo" : "Inativo" }}</span>
+                {{ p.key }}
+              </button>
+
+              <div class="mt-5 space-y-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-semibold text-white truncate">
+                    {{ p.name || "Processo" }}
+                  </h3>
                   <button
-                    class="p-2 text-slate-300 hover:text-white transition-colors"
+                    class="rounded-md border border-slate-700 bg-slate-900 p-2 text-slate-200 hover:bg-slate-800"
                     @click.stop="toggleActive(p)"
                     :title="p.active !== false ? 'Desativar' : 'Ativar'"
-                    :aria-label="p.active !== false ? 'Desativar' : 'Ativar'"
                   >
                     <i
                       :class="
                         p.active !== false
-                          ? 'fa-solid fa-power-off text-sky-400'
-                          : 'fa-solid fa-play text-sky-400'
+                          ? 'fa-solid fa-power-off text-emerald-300'
+                          : 'fa-solid fa-play text-slate-400'
                       "
                     />
                   </button>
-                  <button
-                    class="p-2 text-slate-300 hover:text-sky-400 transition-colors"
-                    @click.stop="editProcess(p)"
-                    title="Editar"
-                    aria-label="Editar"
+                </div>
+
+                <div class="flex items-center justify-between text-xs">
+                  <span
+                    class="inline-flex items-center gap-2 rounded-full px-2 py-0.5 text-xs"
+                    :class="
+                      p.active !== false
+                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    "
                   >
-                    <i class="fa-regular fa-pen-to-square"></i>
-                  </button>
-                  <button
-                    class="p-2 text-red-400 hover:text-red-300 transition-colors"
-                    @click.stop="openDeleteModal(p)"
-                    title="Excluir"
-                    aria-label="Excluir"
-                  >
-                    <i class="fa-regular fa-trash-can"></i>
-                  </button>
+                    <i
+                      :class="[
+                        'fa-solid',
+                        p.isFinanceiro
+                          ? 'fa-coins text-emerald-300'
+                          : 'fa-diagram-project text-slate-400',
+                      ]"
+                    ></i>
+                    {{ p.active !== false ? "Ativo" : "Inativo" }}
+                  </span>
+
+                  <div class="flex items-center gap-2">
+                    <button
+                      class="rounded-md border border-slate-700 bg-slate-900 p-2 text-red-300 hover:bg-slate-800"
+                      @click.stop="openDeleteModal(p)"
+                      title="Excluir"
+                    >
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="text-[12px] text-slate-300">
-          Selecione um processo acima e clique em
-          <span class="text-indigo-400 font-medium">Editar</span> para
-          configurar colunas e inputs no modal.
+
+        <div
+          class="mt-4 rounded-lg border border-slate-800 bg-slate-900 px-4 py-3"
+        >
+          <p class="text-sm text-slate-400">
+            <i class="fa-solid fa-info-circle text-slate-500 mr-2"></i>
+            Selecione um processo para ajustar etapas, campos e automações.
+          </p>
         </div>
-      </div>
+      </section>
     </main>
+
+    <!-- Modal: Novo Processo -->
+    <BaseModal v-model="showCreateProcessModal" title="Novo processo" size="sm">
+      <div class="space-y-4">
+        <div>
+          <label
+            class="text-xs font-semibold text-slate-300 uppercase tracking-wide"
+            for="modal-pipeline-name"
+          >
+            Nome do processo
+          </label>
+          <input
+            id="modal-pipeline-name"
+            v-model="newProcName"
+            class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+            placeholder="ex.: ConsorEquity"
+          />
+        </div>
+
+        <button
+          type="button"
+          class="app-toggle-card w-full justify-between"
+          :class="{ 'app-toggle-card--active': newProcFinanceiro }"
+          @click="newProcFinanceiro = !newProcFinanceiro"
+        >
+          <div class="flex items-center gap-3">
+            <div class="app-toggle-card-icon">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-semibold">Processo financeiro</p>
+              <p class="text-xs text-slate-400">
+                Identifica fluxos com etapas financeiras, cálculos e integrações
+                bancárias.
+              </p>
+            </div>
+          </div>
+          <div v-if="newProcFinanceiro" class="app-toggle-card-pill">ON</div>
+        </button>
+      </div>
+
+      <template #footer>
+        <div class="flex items-center justify-end gap-2">
+          <button
+            class="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
+            @click="closeCreateProcessModal"
+          >
+            Cancelar
+          </button>
+          <button
+            class="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-60"
+            :disabled="creatingProcess || !newProcName.trim()"
+            @click="createProcess"
+          >
+            <i
+              v-if="creatingProcess"
+              class="fa-solid fa-spinner fa-spin text-xs"
+            ></i>
+            <template v-else>
+              <i class="fa-solid fa-plus text-xs"></i>
+              Criar processo
+            </template>
+          </button>
+        </div>
+      </template>
+    </BaseModal>
 
     <!-- Modal: Gestão da Esteira (BaseModal) -->
     <BaseModal
@@ -195,7 +285,9 @@
           <div class="text-[11px] text-slate-400">{{ deleteTarget?.key }}</div>
         </div>
         <div>
-          <label class="text-[12px] text-slate-300">Digite o nome do processo</label>
+          <label class="text-[12px] text-slate-300"
+            >Digite o nome do processo</label
+          >
           <input
             v-model="deleteConfirm"
             class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
@@ -273,9 +365,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import BaseModal from "~/components/ui/BaseModal.vue"
-import PipelineManager from "~/components/admin/PipelineManager.vue"
+import { ref, computed, watch, onMounted } from "vue";
+import BaseModal from "~/components/ui/BaseModal.vue";
+import PipelineManager from "~/components/admin/PipelineManager.vue";
 import {
   listProcesses,
   addProcess,
@@ -284,74 +376,93 @@ import {
   setProcessName,
   sanitizeProcessKey,
   renameProcessKey,
-} from "~/composables/usePipeline"
+} from "~/composables/usePipeline";
 import {
   fetchStagesApi,
   saveStagesPreservingIdsApi,
-} from "~/composables/useStages"
+} from "~/composables/useStages";
 import {
   fetchStageFieldsApi,
   saveStageFieldsApi,
-} from "~/composables/useStageFields"
-import { isApiEnabled } from "~/utils/api/index"
-import { useProcessSubmenu } from "~/composables/useProcessMenu"
-import { useToast } from "~/composables/useToast"
+} from "~/composables/useStageFields";
+import { isApiEnabled } from "~/utils/api/index";
+import { useProcessSubmenu } from "~/composables/useProcessMenu";
+import { useToast } from "~/composables/useToast";
 
 definePageMeta({
-  layout: 'sidebar',
-  title: 'Pipeline - Admin'
-})
+  layout: "sidebar",
+  title: "Pipeline - Admin",
+});
 
 // Composables
-const { setLastKey } = useProcessSubmenu()
-const { success: toastSuccess, error: toastError, info: toastInfo } = useToast()
+const { setLastKey } = useProcessSubmenu();
+const {
+  success: toastSuccess,
+  error: toastError,
+  info: toastInfo,
+} = useToast();
 
 // Process registry
-const processes = ref(listProcesses())
-const currentProcessKey = ref(processes.value[0]?.key || "")
-const newProcName = ref("")
-const newProcFinanceiro = ref(false)
-const creatingProcess = ref(false)
+const processes = ref(listProcesses());
+const currentProcessKey = ref(processes.value[0]?.key || "");
+const newProcName = ref("");
+const newProcFinanceiro = ref(false);
+const creatingProcess = ref(false);
+const showCreateProcessModal = ref(false);
 
 async function createProcess() {
-  const name = newProcName.value.trim()
-  if (!name) return
+  const name = newProcName.value.trim();
+  if (!name) return;
   // Gera UUID opaco para o processo (mais seguro e estável)
   const key =
     globalThis.crypto?.randomUUID?.() ||
-    Math.random().toString(36).slice(2) + Date.now().toString(36)
-  if (creatingProcess.value) return
-  creatingProcess.value = true
+    Math.random().toString(36).slice(2) + Date.now().toString(36);
+  if (creatingProcess.value) return;
+  creatingProcess.value = true;
   // Otimista: atualiza DOM primeiro
-  processes.value = [...processes.value, { key, name, active: true, isFinanceiro: newProcFinanceiro.value }]
-  const ok = await addProcess(key, name || key, newProcFinanceiro.value)
+  processes.value = [
+    ...processes.value,
+    { key, name, active: true, isFinanceiro: newProcFinanceiro.value },
+  ];
+  const ok = await addProcess(key, name || key, newProcFinanceiro.value);
   if (ok) {
-    currentProcessKey.value = key
-    setLastKey(key)
-    newProcName.value = ""
-    newProcFinanceiro.value = false
-    toastSuccess("Processo criado")
+    currentProcessKey.value = key;
+    setLastKey(key);
+    newProcName.value = "";
+    newProcFinanceiro.value = false;
+    toastSuccess("Processo criado");
+    showCreateProcessModal.value = false;
   } else {
     // rollback visual
-    processes.value = processes.value.filter((p) => p.key !== key)
-    toastError("Falha ao criar processo. Tente novamente.")
+    processes.value = processes.value.filter((p) => p.key !== key);
+    toastError("Falha ao criar processo. Tente novamente.");
   }
-  creatingProcess.value = false
+  creatingProcess.value = false;
+}
+
+function openCreateProcessModal() {
+  newProcName.value = "";
+  newProcFinanceiro.value = false;
+  showCreateProcessModal.value = true;
+}
+
+function closeCreateProcessModal() {
+  showCreateProcessModal.value = false;
 }
 
 const pipelineStages = ref([
   { id: "dados_basicos", title: "Dados Básicos", slaDays: 2, color: "sky" },
   { id: "documentacao", title: "Documentação", slaDays: 5, color: "indigo" },
-])
-const processName = ref("")
+]);
+const processName = ref("");
 
 // Modal Gestão da Esteira
-const showPipelineModal = ref(false)
+const showPipelineModal = ref(false);
 function openPipelineModal() {
-  showPipelineModal.value = true
+  showPipelineModal.value = true;
 }
 function closePipelineModal() {
-  showPipelineModal.value = false
+  showPipelineModal.value = false;
 }
 async function savePipelineModal() {
   if (currentProcessKey.value) {
@@ -359,41 +470,41 @@ async function savePipelineModal() {
     if (!isApiEnabled()) {
       const base = sanitizeProcessKey(
         processName.value || currentProcessKey.value
-      )
+      );
       const ensureUnique = (k) => {
-        const existing = new Set(listProcesses().map((p) => p.key))
-        if (!existing.has(k) || k === currentProcessKey.value) return k
-        let i = 2
-        while (existing.has(`${k}-${i}`)) i++
-        return `${k}-${i}`
-      }
-      const desiredKey = ensureUnique(base)
+        const existing = new Set(listProcesses().map((p) => p.key));
+        if (!existing.has(k) || k === currentProcessKey.value) return k;
+        let i = 2;
+        while (existing.has(`${k}-${i}`)) i++;
+        return `${k}-${i}`;
+      };
+      const desiredKey = ensureUnique(base);
       if (desiredKey !== currentProcessKey.value) {
-        const res = renameProcessKey(currentProcessKey.value, desiredKey)
-        if (!res.ok) return
-        currentProcessKey.value = desiredKey
-        setLastKey(desiredKey)
+        const res = renameProcessKey(currentProcessKey.value, desiredKey);
+        if (!res.ok) return;
+        currentProcessKey.value = desiredKey;
+        setLastKey(desiredKey);
       }
     }
-    const newName = processName.value || currentProcessKey.value
-    const okName = await setProcessName(currentProcessKey.value, newName)
+    const newName = processName.value || currentProcessKey.value;
+    const okName = await setProcessName(currentProcessKey.value, newName);
     if (okName) {
       // Atualiza lista local sem novo GET
       processes.value = processes.value.map((p) =>
         p.key === currentProcessKey.value ? { ...p, name: newName } : p
-      )
+      );
     }
     try {
       // snapshot antes de salvar para migrar IDs de campos
       const prevStages = (pipelineStages.value || []).map((s) => ({
         id: s.id,
         title: s.title,
-      }))
+      }));
       const saved = await saveStagesPreservingIdsApi(
         currentProcessKey.value,
         prevStages,
         pipelineStages.value
-      )
+      );
       if (Array.isArray(saved) && saved.length) {
         // Atualiza local com IDs reais do backend
         const asClient = saved.map((s) => ({
@@ -401,54 +512,54 @@ async function savePipelineModal() {
           title: s.title,
           slaDays: s.slaDays,
           color: s.color,
-        }))
-        pipelineStages.value = asClient
+        }));
+        pipelineStages.value = asClient;
 
         // Migra mapa de forms local dos IDs antigos para os novos e persiste no backend
         try {
-          const storageKey = `pipeline_stage_forms__${currentProcessKey.value}`
-          const raw = localStorage.getItem(storageKey)
-          const map = raw ? JSON.parse(raw) || {} : {}
-          const nextMap = { ...map }
+          const storageKey = `pipeline_stage_forms__${currentProcessKey.value}`;
+          const raw = localStorage.getItem(storageKey);
+          const map = raw ? JSON.parse(raw) || {} : {};
+          const nextMap = { ...map };
           for (let i = 0; i < asClient.length; i++) {
-            const oldId = prevStages[i]?.id
-            const newId = asClient[i]?.id
-            if (!oldId || !newId || oldId === newId) continue
+            const oldId = prevStages[i]?.id;
+            const newId = asClient[i]?.id;
+            if (!oldId || !newId || oldId === newId) continue;
             if (map[oldId]) {
-              nextMap[newId] = map[oldId]
-              delete nextMap[oldId]
+              nextMap[newId] = map[oldId];
+              delete nextMap[oldId];
               // também envia para o backend, preservando ordem
               if (isApiEnabled() && /^[a-fA-F0-9]{24}$/.test(newId)) {
                 const ordered = (nextMap[newId] || []).map((f, idx) => ({
                   ...f,
                   order: idx,
-                }))
+                }));
                 try {
-                  await saveStageFieldsApi(newId, ordered)
+                  await saveStageFieldsApi(newId, ordered);
                 } catch (e) {}
               }
             }
           }
-          localStorage.setItem(storageKey, JSON.stringify(nextMap))
+          localStorage.setItem(storageKey, JSON.stringify(nextMap));
         } catch (_) {}
       }
-      if (okName) toastSuccess("Esteira salva")
-      else toastInfo("Etapas salvas; falha ao renomear o processo")
-      showPipelineModal.value = false
+      if (okName) toastSuccess("Esteira salva");
+      else toastInfo("Etapas salvas; falha ao renomear o processo");
+      showPipelineModal.value = false;
     } catch (e) {
-      toastError("Falha ao salvar etapas. Verifique a conexão.")
+      toastError("Falha ao salvar etapas. Verifique a conexão.");
       // mantém o modal aberto para o usuário tentar novamente
-      return
+      return;
     }
   } else {
-    showPipelineModal.value = false
+    showPipelineModal.value = false;
   }
 }
 
 // Load/save pipeline config locally
 onMounted(async () => {
-  if (!currentProcessKey.value) return
-  const loaded = await fetchStagesApi(currentProcessKey.value)
+  if (!currentProcessKey.value) return;
+  const loaded = await fetchStagesApi(currentProcessKey.value);
   pipelineStages.value = Array.isArray(loaded)
     ? loaded.map((s) => ({
         id: s.id,
@@ -456,16 +567,16 @@ onMounted(async () => {
         slaDays: s.slaDays,
         color: s.color,
       }))
-    : []
-  await prefetchStageFields()
-})
+    : [];
+  await prefetchStageFields();
+});
 
 watch(currentProcessKey, async (k) => {
   if (!k) {
-    pipelineStages.value = []
-    return
+    pipelineStages.value = [];
+    return;
   }
-  const loaded = await fetchStagesApi(k)
+  const loaded = await fetchStagesApi(k);
   pipelineStages.value = Array.isArray(loaded)
     ? loaded.map((s) => ({
         id: s.id,
@@ -473,23 +584,23 @@ watch(currentProcessKey, async (k) => {
         slaDays: s.slaDays,
         color: s.color,
       }))
-    : []
-  setLastKey(k)
-  const p = processes.value.find((x) => x.key === k)
-  processName.value = p?.name || k
-  await prefetchStageFields()
-})
+    : [];
+  setLastKey(k);
+  const p = processes.value.find((x) => x.key === k);
+  processName.value = p?.name || k;
+  await prefetchStageFields();
+});
 
 // Persistiremos as etapas somente ao salvar no modal
 
 function toggleActive(p) {
-  setProcessActive(p.key, !(p.active !== false))
-  processes.value = listProcesses()
+  setProcessActive(p.key, !(p.active !== false));
+  processes.value = listProcesses();
 }
 
 async function editProcess(p) {
-  currentProcessKey.value = p.key
-  const loaded = await fetchStagesApi(p.key)
+  currentProcessKey.value = p.key;
+  const loaded = await fetchStagesApi(p.key);
   pipelineStages.value = Array.isArray(loaded)
     ? loaded.map((s) => ({
         id: s.id,
@@ -497,26 +608,26 @@ async function editProcess(p) {
         slaDays: s.slaDays,
         color: s.color,
       }))
-    : []
-  setLastKey(p.key)
-  processName.value = p.name || p.key
-  await prefetchStageFields()
-  openPipelineModal()
+    : [];
+  setLastKey(p.key);
+  processName.value = p.name || p.key;
+  await prefetchStageFields();
+  openPipelineModal();
 }
 
 // Busca os fields do backend por etapa (para mostrar contagem e já aquecer o builder)
 async function prefetchStageFields() {
-  if (!isApiEnabled()) return
+  if (!isApiEnabled()) return;
   try {
-    const storageKey = `pipeline_stage_forms__${currentProcessKey.value}`
-    const raw = localStorage.getItem(storageKey)
-    const map = raw ? JSON.parse(raw) || {} : {}
-    const nextMap = { ...map }
+    const storageKey = `pipeline_stage_forms__${currentProcessKey.value}`;
+    const raw = localStorage.getItem(storageKey);
+    const map = raw ? JSON.parse(raw) || {} : {};
+    const nextMap = { ...map };
     for (const st of pipelineStages.value || []) {
-      const sid = st?.id
-      if (!sid || !/^[a-fA-F0-9]{24}$/.test(sid)) continue
+      const sid = st?.id;
+      if (!sid || !/^[a-fA-F0-9]{24}$/.test(sid)) continue;
       try {
-        const arr = await fetchStageFieldsApi(sid)
+        const arr = await fetchStageFieldsApi(sid);
         if (Array.isArray(arr)) {
           nextMap[sid] = arr.map((r) => ({
             id: r.id || String(Date.now()),
@@ -525,91 +636,91 @@ async function prefetchStageFields() {
             required: !!r.required,
             placeholder: r.placeholder || "",
             options: Array.isArray(r.options) ? r.options : [],
-          }))
+          }));
         }
       } catch (_) {}
     }
-    localStorage.setItem(storageKey, JSON.stringify(nextMap))
+    localStorage.setItem(storageKey, JSON.stringify(nextMap));
   } catch (_) {}
 }
 
 // Delete modal state/handlers
-const showDeleteModal = ref(false)
-const deleteTarget = ref(null)
-const deleteConfirm = ref("")
+const showDeleteModal = ref(false);
+const deleteTarget = ref(null);
+const deleteConfirm = ref("");
 const canConfirmDelete = computed(() => {
-  const target = (deleteTarget.value?.name || "").trim().toLowerCase()
-  const typed = deleteConfirm.value.trim().toLowerCase()
-  return !!target && typed === target
-})
-const showResetModal = ref(false)
+  const target = (deleteTarget.value?.name || "").trim().toLowerCase();
+  const typed = deleteConfirm.value.trim().toLowerCase();
+  return !!target && typed === target;
+});
+const showResetModal = ref(false);
 function openDeleteModal(p) {
-  deleteTarget.value = p
-  deleteConfirm.value = ""
-  showDeleteModal.value = true
+  deleteTarget.value = p;
+  deleteConfirm.value = "";
+  showDeleteModal.value = true;
 }
 function cancelDelete() {
-  showDeleteModal.value = false
-  deleteTarget.value = null
-  deleteConfirm.value = ""
+  showDeleteModal.value = false;
+  deleteTarget.value = null;
+  deleteConfirm.value = "";
 }
 async function confirmDelete() {
-  const p = deleteTarget.value
-  if (!p || !canConfirmDelete.value) return
+  const p = deleteTarget.value;
+  if (!p || !canConfirmDelete.value) return;
 
   // Remoção otimista no DOM
-  const key = p.key
-  processes.value = processes.value.filter((x) => x.key !== key)
+  const key = p.key;
+  processes.value = processes.value.filter((x) => x.key !== key);
   if (currentProcessKey.value === key) {
-    currentProcessKey.value = processes.value[0]?.key || ""
-    pipelineStages.value = []
-    if (currentProcessKey.value) setLastKey(currentProcessKey.value)
+    currentProcessKey.value = processes.value[0]?.key || "";
+    pipelineStages.value = [];
+    if (currentProcessKey.value) setLastKey(currentProcessKey.value);
   }
 
   // Efetiva no backend e re-sincroniza silenciosamente
-  const ok = await removeProcess(key)
-  if (ok) toastSuccess("Processo excluído")
+  const ok = await removeProcess(key);
+  if (ok) toastSuccess("Processo excluído");
   else {
     // rollback
-    processes.value = [...processes.value, p]
-    toastError("Falha ao excluir. Tente novamente.")
+    processes.value = [...processes.value, p];
+    toastError("Falha ao excluir. Tente novamente.");
   }
   // Não recarrega toda a lista para evitar GET extra; o evento já atualizará quem escuta
 
-  cancelDelete()
+  cancelDelete();
 }
 
 function onDeleteConfirmKeydown(e) {
   // Block paste shortcuts (Cmd/Ctrl+V) and select-all paste combos
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
-    e.preventDefault()
-    return
+    e.preventDefault();
+    return;
   }
 }
 
 function openResetModal() {
-  showResetModal.value = true
+  showResetModal.value = true;
 }
 function cancelReset() {
-  showResetModal.value = false
+  showResetModal.value = false;
 }
 function confirmReset() {
   // Remove todos os processos e dados locais relacionados
   try {
-    const keys = processes.value.map((p) => p.key)
-    keys.forEach((k) => removeProcess(k))
+    const keys = processes.value.map((p) => p.key);
+    keys.forEach((k) => removeProcess(k));
     // também limpa o registro explicitamente
-    localStorage.removeItem("pipeline_processes")
+    localStorage.removeItem("pipeline_processes");
   } catch (_) {}
-  processes.value = []
-  currentProcessKey.value = ""
-  pipelineStages.value = []
-  setLastKey("")
-  showResetModal.value = false
+  processes.value = [];
+  currentProcessKey.value = "";
+  pipelineStages.value = [];
+  setLastKey("");
+  showResetModal.value = false;
 }
 
 // Initialize
 if (currentProcessKey.value) {
-  setLastKey(currentProcessKey.value)
+  setLastKey(currentProcessKey.value);
 }
 </script>

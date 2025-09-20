@@ -1,0 +1,1 @@
+@keyframes draw{0%{stroke-dashoffset:1000}to{stroke-dashoffset:0}}@keyframes fill{30%{fill-opacity:5%}to{fill-opacity:100%}}.lobe-brand-loading path{fill:currentcolor;fill-opacity:0;stroke:currentcolor;stroke-dasharray:1000;stroke-dashoffset:1000;stroke-width:.25em;animation:draw 2s cubic-bezier(.4,0,.2,1) infinite,fill 2s cubic-bezier(.4,0,.2,1) infinite}

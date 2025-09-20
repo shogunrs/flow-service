@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
@@ -79,6 +80,16 @@ public class FileStorageService {
         out.put("url", url.toString());
         out.put("objectKey", key);
         return out;
+    }
+
+    public InputStream getFileStream(String key) {
+        if (s3 == null) throw new IllegalStateException("S3 storage disabled");
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        return s3.getObject(getObjectRequest);
     }
 
     private static String sanitize(String name) {

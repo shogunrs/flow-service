@@ -1,12 +1,24 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <main class="p-6 space-y-6">
-      <div class="relative overflow-hidden rounded-lg h-14">
-        <CanvasFinance class="opacity-40" :speed="0.6" :font-size="12" />
-        <div class="absolute inset-0 flex items-center px-2">
-          <h1 class="text-xl font-semibold text-white">Dashboard</h1>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <!-- Modern Header with Glass Effect -->
+    <header class="app-header relative bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 p-4">
+      <div class="absolute inset-0 bg-white/[0.02] backdrop-blur-3xl"></div>
+      <div class="relative flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="p-2 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl shadow-lg">
+            <i class="fa-solid fa-home text-white text-sm"></i>
+          </div>
+          <div>
+            <h1 class="app-header-title">Dashboard</h1>
+            <p class="app-header-subtitle">
+              Visão geral do sistema e métricas principais
+            </p>
+          </div>
         </div>
       </div>
+    </header>
+
+    <main class="p-3 space-y-3">
       <KPIGrid :items="kpis" />
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Diff</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+      --sb-blue-900: #002855;
+      --sb-blue-700: #0055a5;
+      --sb-blue-500: #0072ce;
+      --sb-blue-300: #26a9e0;
+      --sb-blue-100: #e6f4fb;
+      --sb-grey-900: #0f172a;
+      --sb-grey-700: #334155;
+      --sb-grey-500: #64748b;
+      --card-shadow: 0 24px 40px rgba(2, 44, 92, 0.12);
+      background: radial-gradient(circle at top, rgba(0, 114, 206, 0.14), transparent 55%), #f7f9fc;
+      color: var(--sb-grey-900);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    body {
+      margin: 0;
+      padding: 2.25rem clamp(1rem, 4vw, 2.75rem);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--sb-blue-900);
+    }
+
+    header p {
+      margin: 0;
+      color: var(--sb-grey-500);
+      max-width: 640px;
+      font-size: 0.95rem;
+    }
+
+    .input-card,
+    .output-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 18px;
+      border: 1px solid rgba(0, 40, 85, 0.08);
+      box-shadow: var(--card-shadow);
+      padding: clamp(1.15rem, 3vw, 1.75rem);
+    }
+
+    .input-card {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .card-description {
+      margin: 0.35rem 0 0;
+      color: var(--sb-grey-500);
+      font-size: 0.85rem;
+    }
+
+    .card-description code {
+      background: rgba(0, 114, 206, 0.1);
+      border-radius: 8px;
+      padding: 0.15rem 0.4rem;
+      font-size: 0.8rem;
+      color: var(--sb-blue-700);
+    }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+    }
+
+    .tag {
+      background: rgba(0, 114, 206, 0.1);
+      color: var(--sb-blue-700);
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .tag strong {
+      font-weight: 600;
+      color: var(--sb-blue-900);
+    }
+
+    .api-base {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .api-base label {
+      font-size: 0.85rem;
+      color: var(--sb-grey-500);
+    }
+
+    .api-base-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .api-base input {
+      flex: 1;
+      min-width: min(260px, 100%);
+      border-radius: 10px;
+      border: 1px solid rgba(0, 114, 206, 0.2);
+      padding: 0.45rem 0.75rem;
+      font-size: 0.88rem;
+      background: rgba(230, 244, 251, 0.5);
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .api-base input:focus {
+      outline: none;
+      border-color: rgba(0, 114, 206, 0.6);
+      box-shadow: 0 0 0 3px rgba(0, 114, 206, 0.16);
+      background: rgba(230, 244, 251, 0.85);
+    }
+
+    .api-hint {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--sb-grey-500);
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--sb-grey-700);
+      display: block;
+    }
+
+    textarea,
+    .preview.editable {
+      width: 100%;
+      min-height: 160px;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 114, 206, 0.22);
+      padding: 0.85rem 1rem;
+      font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+      font-size: 0.88rem;
+      background: rgba(230, 244, 251, 0.65);
+      color: inherit;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: rgba(0, 114, 206, 0.65);
+      box-shadow: 0 0 0 4px rgba(0, 114, 206, 0.18);
+      background: rgba(230, 244, 251, 0.95);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.65rem 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button.load {
+      background: linear-gradient(135deg, var(--sb-blue-700), var(--sb-blue-500));
+      color: #fff;
+      box-shadow: 0 16px 28px rgba(0, 85, 165, 0.28);
+    }
+
+    button.secondary {
+      background: rgba(0, 114, 206, 0.12);
+      color: var(--sb-blue-700);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .panes {
+      display: grid;
+      gap: clamp(1rem, 2.5vw, 1.5rem);
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+
+    .pane {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      height: 100%;
+    }
+
+    .pane h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--sb-blue-700);
+    }
+
+    .preview {
+      flex: 1;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 114, 206, 0.18);
+      background: rgba(255, 255, 255, 0.92);
+      padding: clamp(0.9rem, 2vw, 1.1rem);
+      overflow: auto;
+      line-height: 1.55;
+      color: var(--sb-grey-700);
+    }
+
+    .preview h1,
+    .preview h2,
+    .preview h3,
+    .preview h4 {
+      margin-top: 1.2em;
+      margin-bottom: 0.6em;
+    }
+
+    .preview p {
+      margin: 0.75em 0;
+    }
+
+    .preview ul,
+    .preview ol {
+      padding-left: 1.5em;
+      margin: 0.75em 0;
+    }
+
+    .preview code,
+    .preview pre {
+      background: rgba(0, 114, 206, 0.12);
+      border-radius: 10px;
+      padding: 0.35rem 0.6rem;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.85rem;
+    }
+
+    .export-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: flex-start;
+      margin-top: 0.5rem;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: var(--sb-grey-500);
+      min-height: 1.1em;
+    }
+
+    textarea:focus + .preview.editable,
+    .pane:focus-within .preview.editable {
+      background: rgba(230, 244, 251, 0.95);
+      border-color: rgba(0, 114, 206, 0.55);
+      box-shadow: 0 0 0 4px rgba(0, 114, 206, 0.18);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        background: #06172c;
+        color: #e2e8f0;
+      }
+
+      body {
+        background: radial-gradient(circle at top, rgba(0, 114, 206, 0.22), transparent 55%), #06172c;
+      }
+
+      .input-card,
+      .output-card,
+      .preview {
+        background: rgba(10, 28, 48, 0.85);
+        border: 1px solid rgba(38, 169, 224, 0.25);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      }
+
+      textarea,
+      .preview.editable {
+        background: rgba(10, 28, 48, 0.82);
+        border-color: rgba(38, 169, 224, 0.28);
+        color: #e2e8f0;
+      }
+
+      textarea:focus,
+      textarea:focus + .preview.editable,
+      .pane:focus-within .preview.editable {
+        background: rgba(12, 40, 70, 0.92);
+        border-color: rgba(38, 169, 224, 0.5);
+        box-shadow: 0 0 0 4px rgba(0, 114, 206, 0.28);
+      }
+
+      header h1 {
+        color: #e0f2ff;
+      }
+
+      header p {
+        color: #96aed4;
+      }
+
+      .card-description {
+        color: #8fa6c5;
+      }
+
+      .card-description code {
+        background: rgba(38, 169, 224, 0.2);
+        color: #8dd6ff;
+      }
+
+      .api-base input {
+        background: rgba(8, 26, 46, 0.75);
+        border-color: rgba(38, 169, 224, 0.25);
+        color: #e2e8f0;
+      }
+
+      .api-base input:focus {
+        background: rgba(12, 40, 70, 0.92);
+        border-color: rgba(38, 169, 224, 0.55);
+        box-shadow: 0 0 0 3px rgba(0, 114, 206, 0.25);
+      }
+
+      .pane h2 {
+        color: #d0e7ff;
+      }
+
+      .preview {
+        color: #cbd5f5;
+      }
+
+      .tag {
+        background: rgba(38, 169, 224, 0.18);
+        color: #c7e6ff;
+      }
+
+      .tag strong {
+        color: #7fd4ff;
+      }
+
+      button.secondary {
+        background: rgba(38, 169, 224, 0.24);
+        color: #d8f1ff;
+      }
+
+      .status {
+        color: #96aed4;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Central de Prompt</h1>
+    <p>O prompt prioritário é carregado automaticamente da API. Revise o conteúdo em Markdown, ajuste o texto e salve as alterações diretamente no backend.</p>
+  </header>
+
+  <section class="input-card">
+    <div class="card-header">
+      <div>
+        <label>Fonte do prompt</label>
+        <p class="card-description">Os dados são carregados diretamente de <code>/api/ai/system/priority</code>. Clique em recarregar para buscar o estado mais recente.</p>
+        <div class="api-base">
+          <label for="api-base">Base da API (opcional)</label>
+          <div class="api-base-row">
+            <input id="api-base" type="url" placeholder="https://flow-service.sebrae.br" spellcheck="false" />
+            <button class="secondary" type="button" id="apply-base">Aplicar</button>
+          </div>
+          <p class="api-hint">Deixe vazio para usar o mesmo domínio deste arquivo ou informe a URL base da API (ex.: https://meu-backend.com).</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="secondary" type="button" id="refresh-prompt">Recarregar</button>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="tag">Escopo: <strong id="prompt-scope">—</strong></span>
+      <span class="tag">Última atualização: <span id="prompt-updated">—</span></span>
+    </div>
+    <div class="status" id="load-status"></div>
+  </section>
+
+  <section class="output-card">
+    <div class="panes">
+      <article class="pane">
+        <h2>Antes</h2>
+        <div class="preview" id="preview-before">Carregando prompt atual...</div>
+      </article>
+      <article class="pane">
+        <h2>Depois</h2>
+        <textarea id="text-after" placeholder="# Faça suas alterações aqui" spellcheck="false"></textarea>
+        <div class="preview editable" id="preview-after">As alterações aparecem aqui em tempo real.</div>
+        <div class="export-area">
+          <button class="load" type="button" id="save-prompt">Salvar alterações</button>
+          <button class="secondary" type="button" id="copy-text">Copiar texto</button>
+          <div class="status" id="save-status"></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <script>
+    const textAfter = document.getElementById('text-after');
+    const previewBefore = document.getElementById('preview-before');
+    const previewAfter = document.getElementById('preview-after');
+    const refreshButton = document.getElementById('refresh-prompt');
+    const saveButton = document.getElementById('save-prompt');
+    const copyTextButton = document.getElementById('copy-text');
+    const loadStatus = document.getElementById('load-status');
+    const saveStatus = document.getElementById('save-status');
+    const scopeLabel = document.getElementById('prompt-scope');
+    const updatedLabel = document.getElementById('prompt-updated');
+    const apiBaseInput = document.getElementById('api-base');
+    const applyBaseButton = document.getElementById('apply-base');
+
+    const ENDPOINT_PATH = '/api/ai/system/priority';
+    const STORAGE_KEY = 'prompt-api-base';
+
+    let originalObject = null;
+    let loadingPrompt = false;
+    let savingPrompt = false;
+
+    // Inicializar base da API
+    let storedBase = '';
+    try {
+      storedBase = localStorage.getItem(STORAGE_KEY) || '';
+    } catch {}
+    if (apiBaseInput) {
+      apiBaseInput.value = storedBase;
+    }
+
+    if (refreshButton) {
+      refreshButton.addEventListener('click', () => {
+        fetchPrompt(true);
+      });
+    }
+
+    textAfter.addEventListener('input', () => {
+      renderMarkdown(textAfter.value, previewAfter);
+      updateCopyAvailability();
+      if (saveStatus) setStatus(saveStatus, '', false);
+    });
+
+    copyTextButton.addEventListener('click', async () => {
+      try {
+        await copyToClipboard(textAfter.value);
+        setStatus(saveStatus, 'Texto copiado.', false);
+      } catch (error) {
+        console.error(error);
+        setStatus(saveStatus, 'Não foi possível copiar o texto.', true);
+      }
+    });
+
+    if (saveButton) {
+      saveButton.addEventListener('click', async () => {
+        if (!originalObject) {
+          setStatus(saveStatus, 'Carregue o prompt antes de salvar.', true);
+          return;
+        }
+        try {
+          savingPrompt = true;
+          updateButtonStates();
+          setStatus(saveStatus, 'Enviando alterações...', false);
+          const payload = cloneObject(originalObject);
+          payload.text = textAfter.value;
+          const response = await fetch(resolveEndpoint(), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Falha ao atualizar o prompt.');
+          }
+          let data = null;
+          try {
+            data = await response.json();
+          } catch {}
+          if (data && typeof data === 'object') {
+            originalObject = data;
+          } else {
+            originalObject = { ...payload };
+          }
+          const latestText = originalObject?.text || '';
+          textAfter.value = latestText;
+          renderMarkdown(latestText, previewBefore);
+          renderMarkdown(latestText, previewAfter);
+          setScopeAndTimestamp(originalObject);
+          updateCopyAvailability();
+          setStatus(saveStatus, 'Prompt atualizado com sucesso.', false);
+          setStatus(loadStatus, 'Estado sincronizado com o servidor.', false);
+        } catch (error) {
+          console.error(error);
+          setStatus(saveStatus, 'Erro ao salvar: ' + (error.message || error), true);
+        } finally {
+          savingPrompt = false;
+          updateButtonStates();
+        }
+      });
+    }
+
+    async function fetchPrompt(showFeedback = false) {
+      try {
+        loadingPrompt = true;
+        updateButtonStates();
+        setStatus(loadStatus, showFeedback ? 'Recarregando prompt...' : 'Carregando prompt...', false);
+        const response = await fetch(resolveEndpoint(), {
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Falha ao carregar o prompt.');
+        }
+        const data = await response.json();
+        originalObject = data || {};
+        const promptText = typeof data?.text === 'string' ? data.text : '';
+        textAfter.value = promptText;
+        renderMarkdown(promptText, previewBefore);
+        renderMarkdown(promptText, previewAfter);
+        setScopeAndTimestamp(data);
+        updateCopyAvailability();
+        setStatus(loadStatus, 'Prompt carregado com sucesso.', false);
+        setStatus(saveStatus, '', false);
+      } catch (error) {
+        console.error(error);
+        originalObject = null;
+        textAfter.value = '';
+        renderMarkdown('', previewBefore);
+        renderMarkdown('', previewAfter);
+        updateCopyAvailability();
+        setScopeAndTimestamp(null);
+        setStatus(loadStatus, 'Erro ao carregar: ' + (error.message || error), true);
+      } finally {
+        loadingPrompt = false;
+        updateButtonStates();
+      }
+    }
+
+    function renderMarkdown(source, target) {
+      if (!source) {
+        target.innerHTML = '<em>Vazio</em>';
+        return;
+      }
+      const html = markdownToHtml(source);
+      target.innerHTML = html;
+    }
+
+    function setStatus(element, message, isError) {
+      element.textContent = message;
+      element.style.color = isError ? '#d92d20' : 'var(--sb-grey-500)';
+    }
+
+    function cloneObject(obj) {
+      if (!obj || typeof obj !== 'object') return {};
+      if (typeof structuredClone === 'function') {
+        return structuredClone(obj);
+      }
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    async function copyToClipboard(value) {
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API indisponível.');
+      }
+      await navigator.clipboard.writeText(value || '');
+    }
+
+    function updateCopyAvailability() {
+      if (!copyTextButton) return;
+      const hasContent = Boolean(textAfter.value && textAfter.value.trim().length);
+      copyTextButton.disabled = !hasContent || !originalObject;
+    }
+
+    function resolveEndpoint() {
+      const base = getApiBase();
+      if (!base) return ENDPOINT_PATH;
+      return `${base.replace(/\/$/, '')}${ENDPOINT_PATH}`;
+    }
+
+    function getApiBase() {
+      const value = (apiBaseInput?.value || '').trim();
+      return value;
+    }
+
+    function persistApiBase(base) {
+      try {
+        if (base) {
+          localStorage.setItem(STORAGE_KEY, base);
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch {}
+    }
+
+    function setScopeAndTimestamp(data) {
+      if (scopeLabel) {
+        scopeLabel.textContent = data?.scope || '—';
+      }
+      if (updatedLabel) {
+        const date = data?.updatedAt ? new Date(data.updatedAt) : data ? new Date() : null;
+        updatedLabel.textContent = date ? formatDate(date) : '—';
+      }
+    }
+
+    function formatDate(date) {
+      if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+        return new Date().toLocaleString('pt-BR');
+      }
+      return date.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
+    function updateButtonStates() {
+      if (refreshButton) {
+        refreshButton.disabled = loadingPrompt || savingPrompt;
+      }
+      if (saveButton) {
+        saveButton.disabled = savingPrompt || !originalObject;
+      }
+      updateCopyAvailability();
+    }
+
+    function applyBase() {
+      const base = getApiBase();
+      persistApiBase(base);
+      setStatus(loadStatus, base ? `Base atualizada para ${base}.` : 'Usando o mesmo host da página.', false);
+      fetchPrompt(true);
+    }
+
+    if (applyBaseButton) {
+      applyBaseButton.addEventListener('click', applyBase);
+    }
+
+    if (apiBaseInput) {
+      apiBaseInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          applyBase();
+        }
+      });
+    }
+
+    function markdownToHtml(markdown) {
+      const lines = markdown.split(/\n/);
+      let html = '';
+      let inList = false;
+      let inCodeBlock = false;
+
+      const escape = (text) => text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      lines.forEach((rawLine) => {
+        let line = rawLine.trimEnd();
+
+        if (line.startsWith('```')) {
+          if (!inCodeBlock) {
+            inCodeBlock = true;
+            html += '<pre><code>';
+          } else {
+            inCodeBlock = false;
+            html += '</code></pre>';
+          }
+          return;
+        }
+
+        if (inCodeBlock) {
+          html += escape(rawLine) + '\n';
+          return;
+        }
+
+        if (/^\s*$/.test(line)) {
+          if (inList) {
+            html += '</ul>';
+            inList = false;
+          }
+          html += '<br />';
+          return;
+        }
+
+        const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+          if (inList) {
+            html += '</ul>';
+            inList = false;
+          }
+          const level = headingMatch[1].length;
+          const content = applyInlineMarkdown(headingMatch[2]);
+          html += `<h${level}>${content}</h${level}>`;
+          return;
+        }
+
+        if (/^[-*]\s+/.test(line)) {
+          if (!inList) {
+            html += '<ul>';
+            inList = true;
+          }
+          const item = line.replace(/^[-*]\s+/, '');
+          html += `<li>${applyInlineMarkdown(item)}</li>`;
+          return;
+        }
+
+        if (inList) {
+          html += '</ul>';
+          inList = false;
+        }
+
+        html += `<p>${applyInlineMarkdown(line)}</p>`;
+      });
+
+      if (inList) {
+        html += '</ul>';
+      }
+
+      if (inCodeBlock) {
+        html += '</code></pre>';
+      }
+
+      return html;
+    }
+
+    function applyInlineMarkdown(text) {
+      let escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      escaped = escaped
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+
+      return escaped;
+    }
+
+    // Inicialização
+    renderMarkdown('', previewBefore);
+    renderMarkdown('', previewAfter);
+    setScopeAndTimestamp(null);
+    updateButtonStates();
+    fetchPrompt(false);
+  </script>
+</body>
+</html>

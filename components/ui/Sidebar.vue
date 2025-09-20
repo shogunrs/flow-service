@@ -10,7 +10,7 @@
     <!-- Sidebar -->
     <nav
       :class="[
-        'fixed top-0 left-0 h-screen bg-slate-900 border-r border-slate-700 transform transition-all duration-300 ease-in-out z-[100]',
+        'fixed top-0 left-0 h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 transform transition-all duration-300 ease-in-out z-[100]',
         'lg:translate-x-0',
         collapsed ? 'w-16' : 'w-64',
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
@@ -18,7 +18,7 @@
     >
       <!-- Header/Brand -->
       <div
-        class="flex items-center justify-between p-4 border-b border-slate-700"
+        class="flex items-center justify-between p-4 border-b border-slate-700/50"
       >
         <div class="flex items-center gap-3">
           <BrandMark size="sm" />
@@ -55,7 +55,7 @@
       </div>
 
       <!-- User info -->
-      <div class="p-4 border-b border-slate-700">
+      <div class="p-4 border-b border-slate-700/50">
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
@@ -91,30 +91,13 @@
       </div>
 
       <!-- Footer/Settings -->
-      <div class="p-4 border-t border-slate-700">
+      <div class="p-4 border-t border-slate-700/50">
         <SidebarItem
           :item="settingsItem"
           :is-active="false"
           :collapsed="collapsed"
           @click="openSettings"
         />
-
-        <!-- Chat IA Button -->
-        <button
-          @click="openChatModal"
-          :class="[
-            'w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-purple-600/20 rounded-md transition-all duration-300 text-sm border border-purple-500/30 hover:border-purple-400/50 relative overflow-hidden group',
-            collapsed ? 'justify-center' : '',
-          ]"
-          :title="collapsed ? 'ConsorIA' : ''"
-        >
-          <!-- Shimmer effect -->
-          <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-700"></div>
-          <!-- Pulsing dot -->
-          <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse absolute top-2 right-2" v-show="!collapsed"></div>
-          <i class="fa-solid fa-robot w-5 text-purple-400 group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
-          <span v-show="!collapsed" class="transition-opacity duration-300 relative z-10">ConsorIA</span>
-        </button>
 
         <button
           @click="logout"
@@ -277,7 +260,7 @@ const menuItems = computed(() => [
       {
         label: "Status",
         path: "/admin/status",
-        icon: "fa-solid fa-circle-info",
+        icon: "fa-solid fa-tags",
         description: "Gerenciar status",
       },
       {
@@ -285,6 +268,12 @@ const menuItems = computed(() => [
         path: "/admin/notifications",
         icon: "fa-solid fa-bell",
         description: "Gerenciar notificações",
+      },
+      {
+        label: "Centro IA",
+        path: "/admin/ia",
+        icon: "fa-solid fa-robot",
+        description: "Centro de treinamento de IA",
       },
     ],
   },
@@ -348,8 +337,9 @@ function openChatModal() {
   // Adicionar mensagem de boas-vindas se for primeira vez
   if (chatMessages.value.length === 0) {
     chatMessages.value.push({
-      role: 'assistant',
-      content: 'Olá! Sou a ConsorIA, sua assistente especializada em consórcios e gestão de processos. Posso ajudar com:\n\n• Análise de propostas e estágios\n• Informações sobre processos financeiros\n• Dúvidas sobre fluxo de trabalho\n• Interpretação de dados e estatísticas\n\nComo posso ajudá-lo hoje?'
+      role: "assistant",
+      content:
+        "Olá! Sou a ConsorIA, sua assistente especializada em consórcios e gestão de processos. Posso ajudar com:\n\n• Análise de propostas e estágios\n• Informações sobre processos financeiros\n• Dúvidas sobre fluxo de trabalho\n• Interpretação de dados e estatísticas\n\nComo posso ajudá-lo hoje?",
     });
   }
 }
@@ -357,9 +347,9 @@ function openChatModal() {
 async function handleChatSend(data) {
   // Adicionar mensagem do usuário
   chatMessages.value.push({
-    role: 'user',
+    role: "user",
     content: data.text,
-    attachments: data.attachments
+    attachments: data.attachments,
   });
 
   // Chamar API real de IA
@@ -367,39 +357,44 @@ async function handleChatSend(data) {
   try {
     // Criar contexto rico com informações do sistema
     const currentPage = route.path;
-    let contextInfo = '';
+    let contextInfo = "";
 
-    if (currentPage.includes('/esteira')) {
-      const processKey = currentPage.split('/esteira/')[1];
-      contextInfo = processKey ? `Usuário está na esteira do processo: ${processKey}. ` : 'Usuário está visualizando uma esteira de processos. ';
-    } else if (currentPage.includes('/admin')) {
-      contextInfo = 'Usuário está na área administrativa. ';
+    if (currentPage.includes("/esteira")) {
+      const processKey = currentPage.split("/esteira/")[1];
+      contextInfo = processKey
+        ? `Usuário está na esteira do processo: ${processKey}. `
+        : "Usuário está visualizando uma esteira de processos. ";
+    } else if (currentPage.includes("/admin")) {
+      contextInfo = "Usuário está na área administrativa. ";
     }
 
     // Construir prompt contextualizado
     const contextualPrompt = `${contextInfo}${data.text}`;
 
-    const response = await $fetch('/api/ai', {
-      method: 'POST',
+    const response = await $fetch("/api/ai", {
+      method: "POST",
       body: {
         text: contextualPrompt,
         attachments: data.attachments,
-        history: chatMessages.value.slice(-10).map(msg => ({
+        history: chatMessages.value.slice(-10).map((msg) => ({
           role: msg.role,
-          content: msg.content
-        })) // Últimas 10 mensagens para contexto
-      }
+          content: msg.content,
+        })), // Últimas 10 mensagens para contexto
+      },
     });
 
     chatMessages.value.push({
-      role: 'assistant',
-      content: response.text || 'Desculpe, não consegui processar sua pergunta no momento.'
+      role: "assistant",
+      content:
+        response.text ||
+        "Desculpe, não consegui processar sua pergunta no momento.",
     });
   } catch (error) {
-    console.error('Erro ao chamar API de IA:', error);
+    console.error("Erro ao chamar API de IA:", error);
     chatMessages.value.push({
-      role: 'assistant',
-      content: 'Ops! Estou com dificuldades técnicas no momento. Tente novamente em instantes.'
+      role: "assistant",
+      content:
+        "Ops! Estou com dificuldades técnicas no momento. Tente novamente em instantes.",
     });
   } finally {
     chatTyping.value = false;

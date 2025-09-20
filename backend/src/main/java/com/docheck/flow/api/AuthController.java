@@ -32,15 +32,56 @@ public class AuthController {
 
                     return ResponseEntity.ok(Map.of(
                             "token", generateMockToken(u),
-                            "user", new UserDTO(
-                                    u.getId(), u.getName(), u.getEmail(), u.getRoles(),
-                                    u.getCpf(), u.getCnpj(), u.getRg(),
-                                    u.getBanco(), u.getAgencia(), u.getConta(), u.getTipoConta(),
-                                    u.getPixTipo(), u.getPixChave(),
-                                    u.getFotoPerfilUrl(), u.getComprovanteEnderecoUrl(),
-                                    u.getUltimoIpAcesso(), u.getUltimaLocalizacao(),
-                                    u.getIpCadastro(), u.getLocalizacaoCadastro()
-                            )
+                            "user", UserDTO.builder()
+                                    .id(u.getId())
+                                    .name(u.getName())
+                                    .email(u.getEmail())
+                                    .roles(u.getRoles())
+                                    .superUser(u.isSuperUser())
+                                    .cpf(u.getCpf())
+                                    .cnpj(u.getCnpj())
+                                    .rg(u.getRg())
+                                    .telefone(u.getTelefone())
+                                    .endereco(u.getEndereco())
+                                    .enderecoRua(u.getEnderecoRua())
+                                    .enderecoNumero(u.getEnderecoNumero())
+                                    .enderecoComplemento(u.getEnderecoComplemento())
+                                    .enderecoBairro(u.getEnderecoBairro())
+                                    .enderecoCidade(u.getEnderecoCidade())
+                                    .enderecoEstado(u.getEnderecoEstado())
+                                    .cep(u.getCep())
+                                    .banco(u.getBanco())
+                                    .agencia(u.getAgencia())
+                                    .conta(u.getConta())
+                                    .tipoConta(u.getTipoConta())
+                                    .pixTipo(u.getPixTipo())
+                                    .pixChave(u.getPixChave())
+                                    .profileImage(u.getFotoPerfilUrl())
+                                    .fotoPerfilUrl(u.getFotoPerfilUrl())
+                                    .comprovanteEnderecoUrl(u.getComprovanteEnderecoUrl())
+                                    .documentoIdentidade(u.getDocumentoIdentidade())
+                                    .ultimoIpAcesso(u.getUltimoIpAcesso())
+                                    .ultimaLocalizacao(u.getUltimaLocalizacao())
+                                    .observacoes(u.getObservacoes())
+                                    .nomeCompleto(u.getNomeCompleto())
+                                    .quantidadeSocios(u.getQuantidadeSocios())
+                                    .enderecoEmpresa(u.getEnderecoEmpresa())
+                                    .enderecoEmpresaRua(u.getEnderecoEmpresaRua())
+                                    .enderecoEmpresaNumero(u.getEnderecoEmpresaNumero())
+                                    .enderecoEmpresaComplemento(u.getEnderecoEmpresaComplemento())
+                                    .enderecoEmpresaBairro(u.getEnderecoEmpresaBairro())
+                                    .enderecoEmpresaCidade(u.getEnderecoEmpresaCidade())
+                                    .enderecoEmpresaEstado(u.getEnderecoEmpresaEstado())
+                                    .cepEmpresa(u.getCepEmpresa())
+                                    .observacoesEmpresa(u.getObservacoesEmpresa())
+                                    .razaoSocial(u.getRazaoSocial())
+                                    .nomeFantasia(u.getNomeFantasia())
+                                    .cartaoCnpjImage(u.getCartaoCnpjImage())
+                                    .contratoSocialImage(u.getContratoSocialImage())
+                                    .qualificacaoSociosImage(u.getQualificacaoSociosImage())
+                                    .ipCadastro(u.getIpCadastro())
+                                    .localizacaoCadastro(u.getLocalizacaoCadastro())
+                                    .build()
                     ));
                 })
                 .orElseGet(() -> ResponseEntity.status(401).body(Map.of("error", "invalid_credentials")));

@@ -6,8 +6,8 @@
     <!-- Main content area -->
     <div :class="['min-h-screen transition-all duration-300 lg:pl-0', sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64']">
       <!-- Top header (optional) -->
-      <header class="bg-slate-900 border-b border-slate-700 lg:hidden">
-        <div class="flex items-center justify-between px-4 py-3">
+      <header class="app-header bg-slate-900 border-b border-slate-700 lg:hidden">
+        <div class="flex items-center justify-between px-4 py-4">
           <h1 class="text-lg font-semibold text-white">
             {{ pageTitle }}
           </h1>
