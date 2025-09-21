@@ -83,6 +83,9 @@ public class User {
     private String cartaoCnpjImage;
     private String contratoSocialImage;
     private String qualificacaoSociosImage;
+    private UserFileReference cartaoCnpjReference;
+    private UserFileReference contratoSocialReference;
+    private UserFileReference qualificacaoSociosReference;
 
     // Dados de auditoria
     private String ipCadastro;
@@ -123,6 +126,8 @@ public class User {
             outrosArquivos = new ArrayList<>();
         }
 
+        resetReviewMetadata(fileReference);
+
         // Definir onde salvar baseado no tipo
         switch (fileReference.getFileType()) {
             case "PROFILE_PHOTO":
@@ -139,12 +144,15 @@ public class User {
                 this.documentoIdentidade = fileReference.getPublicUrl();
                 break;
             case "CONTRATO_SOCIAL":
+                this.contratoSocialReference = fileReference;
                 this.contratoSocialImage = fileReference.getPublicUrl();
                 break;
             case "CARTAO_CNPJ":
+                this.cartaoCnpjReference = fileReference;
                 this.cartaoCnpjImage = fileReference.getPublicUrl();
                 break;
             case "QUALIFICACAO_SOCIOS":
+                this.qualificacaoSociosReference = fileReference;
                 this.qualificacaoSociosImage = fileReference.getPublicUrl();
                 break;
             case "RG":
@@ -154,6 +162,15 @@ public class User {
                 outrosArquivos.add(fileReference);
                 break;
         }
+    }
+
+    private void resetReviewMetadata(UserFileReference ref) {
+        if (ref == null) return;
+        ref.setStatus(DocumentReviewStatus.PENDING);
+        ref.setReviewerId(null);
+        ref.setReviewerName(null);
+        ref.setReviewedAt(null);
+        ref.setReviewNotes(null);
     }
 
     public void addTag(String tag) {
@@ -184,6 +201,12 @@ public class User {
             case "DOCUMENT":
             case "IDENTITY":
                 return documentoIdentidadeReference;
+            case "CARTAO_CNPJ":
+                return cartaoCnpjReference;
+            case "CONTRATO_SOCIAL":
+                return contratoSocialReference;
+            case "QUALIFICACAO_SOCIOS":
+                return qualificacaoSociosReference;
             default:
                 if (outrosArquivos != null) {
                     return outrosArquivos.stream()
@@ -200,6 +223,9 @@ public class User {
         if (fotoPerfilReference != null) allFiles.add(fotoPerfilReference);
         if (comprovanteEnderecoReference != null) allFiles.add(comprovanteEnderecoReference);
         if (documentoIdentidadeReference != null) allFiles.add(documentoIdentidadeReference);
+        if (cartaoCnpjReference != null) allFiles.add(cartaoCnpjReference);
+        if (contratoSocialReference != null) allFiles.add(contratoSocialReference);
+        if (qualificacaoSociosReference != null) allFiles.add(qualificacaoSociosReference);
         if (outrosArquivos != null) allFiles.addAll(outrosArquivos);
         return allFiles;
     }
@@ -220,5 +246,15 @@ public class User {
         private String uploadedFromIp;     // IP de onde foi feito o upload
         private String uploadedFromLocation; // Localização do upload (lat,lng)
         private boolean isMobileUpload;    // Se foi enviado via celular
+        @Builder.Default
+        private DocumentReviewStatus status = DocumentReviewStatus.PENDING;
+        private String reviewerId;
+        private String reviewerName;
+        private Instant reviewedAt;
+        private String reviewNotes;
+    }
+
+    public enum DocumentReviewStatus {
+        PENDING, APPROVED, REJECTED
     }
 }

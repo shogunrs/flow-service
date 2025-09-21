@@ -41,11 +41,15 @@ public class TemporaryFileController {
                     break;
                 case "ADDRESS_PROOF":
                     type = UserFileStorageService.FileType.ADDRESS_PROOF;
+                    break;
                 case "CONTRATO_SOCIAL":
                     type = UserFileStorageService.FileType.CONTRATO_SOCIAL;
                     break;
                 case "CARTAO_CNPJ":
                     type = UserFileStorageService.FileType.CARTAO_CNPJ;
+                    break;
+                case "QUALIFICACAO_SOCIOS":
+                    type = UserFileStorageService.FileType.QUALIFICACAO_SOCIOS;
                     break;
                 case "FACE_RECOGNITION":
                     type = UserFileStorageService.FileType.FACE_RECOGNITION;
@@ -98,6 +102,15 @@ public class TemporaryFileController {
                     break;
                 case "ADDRESS_PROOF":
                     type = UserFileStorageService.FileType.ADDRESS_PROOF;
+                    break;
+                case "CARTAO_CNPJ":
+                    type = UserFileStorageService.FileType.CARTAO_CNPJ;
+                    break;
+                case "CONTRATO_SOCIAL":
+                    type = UserFileStorageService.FileType.CONTRATO_SOCIAL;
+                    break;
+                case "QUALIFICACAO_SOCIOS":
+                    type = UserFileStorageService.FileType.QUALIFICACAO_SOCIOS;
                     break;
                 default:
                     return ResponseEntity.badRequest().body(

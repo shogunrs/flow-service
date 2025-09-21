@@ -75,9 +75,12 @@ public class MongoUserRepository implements UserRepository {
                 .ipCadastro(doc.getIpCadastro())
                 .localizacaoCadastro(doc.getLocalizacaoCadastro())
                 .tags(copyStrings(doc.getTags()))
-                .fotoPerfilReference(doc.getFotoPerfilReference())
-                .comprovanteEnderecoReference(doc.getComprovanteEnderecoReference())
-                .documentoIdentidadeReference(doc.getDocumentoIdentidadeReference())
+                .fotoPerfilReference(normalizeReference(doc.getFotoPerfilReference()))
+                .comprovanteEnderecoReference(normalizeReference(doc.getComprovanteEnderecoReference()))
+                .documentoIdentidadeReference(normalizeReference(doc.getDocumentoIdentidadeReference()))
+                .cartaoCnpjReference(normalizeReference(doc.getCartaoCnpjReference()))
+                .contratoSocialReference(normalizeReference(doc.getContratoSocialReference()))
+                .qualificacaoSociosReference(normalizeReference(doc.getQualificacaoSociosReference()))
                 .outrosArquivos(copyFileReferences(doc.getOutrosArquivos()))
                 .createdAt(doc.getCreatedAt())
                 .updatedAt(doc.getUpdatedAt())
@@ -137,6 +140,9 @@ public class MongoUserRepository implements UserRepository {
                 .cartaoCnpjImage(user.getCartaoCnpjImage())
                 .contratoSocialImage(user.getContratoSocialImage())
                 .qualificacaoSociosImage(user.getQualificacaoSociosImage())
+                .cartaoCnpjReference(user.getCartaoCnpjReference())
+                .contratoSocialReference(user.getContratoSocialReference())
+                .qualificacaoSociosReference(user.getQualificacaoSociosReference())
                 .ipCadastro(user.getIpCadastro())
                 .localizacaoCadastro(user.getLocalizacaoCadastro())
                 .tags(copyStrings(user.getTags()))
@@ -158,7 +164,22 @@ public class MongoUserRepository implements UserRepository {
     }
 
     private static List<User.UserFileReference> copyFileReferences(List<User.UserFileReference> refs) {
-        return refs == null ? new ArrayList<>() : new ArrayList<>(refs);
+        if (refs == null) {
+            return new ArrayList<>();
+        }
+        return refs.stream()
+                .map(MongoUserRepository::normalizeReference)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private static User.UserFileReference normalizeReference(User.UserFileReference reference) {
+        if (reference == null) {
+            return null;
+        }
+        if (reference.getStatus() == null) {
+            reference.setStatus(User.DocumentReviewStatus.PENDING);
+        }
+        return reference;
     }
 
     @Override

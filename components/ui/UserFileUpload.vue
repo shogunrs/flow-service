@@ -246,7 +246,11 @@ const props = defineProps({
   fileType: {
     type: String,
     required: true,
-    validator: (value) => ['profileImage', 'cpfImage', 'rgImage', 'cnpjImage', 'enderecoImage', 'telefoneImage', 'bancoImage', 'pixImage', 'PROFILE_PHOTO', 'ADDRESS_PROOF', 'DOCUMENT', 'RG', 'CNH', 'IDENTITY'].includes(value)
+    validator: (value) => [
+      'profileImage', 'cpfImage', 'rgImage', 'cnpjImage', 'enderecoImage', 'telefoneImage', 'bancoImage', 'pixImage',
+      'PROFILE_PHOTO', 'ADDRESS_PROOF', 'DOCUMENT', 'RG', 'CNH', 'IDENTITY',
+      'CARTAO_CNPJ', 'CONTRATO_SOCIAL', 'QUALIFICACAO_SOCIOS'
+    ].includes(value)
   },
   enableOcr: {
     type: Boolean,
@@ -303,7 +307,14 @@ const pendingFile = ref(null);
 const cropperProcessing = ref(false);
 
 const { uploadUserFile } = useUserFileUpload();
-const { extractFromCPF, extractFromRG, extractText, validateDocumentData, extractPhotoFromDocument, isProcessing, progress } = useOCR();
+const {
+  extractFromCPF,
+  extractFromRG,
+  extractText,
+  validateDocumentData,
+  isProcessing,
+  progress,
+} = useOCR();
 
 // Watch OCR progress
 watch(isProcessing, (processing) => {
@@ -448,10 +459,11 @@ async function uploadFile(file) {
     let uploadData;
 
     // Verifica se temos um userId para fazer upload normal
-    if (props.userId) {
+    const hasUser = Boolean(props.userId) && !isTemporarySession(props.userId);
+
+    if (hasUser) {
       uploadData = await uploadUserFile(props.userId, file, props.fileType);
     } else {
-      // Se não tem userId, não pode fazer upload (usuário deve ser criado primeiro)
       error.value = 'Usuário deve ser salvo antes de enviar arquivos. Preencha nome e email válidos.';
       return;
     }
@@ -582,11 +594,37 @@ function resetCrop() {
   cropper.value.reset();
 }
 
-// Helper function to check if file is a document that supports OCR
+// Helper functions ---------------------------------------------------------
+const ocrSupportedTypes = new Set([
+  'DOCUMENT',
+  'IDENTITY',
+  'CPF',
+  'CPFIMAGE',
+  'RG',
+  'RGIMAGE',
+  'CNH',
+  'CNHIMAGE',
+  'ADDRESS_PROOF',
+  'ENDERECOIMAGE',
+  'CARTAO_CNPJ',
+  'CNPJIMAGE',
+  'CONTRATO_SOCIAL',
+  'QUALIFICACAO_SOCIOS',
+]);
+
+function normalizeFileType(value) {
+  if (!value) return '';
+  return String(value).trim().toUpperCase();
+}
+
+function isTemporarySession(id) {
+  if (typeof id !== 'string') return false;
+  return id.startsWith('temp_') || id.startsWith('session_');
+}
+
 function isDocumentFile(file) {
-  // Agora suporta qualquer tipo de documento que seja imagem ou PDF
-  const documentTypes = ['cpfImage', 'rgImage', 'cnpjImage', 'profileImage', 'enderecoImage', 'telefoneImage', 'bancoImage'];
-  return documentTypes.includes(props.fileType) &&
+  const normalizedType = normalizeFileType(props.fileType);
+  return ocrSupportedTypes.has(normalizedType) &&
          (file.type.startsWith('image/') || file.type === 'application/pdf');
 }
 
@@ -598,19 +636,32 @@ async function processOCR(file) {
 
     let result;
 
-    // Choose OCR method based on file type
-    switch (props.fileType) {
-      case 'cpfImage':
+    // Escolhe o método OCR com base no tipo do arquivo solicitado
+    const normalizedType = normalizeFileType(props.fileType);
+    switch (normalizedType) {
+      case 'CPF':
+      case 'CPFIMAGE':
         result = await extractFromCPF(file);
         break;
-      case 'rgImage':
+      case 'RG':
+      case 'RGIMAGE':
+      case 'DOCUMENT':
+      case 'IDENTITY':
+      case 'CNH':
+      case 'CNHIMAGE':
         result = await extractFromRG(file);
         break;
-      case 'cnpjImage':
+      case 'CARTAO_CNPJ':
+      case 'CNPJIMAGE':
+      case 'CONTRATO_SOCIAL':
+      case 'QUALIFICACAO_SOCIOS':
+      case 'ADDRESS_PROOF':
+      case 'ENDERECOIMAGE':
         result = await extractText(file);
         break;
       default:
         result = await extractText(file);
+        break;
     }
 
     if (result && result.extractedData) {

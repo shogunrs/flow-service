@@ -1,15 +1,33 @@
+export type DocumentReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface FileUploadData {
   objectKey: string;
   publicUrl: string;
   filename: string;
   fileType: string;
+  contentType?: string;
+  fileSize?: number;
+}
+
+export interface UserFileReference extends FileUploadData {
+  contentType: string;
+  fileSize: number;
+  uploadedAt: string;
+  uploadedFromIp?: string;
+  uploadedFromLocation?: string;
+  isMobileUpload: boolean;
+  status: DocumentReviewStatus;
+  reviewerId?: string;
+  reviewerName?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
 }
 
 export function useUserFileUpload() {
   const uploadUserFile = async (
     userId: string,
     file: File,
-    fileType: "PROFILE_PHOTO" | "ADDRESS_PROOF" | "DOCUMENT"
+    fileType: string
   ): Promise<FileUploadData> => {
     try {
       // 1. Obter URL de upload presignada do backend
@@ -67,6 +85,8 @@ export function useUserFileUpload() {
         publicUrl,
         filename: file.name,
         fileType,
+        contentType: file.type,
+        fileSize: file.size,
       };
     } catch (error) {
       console.error("Upload error:", error);
@@ -142,7 +162,7 @@ export function useUserFileUpload() {
     });
   };
 
-  const getUserFiles = async (userId: string): Promise<any[]> => {
+  const getUserFiles = async (userId: string): Promise<UserFileReference[]> => {
     try {
       const { apiFetch } = await import("~/utils/api/index");
 
@@ -152,7 +172,7 @@ export function useUserFileUpload() {
         throw new Error(response.error || "Erro ao buscar arquivos do usuário");
       }
 
-      return response.data;
+      return response.data as UserFileReference[];
     } catch (error) {
       console.error("Get user files error:", error);
       throw error;
@@ -162,12 +182,12 @@ export function useUserFileUpload() {
   const getUserFileByType = async (
     userId: string,
     fileType: string
-  ): Promise<any | null> => {
+  ): Promise<UserFileReference | null> => {
     try {
       const { apiFetch } = await import("~/utils/api/index");
 
       const response = await apiFetch<any>(
-        `/api/v1/users/${userId}/files/${fileType}`
+        `/api/v1/users/${userId}/files/${fileType.toUpperCase()}`
       );
 
       if (response.success) {
@@ -175,9 +195,37 @@ export function useUserFileUpload() {
       }
 
       return null;
-    } catch (error) {
+    } catch (error: any) {
+      const status = error?.response?.status ?? error?.statusCode ?? error?.status;
+      if (status === 404) {
+        return null;
+      }
       console.error("Get user file by type error:", error);
       return null;
+    }
+  };
+
+  const updateFileStatus = async (
+    userId: string,
+    fileType: string,
+    status: DocumentReviewStatus,
+    options: { reviewerId?: string; reviewerName?: string; reviewNotes?: string } = {}
+  ): Promise<void> => {
+    try {
+      const { apiFetch } = await import("~/utils/api/index");
+
+      await apiFetch(`/api/v1/users/${userId}/files/${fileType.toUpperCase()}/status`, {
+        method: 'PATCH',
+        body: {
+          status,
+          reviewerId: options.reviewerId,
+          reviewerName: options.reviewerName,
+          reviewNotes: options.reviewNotes,
+        },
+      });
+    } catch (error) {
+      console.error('Update file status error:', error);
+      throw error;
     }
   };
 
@@ -188,5 +236,6 @@ export function useUserFileUpload() {
     getCurrentLocation,
     getUserFiles,
     getUserFileByType,
+    updateFileStatus,
   };
 }

@@ -87,6 +87,9 @@ public class UserDocument {
     private String cartaoCnpjImage;
     private String contratoSocialImage;
     private String qualificacaoSociosImage;
+    private User.UserFileReference cartaoCnpjReference;
+    private User.UserFileReference contratoSocialReference;
+    private User.UserFileReference qualificacaoSociosReference;
 
     // Dados de auditoria
     private String ipCadastro;
