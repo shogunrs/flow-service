@@ -239,11 +239,11 @@ const menuItems = computed(() => [
     description: "Gerenciar processos",
   },
   {
-    label: "Administração",
+    label: "Configurações",
     path: "/admin",
     icon: "fa-solid fa-cog",
     description: "Configurações do sistema",
-    roles: ["admin"], // Apenas para admins
+    roles: ["admin"],
     children: [
       {
         label: "Usuários",
@@ -258,10 +258,16 @@ const menuItems = computed(() => [
         description: "Gerenciar pipeline",
       },
       {
+        label: "Monitoramento",
+        path: "/admin/settings/system-health",
+        icon: "fa-solid fa-heart-pulse",
+        description: "Central de monitoramento e alertas",
+      },
+      {
         label: "Status",
-        path: "/admin/status",
+        path: "/admin/settings/status",
         icon: "fa-solid fa-tags",
-        description: "Gerenciar status",
+        description: "Gerenciar status do sistema",
       },
       {
         label: "Notificações",
@@ -271,7 +277,7 @@ const menuItems = computed(() => [
       },
       {
         label: "Centro IA",
-        path: "/admin/ia",
+        path: "/admin/settings/ia",
         icon: "fa-solid fa-robot",
         description: "Centro de treinamento de IA",
       },
