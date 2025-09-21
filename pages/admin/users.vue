@@ -541,6 +541,7 @@
                 :enable-ocr="true"
                 :form-data="{ nome: userForm.name, email: userForm.email }"
                 @ocr-result="onOcrResult"
+                @file-uploaded="() => handleDocumentUploaded('DOCUMENT')"
               />
               <UserFileUpload
                 label="Comprovante de endereço"
@@ -549,21 +550,81 @@
                 :user-id="currentUserId || tempUploadSessionId"
                 file-type="ADDRESS_PROOF"
                 :temporary-mode="!currentUserId"
+                @file-uploaded="() => handleDocumentUploaded('ADDRESS_PROOF')"
               />
-            </div>
-            <div class="mt-4 rounded-lg border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-xs text-slate-300">
-              <p class="text-slate-200 font-semibold flex items-center gap-2">
-                <i class="fa-solid fa-lightbulb text-amber-400"></i>
-                Dica de validação
+          </div>
+          <div class="mt-4 rounded-lg border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-xs text-slate-300">
+            <p class="text-slate-200 font-semibold flex items-center gap-2">
+              <i class="fa-solid fa-lightbulb text-amber-400"></i>
+              Dica de validação
               </p>
               <p class="mt-2">
                 Após o upload, o Tesseract fará a leitura automática do nome e CPF para comparar com as informações digitadas.
               </p>
               <p class="mt-2 text-slate-400">
                 Utilize documentos legíveis, sem cortes, para maximizar a precisão da leitura.
-              </p>
-            </div>
+            </p>
           </div>
+        </div>
+
+        <div class="border-t border-slate-700/50 pt-4 mb-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div>
+              <h4 class="text-sm font-medium text-slate-300">Revisão de documentos</h4>
+              <p class="text-xs text-slate-400">Acompanhe o status e aprove ou reprove documentos enviados.</p>
+            </div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-md bg-indigo-500/15 px-4 py-2 text-xs font-semibold text-indigo-200 hover:bg-indigo-500/25 transition disabled:opacity-60"
+              @click="openDocumentApproval"
+              :disabled="!currentUserId"
+            >
+              <i class="fa-solid fa-magnifying-glass"></i>
+              Abrir revisão detalhada
+            </button>
+          </div>
+
+          <div v-if="!currentUserId" class="text-xs text-slate-400">
+            Salve o usuário para disponibilizar os documentos para revisão.
+          </div>
+
+          <div v-else>
+            <div v-if="summariesLoading" class="text-xs text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              Atualizando status dos documentos...
+            </div>
+            <div v-else-if="documentSummaries.length" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div
+                v-for="doc in documentSummaries"
+                :key="doc.fileType"
+                class="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-3 space-y-2"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-semibold text-slate-200">{{ resolveDocumentLabel(doc.fileType) }}</span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" :class="statusBadgeClass(doc.status)">
+                    <i
+                      class="fa-solid"
+                      :class="{
+                        'fa-clock': doc.status === 'PENDING',
+                        'fa-check': doc.status === 'APPROVED',
+                        'fa-xmark': doc.status === 'REJECTED'
+                      }"
+                    ></i>
+                    {{ statusLabel(doc.status) }}
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400 truncate">{{ doc.filename || 'Aguardando envio' }}</p>
+                <p v-if="doc.reviewerName" class="text-[11px] text-slate-500">
+                  Última revisão por {{ doc.reviewerName }}
+                </p>
+                <p v-else class="text-[11px] text-slate-500">Sem revisão registrada.</p>
+              </div>
+            </div>
+            <p v-else class="text-xs text-slate-400">
+              Nenhum documento enviado para revisão.
+            </p>
+          </div>
+        </div>
 
           <!-- Acesso ao Sistema -->
           <div class="border-t border-slate-700/50 pt-4">
@@ -837,6 +898,7 @@
                   :user-id="currentUserId || tempUploadSessionId"
                   file-type="CARTAO_CNPJ"
                   :temporary-mode="!currentUserId"
+                  @file-uploaded="() => handleDocumentUploaded('CARTAO_CNPJ')"
                 />
               </div>
               <div>
@@ -847,6 +909,7 @@
                   :user-id="currentUserId || tempUploadSessionId"
                   file-type="CONTRATO_SOCIAL"
                   :temporary-mode="!currentUserId"
+                  @file-uploaded="() => handleDocumentUploaded('CONTRATO_SOCIAL')"
                 />
               </div>
             </div>
@@ -859,6 +922,7 @@
                   :user-id="currentUserId || tempUploadSessionId"
                   file-type="QUALIFICACAO_SOCIOS"
                   :temporary-mode="!currentUserId"
+                  @file-uploaded="() => handleDocumentUploaded('QUALIFICACAO_SOCIOS')"
                 />
               </div>
             </div>
@@ -1042,13 +1106,21 @@
         </div>
       </template>
     </BaseModal>
+    <DocumentApprovalModal
+      v-model="showDocumentApprovalModal"
+      entity-type="USER"
+      :entity-id="currentUserId || ''"
+      context-label="cadastro"
+      @decision="onDocumentDecision"
+    />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import BaseModal from "~/components/ui/BaseModal.vue";
 import UserFileUpload from "~/components/ui/UserFileUpload.vue";
+import DocumentApprovalModal from "~/components/ui/DocumentApprovalModal.vue";
 import {
   fetchUsersApi,
   updateUserApi,
@@ -1059,6 +1131,8 @@ import {
 import { getApiBase } from "~/utils/api/index";
 import { useGeolocation } from "~/composables/useGeolocation";
 import { useToast } from "~/composables/useToast";
+import { useDocumentApproval, type DocumentApprovalFile } from "~/composables/useDocumentApproval";
+import { useCurrentUser } from "~/composables/useCurrentUser";
 
 definePageMeta({
   layout: "sidebar",
@@ -1068,7 +1142,9 @@ definePageMeta({
 // Composables
 const { getCurrentLocation, formatLocation } = useGeolocation();
 const { success: toastSuccess, error: toastError } = useToast();
+const { listDocumentFiles } = useDocumentApproval();
 const apiBaseUrl = getApiBase()?.replace(/\/$/, "") || "";
+const { user: currentUser, load: loadCurrentUser } = useCurrentUser();
 
 const resolveStorageUrl = (rawUrl) => {
   if (!rawUrl) return "";
@@ -1313,6 +1389,83 @@ const companyCepValid = computed(() => {
   return digits.length === 8 && !companyCepLoading.value && !companyCepError.value;
 });
 
+watch(currentUserId, (newId) => {
+  refreshDocumentSummaries(newId);
+});
+
+const documentSummaryLabels: Record<string, string> = {
+  DOCUMENT: 'Documento de identidade',
+  IDENTITY: 'Documento de identidade',
+  ADDRESS_PROOF: 'Comprovante de endereço',
+  CARTAO_CNPJ: 'Cartão CNPJ',
+  CONTRATO_SOCIAL: 'Contrato social',
+  QUALIFICACAO_SOCIOS: 'Qualificação dos sócios',
+  PROFILE_PHOTO: 'Foto do usuário',
+};
+
+const documentSummaries = ref<DocumentApprovalFile[]>([]);
+const summariesLoading = ref(false);
+const showDocumentApprovalModal = ref(false);
+
+const statusLabel = (status?: string) => {
+  switch (status) {
+    case 'APPROVED':
+      return 'Aprovado';
+    case 'REJECTED':
+      return 'Rejeitado';
+    default:
+      return 'Pendente';
+  }
+};
+
+const statusBadgeClass = (status?: string) => {
+  switch (status) {
+    case 'APPROVED':
+      return 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+    case 'REJECTED':
+      return 'bg-rose-500/15 text-rose-300 border border-rose-500/30';
+    default:
+      return 'bg-amber-500/15 text-amber-300 border border-amber-500/30';
+  }
+};
+
+const resolveDocumentLabel = (fileType?: string) => {
+  if (!fileType) return 'Documento';
+  return documentSummaryLabels[fileType.toUpperCase()] || fileType.toUpperCase();
+};
+
+const refreshDocumentSummaries = async (userId?: string | null) => {
+  if (!userId) {
+    documentSummaries.value = [];
+    return;
+  }
+  try {
+    summariesLoading.value = true;
+    documentSummaries.value = await listDocumentFiles('USER', userId);
+  } catch (error) {
+    console.error('Erro ao carregar resumo de documentos', error);
+    documentSummaries.value = [];
+  } finally {
+    summariesLoading.value = false;
+  }
+};
+
+const handleDocumentUploaded = async (fileType: string) => {
+  if (!userForm.value.id) return;
+  await refreshDocumentSummaries(userForm.value.id);
+};
+
+const openDocumentApproval = () => {
+  if (!currentUserId.value) return;
+  showDocumentApprovalModal.value = true;
+};
+
+const onDocumentDecision = async () => {
+  if (currentUserId.value) {
+    await refreshDocumentSummaries(currentUserId.value);
+  }
+};
+
 const applyAddressData = (target, res, base = 'endereco') => {
   if (!target || !base) return;
   const set = (suffix, value) => {
@@ -1525,6 +1678,8 @@ async function openNewUserModal() {
   imageError.value = false;
   imageLoading.value = false;
   imageUploaded.value = false;
+  documentSummaries.value = [];
+  summariesLoading.value = false;
 
   showUserModal.value = true;
 }
@@ -1602,6 +1757,7 @@ async function editUser(user) {
 
   // Buscar URL presigned para a foto se existir
   await loadUserProfilePhotoUrl(user.fotoPerfilUrl);
+  await refreshDocumentSummaries(user.id);
 
   showUserModal.value = true;
 }
@@ -1812,6 +1968,8 @@ async function deleteUser(userId) {
 
 function closeUserModal() {
   showUserModal.value = false;
+  documentSummaries.value = [];
+  summariesLoading.value = false;
   userForm.value = {
     id: null,
     name: "",
@@ -1876,6 +2034,7 @@ async function createBasicUser() {
     if (response?.id) {
       // Usuário criado com sucesso - agora podemos usar uploads normais
       userForm.value.id = response.id;
+      await refreshDocumentSummaries(response.id);
 
       toastSuccess(`Usuário ${name} salvo. Continue preenchendo os dados.`);
 
@@ -2206,6 +2365,7 @@ async function loadUserProfilePhotoUrl(fotoPerfilUrl) {
 
 // Load users on mount
 onMounted(() => {
+  loadCurrentUser();
   loadUsersList();
 });
 </script>

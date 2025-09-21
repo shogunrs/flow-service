@@ -216,9 +216,19 @@ public class UserService {
             String uploadedFromIp, String uploadedFromLocation, boolean isMobileUpload) {
         User user = repo.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        User.UserFileReference fileReference = new User.UserFileReference(
-                objectKey, publicUrl, filename, fileType, contentType, fileSize,
-                Instant.now(), uploadedFromIp, uploadedFromLocation, isMobileUpload);
+        User.UserFileReference fileReference = User.UserFileReference.builder()
+                .objectKey(objectKey)
+                .publicUrl(publicUrl)
+                .filename(filename)
+                .fileType(fileType)
+                .contentType(contentType)
+                .fileSize(fileSize)
+                .uploadedAt(Instant.now())
+                .uploadedFromIp(uploadedFromIp)
+                .uploadedFromLocation(uploadedFromLocation)
+                .isMobileUpload(isMobileUpload)
+                .status(User.DocumentReviewStatus.PENDING)
+                .build();
 
         user.addFileReference(fileReference);
         user.setUpdatedAt(Instant.now());
@@ -247,6 +257,24 @@ public class UserService {
     public User.UserFileReference getUserFileByType(String userId, String fileType) {
         User user = repo.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         return user.getFileByType(fileType);
+    }
+
+    public void updateFileStatus(String userId, String fileType, User.DocumentReviewStatus status,
+            String reviewerId, String reviewerName, String reviewNotes) {
+        User user = repo.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User.UserFileReference reference = user.getFileByType(fileType);
+        if (reference == null) {
+            throw new IllegalArgumentException("File reference not found for type " + fileType);
+        }
+
+        reference.setStatus(status);
+        reference.setReviewerId(reviewerId);
+        reference.setReviewerName(reviewerName);
+        reference.setReviewNotes(reviewNotes);
+        reference.setReviewedAt(Instant.now());
+
+        user.setUpdatedAt(Instant.now());
+        repo.save(user);
     }
 
     private static String normalizeEmail(String email) {

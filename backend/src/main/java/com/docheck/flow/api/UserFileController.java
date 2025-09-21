@@ -2,13 +2,16 @@ package com.docheck.flow.api;
 
 import com.docheck.flow.api.dto.FileUploadRequestDTO;
 import com.docheck.flow.application.service.UserService;
+import com.docheck.flow.domain.model.User;
 import com.docheck.flow.infrastructure.storage.UserFileStorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -16,6 +19,10 @@ public class UserFileController {
 
     private final UserFileStorageService userFileStorageService;
     private final UserService userService;
+
+    private static final String ALLOWED_FILE_TYPES = Arrays.stream(UserFileStorageService.FileType.values())
+            .map(Enum::name)
+            .collect(Collectors.joining(", "));
 
     public UserFileController(UserFileStorageService userFileStorageService, UserService userService) {
         this.userFileStorageService = userFileStorageService;
@@ -32,7 +39,7 @@ public class UserFileController {
                 fileType = UserFileStorageService.FileType.valueOf(request.fileType().toUpperCase());
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().body(
-                    Map.of("error", "Invalid file type. Allowed types: PROFILE_PHOTO, ADDRESS_PROOF, DOCUMENT")
+                    Map.of("error", "Invalid file type. Allowed types: " + ALLOWED_FILE_TYPES)
                 );
             }
 
@@ -192,6 +199,30 @@ public class UserFileController {
             );
         }
     }
+
+    @PatchMapping("/{userId}/files/{fileType}/status")
+    public ResponseEntity<?> updateFileStatus(@PathVariable("userId") String userId,
+                                             @PathVariable("fileType") String fileType,
+                                             @RequestBody UpdateFileStatusRequest body) {
+        try {
+            User.DocumentReviewStatus status = User.DocumentReviewStatus.valueOf(body.status().toUpperCase());
+            userService.updateFileStatus(userId, fileType.toUpperCase(), status,
+                    body.reviewerId(), body.reviewerName(), body.reviewNotes());
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "status", status.name()
+            ));
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.badRequest().body(Map.of("error", iae.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                    Map.of("error", "Error updating file status: " + e.getMessage())
+            );
+        }
+    }
+
+    public record UpdateFileStatusRequest(String status, String reviewerId, String reviewerName, String reviewNotes) {}
 
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");

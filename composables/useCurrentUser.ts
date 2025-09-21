@@ -3,9 +3,10 @@ import { ref } from 'vue'
 export type CurrentUser = {
   id: string
   roles: string[]
+  name?: string
 }
 
-const state = ref<CurrentUser>({ id: 'u-guest', roles: ['guest'] })
+const state = ref<CurrentUser>({ id: 'u-guest', roles: ['guest'], name: 'Guest' })
 
 export function useCurrentUser(){
   function setUser(u: CurrentUser){
@@ -17,4 +18,3 @@ export function useCurrentUser(){
   }
   return { user: state, setUser, load }
 }
-
