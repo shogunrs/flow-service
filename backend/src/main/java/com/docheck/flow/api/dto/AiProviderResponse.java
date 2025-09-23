@@ -29,8 +29,20 @@ public class AiProviderResponse {
         dto.setModels(entity.getModels());
 
         // Mask the API key for security
-        if (entity.getApiKey() != null && !entity.getApiKey().isEmpty()) {
-            dto.setApiKey("********");
+        String apiKey = entity.getApiKey();
+        if (apiKey != null && !apiKey.isEmpty()) {
+            String masked;
+            if (apiKey.length() > 6) {
+                // mostra 3 primeiros e 3 últimos
+                masked = apiKey.substring(0, 3)
+                        + "*".repeat(apiKey.length() - 6)
+                        + apiKey.substring(apiKey.length() - 3);
+            } else {
+                // menor ou igual a 6 -> mostra só os 3 últimos
+                masked = "*".repeat(Math.max(0, apiKey.length() - 3))
+                        + apiKey.substring(Math.max(0, apiKey.length() - 3));
+            }
+            dto.setApiKey(masked);
         } else {
             dto.setApiKey(null);
         }

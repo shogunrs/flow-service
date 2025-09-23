@@ -76,6 +76,12 @@
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/SystemHealthEventService.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/UserService.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/command/UserWriteCommand.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/provider/ChatProvider.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/provider/ChatProviderFactory.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/provider/GeminiProvider.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/provider/GroqProvider.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/provider/OpenAiProvider.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/security/EncryptionService.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/configuration/JacksonConfiguration.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/domain/model/AiCredential.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/domain/model/AiModelConfig.java

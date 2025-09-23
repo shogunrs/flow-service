@@ -1,14 +1,15 @@
 package com.docheck.flow.api;
 
-import com.docheck.flow.api.dto.ChatRequest;
-import com.docheck.flow.api.dto.ChatResponse;
 import com.docheck.flow.api.dto.AiProviderResponse;
 import com.docheck.flow.api.dto.AiProviderUpdateRequest;
+import com.docheck.flow.api.dto.ChatRequest;
+import com.docheck.flow.api.dto.ChatResponse;
 import com.docheck.flow.application.service.AiProviderService;
 import com.docheck.flow.domain.model.AiProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,10 +27,7 @@ public class AiProviderController {
             @PathVariable String id,
             @RequestBody AiProviderUpdateRequest request) {
 
-        // In a real app, the name would likely be part of the request or handled
-        // differently
         String name = Character.toUpperCase(id.charAt(0)) + id.substring(1);
-
         AiProvider updatedProvider = aiProviderService.updateProvider(id, name, request);
         return ResponseEntity.ok(AiProviderResponse.fromEntity(updatedProvider));
     }
@@ -51,8 +49,19 @@ public class AiProviderController {
 
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> getChatResponse(@RequestBody ChatRequest request) {
-        // This will call a new method in AiProviderService to handle the chat logic
         ChatResponse response = aiProviderService.getChatResponse(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/ollama/status")
+    public Mono<ResponseEntity<String>> checkOllamaStatus() {
+        return aiProviderService.checkOllamaStatus()
+                .map(ResponseEntity::ok);
+    }
+
+    @GetMapping("/ollama/models")
+    public Mono<ResponseEntity<List<String>>> getOllamaModels() {
+        return aiProviderService.getOllamaModels()
+                .map(ResponseEntity::ok);
     }
 }

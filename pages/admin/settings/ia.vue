@@ -508,11 +508,11 @@
             </h4>
             <div class="flex flex-col sm:flex-row gap-3">
               <button
-                @click="startOllamaServer"
+                @click="checkOllamaStatus"
                 class="flex-1 w-full bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/30 text-slate-300 hover:text-white rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300"
               >
-                <i class="fa-solid fa-power-off mr-2"></i>
-                Verificar/Iniciar Servidor
+                <i class="fa-solid fa-wifi mr-2"></i>
+                Verificar Status
               </button>
               <button
                 @click="syncOllamaModels"
@@ -568,12 +568,27 @@
               <i class="fa-solid fa-key mr-1 text-slate-400"></i>
               API Key
             </label>
-            <input
-              v-model="providerForm.apiKey"
-              type="password"
-              class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
-              placeholder="Chave da API (será criptografada)"
-            />
+            <div v-if="!editingApiKey" class="flex items-center gap-2">
+              <input
+                :value="providerForm.apiKey"
+                type="text"
+                readonly
+                class="flex-grow w-full bg-slate-900/60 border border-slate-700/50 text-slate-400 rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
+                placeholder="Nenhuma chave definida"
+              />
+              <button @click="editingApiKey = true" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-white rounded-lg text-sm font-medium transition-colors">
+                Alterar
+              </button>
+            </div>
+            <div v-else>
+              <input
+                v-model="newApiKey"
+                type="text"
+                class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
+                placeholder="Cole sua nova chave de API aqui..."
+              />
+              <p class="text-xs text-slate-400 mt-2">A chave será salva de forma segura. Deixe em branco para cancelar a alteração.</p>
+            </div>
           </div>
 
           <!-- Base URL -->
@@ -729,7 +744,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useToast } from "../../../composables/useToast";
 
 const toast = useToast();
@@ -773,7 +788,7 @@ const providers = ref({
   groq: {
     active: false,
     apiKey: "",
-    baseUrl: "https://api.groq.com/openai/v1",
+    baseUrl: "https://api.groq.com/openai/v1/chat/completions",
     models: [],
     selectedModel: "",
     status: "unknown",
@@ -796,6 +811,8 @@ const newModelName = ref("");
 const isSyncingModels = ref(false);
 const showConsole = ref(false);
 const consoleOutput = ref([]);
+const editingApiKey = ref(false);
+const newApiKey = ref("");
 
 const providerForm = ref({
   apiKey: "",
@@ -822,30 +839,54 @@ onMounted(async () => {
           newProvidersState[p.id] = {
             ...newProvidersState[p.id],
             ...p,
-            apiKey: p.apiKey ? "********" : "",
+            apiKey: p.apiKey ? maskApiKey(p.apiKey) : "",
           };
         }
       });
       providers.value = newProvidersState;
       console.log("Successfully loaded provider configurations from backend.");
+      toast.info("Configurações de IA carregadas.");
     }
   } catch (error) {
     console.error("Could not fetch provider configurations:", error);
-    toast.warning("perda de conexão: Não foi possível conectar ao servidor");
+    toast.error("Falha ao carregar as configurações de IA do servidor.");
   }
 });
 
 // --- Modal & Form Logic ---
+function maskApiKey(apiKey) {
+  if (!apiKey) {
+    return "";
+  }
+
+  const underscoreIndex = apiKey.indexOf('_');
+  
+  if (underscoreIndex === -1 || apiKey.length < underscoreIndex + 5) {
+    if (apiKey.length < 8) {
+        return "********";
+    }
+    const prefix = apiKey.substring(0, 4);
+    const suffix = apiKey.substring(apiKey.length - 4);
+    return `${prefix}...${suffix}`;
+  }
+
+  const prefix = apiKey.substring(0, underscoreIndex + 1);
+  const suffix = apiKey.substring(apiKey.length - 4);
+  return `${prefix}......${suffix}`;
+}
+
 function openProviderModal(providerKey) {
   currentProviderKey.value = providerKey;
   const providerData = providers.value[providerKey];
   providerForm.value = {
-    apiKey: "", // Always clear API key field for security
+    apiKey: providerData.apiKey,
     baseUrl: providerData.baseUrl,
     selectedModel: providerData.selectedModel,
     models: [...providerData.models],
   };
-  showConsole.value = false; // Hide console when opening a new modal
+  editingApiKey.value = !providerData.apiKey;
+  newApiKey.value = "";
+  showConsole.value = false;
   consoleOutput.value = [];
   showProviderModal.value = true;
 }
@@ -875,16 +916,19 @@ async function saveProviderSettings() {
   if (!currentProviderKey.value) return;
   const providerKey = currentProviderKey.value;
 
+  let apiKeyToSend = newApiKey.value;
+
   // For Ollama, the API key is not needed and should not be sent.
-  const apiKeyToSend =
-    providerKey === "ollama" ? "" : providerForm.value.apiKey;
+  if (providerKey === "ollama") {
+    apiKeyToSend = "";
+  }
 
   const payload = {
     apiKey: apiKeyToSend,
     baseUrl: providerForm.value.baseUrl,
     selectedModel: providerForm.value.selectedModel,
     models: providerForm.value.models,
-    active: providerKey === "ollama" ? true : !!providerForm.value.apiKey,
+    active: providerKey === "ollama" ? true : (!!newApiKey.value || !!providers.value[providerKey].apiKey),
   };
 
   try {
@@ -897,71 +941,72 @@ async function saveProviderSettings() {
       }
     );
 
+    const originalApiKey = providers.value[providerKey].apiKey;
+    const finalApiKey = apiKeyToSend ? maskApiKey(apiKeyToSend) : originalApiKey;
+
     providers.value[providerKey] = {
       ...providers.value[providerKey],
       ...updatedProvider,
+      apiKey: finalApiKey,
     };
 
+    toast.success("Configurações do provedor salvas com sucesso!");
     console.log("Successfully saved provider settings.");
     closeProviderModal();
   } catch (error) {
     console.error("Failed to save provider settings:", error);
-    alert("Error: Could not save settings to the Java server.");
+    toast.error(`Erro ao salvar as configurações: ${error.data?.message || error.message}`);
   }
 }
 
-async function startOllamaServer() {
+async function checkOllamaStatus() {
   showConsole.value = true;
-  consoleOutput.value = [
-    { text: "Attempting to start Ollama server via backend..." },
-  ];
+  consoleOutput.value = [{ text: "Verificando status do servidor Ollama..." }];
   try {
-    const result = await $fetch(`${apiBaseUrl}/ollama/start`, {
-      method: "POST",
-    });
-    result.stdout.forEach((line) => consoleOutput.value.push({ text: line }));
-    result.stderr.forEach((line) =>
-      consoleOutput.value.push({ text: line, type: "error" })
-    );
+    const result = await $fetch(`${apiBaseUrl}/ai-providers/ollama/status`);
+    consoleOutput.value.push({ text: `Status: ${result.status}` });
+    toast.success(`Servidor Ollama está ${result.status}.`);
+    if (result.status === 'online') {
+        providers.value.ollama.status = 'valid';
+    } else {
+        providers.value.ollama.status = 'invalid';
+    }
   } catch (error) {
-    console.error("Failed to start Ollama server:", error);
+    console.error("Falha ao verificar status do Ollama:", error);
     consoleOutput.value.push({
-      text: `Error: ${error.data?.message || error.message}`,
+      text: `Erro: ${error.data?.message || error.message}`,
       type: "error",
     });
+    toast.error("Não foi possível verificar o status do servidor Ollama.");
+    providers.value.ollama.status = 'invalid';
   }
 }
 
 async function syncOllamaModels() {
   isSyncingModels.value = true;
   showConsole.value = true;
-  consoleOutput.value = [{ text: "$ ollama list" }];
+  consoleOutput.value = [{ text: "Buscando modelos do Ollama..." }];
 
   try {
-    const result = await $fetch(`${apiBaseUrl}/ollama/list`);
-    result.stdout.forEach((line) => consoleOutput.value.push({ text: line }));
+    const models = await $fetch(`${apiBaseUrl}/ai-providers/ollama/models`);
+    
+    consoleOutput.value.push({ text: `Modelos encontrados: ${models.join(', ')}` });
 
-    if (result.stderr && result.stderr.length > 0) {
-      throw new Error(result.stderr.join("\n"));
+    providerForm.value.models = models;
+    if (!providerForm.value.selectedModel && models.length > 0) {
+      providerForm.value.selectedModel = models[0];
     }
+    console.log("Modelos Ollama sincronizados:", models);
+    consoleOutput.value.push({ text: "\nSincronização concluída! Salve as configurações para persistir a lista." });
+    toast.info("Lista de modelos sincronizada. Clique em Salvar para aplicar.");
 
-    const lines = result.stdout;
-    if (lines.length > 1) {
-      // Assuming the first line is the header
-      const models = lines.slice(1).map((line) => line.split(/\s+/)[0]);
-      providerForm.value.models = models;
-      if (!providerForm.value.selectedModel && models.length > 0) {
-        providerForm.value.selectedModel = models[0];
-      }
-      console.log("Ollama models synced:", models);
-      consoleOutput.value.push({ text: "\nSync successful!" });
-    }
   } catch (error) {
-    console.error("Failed to sync Ollama models:", error);
+    console.error("Falha ao sincronizar modelos Ollama:", error);
     consoleOutput.value.push({
-      text: `Error syncing Ollama models: ${error.message}`,
+      text: `Erro ao sincronizar modelos: ${error.data?.message || error.message}`,
       type: "error",
     });
+    toast.error("Não foi possível sincronizar os modelos do Ollama.");
   } finally {
     isSyncingModels.value = false;
   }
