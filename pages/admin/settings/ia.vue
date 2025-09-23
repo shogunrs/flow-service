@@ -48,15 +48,25 @@
               <div class="grid grid-cols-5 gap-4">
                 <!-- OpenAI -->
                 <button
-                  @click="toggleProvider('openai')"
+                  @click="openProviderModal('openai')"
                   :class="[
                     'group relative p-3 rounded-lg border-2 transition-all duration-300 hover:scale-105',
-                    providers.openai
+                    providers.openai.active
                       ? 'border-green-500 bg-green-500/10 shadow-lg shadow-green-500/25'
                       : 'border-slate-600/30 bg-slate-800/40 hover:border-green-500/50',
                   ]"
-                  :title="providers.openai ? 'OpenAI Ativo' : 'Ativar OpenAI'"
+                  title="Configurar OpenAI"
                 >
+                  <div
+                    v-if="providers.openai.status === 'valid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Válida"
+                  ></div>
+                  <div
+                    v-if="providers.openai.status === 'invalid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Inválida"
+                  ></div>
                   <img
                     src="../../../assets/icons/png/11865338.png"
                     class="w-6 h-6 mx-auto"
@@ -66,7 +76,7 @@
                     OpenAI
                   </div>
                   <div
-                    v-if="providers.openai"
+                    v-if="providers.openai.active"
                     class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center"
                   >
                     <i class="fa-solid fa-check text-white text-[6px]"></i>
@@ -75,15 +85,25 @@
 
                 <!-- Gemini -->
                 <button
-                  @click="toggleProvider('gemini')"
+                  @click="openProviderModal('gemini')"
                   :class="[
                     'group relative p-3 rounded-lg border-2 transition-all duration-300 hover:scale-105',
-                    providers.gemini
+                    providers.gemini.active
                       ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/25'
                       : 'border-slate-600/30 bg-slate-800/40 hover:border-blue-500/50',
                   ]"
-                  :title="providers.gemini ? 'Gemini Ativo' : 'Ativar Gemini'"
+                  title="Configurar Gemini"
                 >
+                  <div
+                    v-if="providers.gemini.status === 'valid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Válida"
+                  ></div>
+                  <div
+                    v-if="providers.gemini.status === 'invalid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Inválida"
+                  ></div>
                   <img
                     src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
                     class="w-6 h-6 mx-auto"
@@ -93,7 +113,7 @@
                     Gemini
                   </div>
                   <div
-                    v-if="providers.gemini"
+                    v-if="providers.gemini.active"
                     class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center"
                   >
                     <i class="fa-solid fa-check text-white text-[6px]"></i>
@@ -102,27 +122,37 @@
 
                 <!-- Claude -->
                 <button
-                  @click="toggleProvider('claude')"
+                  @click="openProviderModal('claude')"
                   :class="[
                     'group relative p-3 rounded-lg border-2 transition-all duration-300 hover:scale-105',
-                    providers.claude
+                    providers.claude.active
                       ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/25'
                       : 'border-slate-600/30 bg-slate-800/40 hover:border-orange-500/50',
                   ]"
-                  :title="providers.claude ? 'Claude Ativo' : 'Ativar Claude'"
+                  title="Configurar Claude"
                 >
+                  <div
+                    v-if="providers.claude.status === 'valid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Válida"
+                  ></div>
+                  <div
+                    v-if="providers.claude.status === 'invalid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Inválida"
+                  ></div>
                   <div>
                     <img
-                    src="../../../assets/icons/png/claude-ai-icon.webp"
+                      src="../../../assets/icons/png/claude-ai-icon.webp"
                       class="w-6 h-6 mx-auto"
-                      alt="Google"
+                      alt="Claude"
                     />
                   </div>
                   <div class="text-xs text-center mt-1 text-white font-medium">
                     Claude
                   </div>
                   <div
-                    v-if="providers.claude"
+                    v-if="providers.claude.active"
                     class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center"
                   >
                     <i class="fa-solid fa-check text-white text-[6px]"></i>
@@ -131,28 +161,38 @@
 
                 <!-- Groq -->
                 <button
-                  @click="toggleProvider('groq')"
+                  @click="openProviderModal('groq')"
                   :class="[
                     'group relative p-3 rounded-lg border-2 transition-all duration-300 hover:scale-105',
-                    providers.groq
-                      ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/25'
-                      : 'border-slate-600/30 bg-slate-800/40 hover:border-orange-500/50',
+                    providers.groq.active
+                      ? 'border-yellow-500 bg-yellow-500/10 shadow-lg shadow-yellow-500/25'
+                      : 'border-slate-600/30 bg-slate-800/40 hover:border-yellow-500/50',
                   ]"
-                  :title="providers.groq ? 'Groq Ativo' : 'Ativar Groq'"
+                  title="Configurar Groq"
                 >
+                  <div
+                    v-if="providers.groq.status === 'valid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Válida"
+                  ></div>
+                  <div
+                    v-if="providers.groq.status === 'invalid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Inválida"
+                  ></div>
                   <div>
                     <img
                       src="../../../assets/icons/svg/groq.svg"
                       class="w-6 h-6 mx-auto"
-                      alt="Google"
+                      alt="Groq"
                     />
                   </div>
                   <div class="text-xs text-center mt-1 text-white font-medium">
                     Groq
                   </div>
                   <div
-                    v-if="providers.groq"
-                    class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center"
+                    v-if="providers.groq.active"
+                    class="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full flex items-center justify-center"
                   >
                     <i class="fa-solid fa-check text-white text-[6px]"></i>
                   </div>
@@ -160,137 +200,147 @@
 
                 <!-- Ollama -->
                 <button
-                  @click="toggleProvider('ollama')"
+                  @click="openProviderModal('ollama')"
                   :class="[
                     'group relative p-3 rounded-lg border-2 transition-all duration-300 hover:scale-105',
-                    providers.ollama
+                    providers.ollama.active
                       ? 'border-slate-500 bg-slate-500/10 shadow-lg shadow-slate-500/25'
                       : 'border-slate-600/30 bg-slate-800/40 hover:border-slate-500/50',
                   ]"
-                  :title="providers.ollama ? 'Ollama Ativo' : 'Ativar Ollama'"
+                  title="Configurar Ollama"
                 >
+                  <div
+                    v-if="providers.ollama.status === 'valid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Válida"
+                  ></div>
+                  <div
+                    v-if="providers.ollama.status === 'invalid'"
+                    class="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-800"
+                    title="Conexão Inválida"
+                  ></div>
                   <div>
                     <img
                       src="../../../assets/icons/png/olhama.png"
                       class="w-6 h-6 mx-auto"
-                      alt="Google"
+                      alt="Ollama"
                     />
                   </div>
                   <div class="text-xs text-center mt-1 text-white font-medium">
                     Ollama
                   </div>
                   <div
-                    v-if="providers.ollama"
+                    v-if="providers.ollama.active"
                     class="absolute -top-1 -right-1 w-3 h-3 bg-slate-500 rounded-full flex items-center justify-center"
                   >
                     <i class="fa-solid fa-check text-white text-[6px]"></i>
                   </div>
                 </button>
               </div>
-
-              <div class="flex gap-3 mt-6">
-                <button
-                  class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors"
-                >
-                  <i class="fa-solid fa-save mr-2"></i>
-                  Salvar Configurações
-                </button>
-                <button
-                  class="bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors"
-                >
-                  <i class="fa-solid fa-network-wired mr-2"></i>
-                  Testar Conexões
-                </button>
-              </div>
             </div>
 
-            <!-- MCP Database Connections -->
+            <!-- Chat Playground -->
             <div
               class="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl p-6"
             >
-              <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
-                  <i class="fa-solid fa-database text-xl text-cyan-400"></i>
-                  <h2 class="text-sm font-medium text-white">Conexões MCP</h2>
+                  <i class="fa-solid fa-comments text-xl text-teal-400"></i>
+                  <h2 class="text-sm font-medium text-white">
+                    Playground de Chat
+                  </h2>
                 </div>
-                <button
-                  @click="openMcpModal"
-                  class="bg-cyan-600 hover:bg-cyan-700 px-3 py-1 rounded-lg text-white text-xs font-medium transition-colors"
-                >
-                  <i class="fa-solid fa-plus mr-1"></i>
-                  Adicionar MCP
-                </button>
               </div>
 
-              <!-- MCP List -->
-              <div class="space-y-3">
-                <div
-                  v-if="mcpConnections.length === 0"
-                  class="text-center py-8 text-slate-500"
+              <!-- Model Selection -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <select
+                  v-model="selectedTestProvider"
+                  class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50"
                 >
-                  <i class="fa-solid fa-plug text-3xl mb-3"></i>
-                  <p class="text-sm">Nenhuma conexão MCP configurada</p>
-                  <p class="text-xs text-slate-400 mt-1">
-                    Adicione conexões para PostgreSQL, MongoDB ou ClickHouse
-                  </p>
-                </div>
+                  <option value="">Selecione um Provider</option>
+                  <option
+                    v-for="provider in availableTestProviders"
+                    :key="provider.id"
+                    :value="provider.id"
+                  >
+                    {{ provider.name }}
+                  </option>
+                </select>
+                <select
+                  v-model="selectedTestModel"
+                  :disabled="!selectedTestProvider"
+                  class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 disabled:opacity-50"
+                >
+                  <option value="">Selecione um Modelo</option>
+                  <option
+                    v-for="model in availableTestModels"
+                    :key="model"
+                    :value="model"
+                  >
+                    {{ model }}
+                  </option>
+                </select>
+              </div>
 
+              <!-- Chat History -->
+              <div
+                ref="chatHistoryRef"
+                class="bg-slate-900/50 border border-slate-700/30 rounded-lg p-4 h-64 overflow-y-auto mb-4 space-y-4"
+              >
                 <div
-                  v-for="(mcp, index) in mcpConnections"
-                  :key="mcp.id"
-                  class="border border-slate-600/30 bg-slate-800/40 rounded-lg p-4"
+                  v-if="chatHistory.length === 0"
+                  class="text-center text-slate-500 pt-20"
                 >
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                      <div
-                        class="w-8 h-8 rounded-lg flex items-center justify-center"
-                        :class="getMcpTypeIcon(mcp.type).bg"
-                      >
-                        <i
-                          :class="getMcpTypeIcon(mcp.type).icon"
-                          class="text-sm"
-                        ></i>
-                      </div>
-                      <div>
-                        <h3 class="font-medium text-white text-sm">
-                          {{ mcp.name }}
-                        </h3>
-                        <p class="text-xs text-slate-400">
-                          {{ mcp.type }} • {{ mcp.host }}:{{ mcp.port }}
-                        </p>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div
-                        :class="[
-                          'w-2 h-2 rounded-full',
-                          mcp.status === 'connected'
-                            ? 'bg-green-500'
-                            : 'bg-red-500',
-                        ]"
-                        :title="
-                          mcp.status === 'connected'
-                            ? 'Conectado'
-                            : 'Desconectado'
-                        "
-                      ></div>
-                      <button
-                        @click="editMcp(mcp)"
-                        class="p-1 text-slate-400 hover:text-white transition-colors"
-                        title="Editar"
-                      >
-                        <i class="fa-solid fa-edit text-xs"></i>
-                      </button>
-                      <button
-                        @click="deleteMcp(mcp.id)"
-                        class="p-1 text-red-400 hover:text-red-300 transition-colors"
-                        title="Remover"
-                      >
-                        <i class="fa-solid fa-trash text-xs"></i>
-                      </button>
-                    </div>
+                  <i class="fa-solid fa-robot text-3xl"></i>
+                  <p class="mt-2 text-sm">Nenhuma mensagem ainda.</p>
+                </div>
+                <div
+                  v-for="(message, index) in chatHistory"
+                  :key="index"
+                  class="flex"
+                  :class="
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  "
+                >
+                  <div
+                    class="max-w-xs lg:max-w-md rounded-lg px-4 py-2"
+                    :class="
+                      message.role === 'user'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-700 text-slate-200'
+                    "
+                  >
+                    <p class="text-sm">{{ message.content }}</p>
                   </div>
                 </div>
+                <div v-if="isModelResponding" class="flex justify-start">
+                  <div
+                    class="max-w-xs lg:max-w-md rounded-lg px-4 py-2 bg-slate-700 text-slate-200"
+                  >
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chat Input -->
+              <div class="flex gap-3">
+                <input
+                  v-model="userMessage"
+                  @keyup.enter="sendChatMessage"
+                  :disabled="!selectedTestModel"
+                  class="flex-grow w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-2 text-sm backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 disabled:opacity-50"
+                  placeholder="Digite sua mensagem..."
+                />
+                <button
+                  @click="sendChatMessage"
+                  :disabled="
+                    !userMessage || !selectedTestModel || isModelResponding
+                  "
+                  class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
               </div>
             </div>
 
@@ -419,31 +469,26 @@
       </div>
     </main>
 
-    <!-- MCP Modal -->
+    <!-- Provider Settings Modal -->
     <div
-      v-if="showMcpModal"
+      v-if="showProviderModal && currentProvider"
       class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      @click.self="closeMcpModal"
+      @click.self="closeProviderModal"
     >
       <div
-        class="bg-gradient-to-br from-slate-800/95 via-slate-700/95 to-slate-800/95 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        class="bg-gradient-to-br from-slate-800/95 via-slate-700/95 to-slate-800/95 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
       >
         <!-- Header -->
         <div
           class="flex items-center justify-between p-6 border-b border-slate-600/30"
         >
           <div class="flex items-center gap-3">
-            <div
-              class="w-8 h-8 bg-cyan-600 rounded-lg flex items-center justify-center"
-            >
-              <i class="fa-solid fa-database text-white text-sm"></i>
-            </div>
             <h3 class="text-lg font-semibold text-white">
-              {{ editingMcp ? "Editar Conexão MCP" : "Nova Conexão MCP" }}
+              Configurar {{ currentProvider.name }}
             </h3>
           </div>
           <button
-            @click="closeMcpModal"
+            @click="closeProviderModal"
             class="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg p-2 transition-all"
           >
             <i class="fa-solid fa-times"></i>
@@ -451,125 +496,208 @@
         </div>
 
         <!-- Form -->
-        <div class="p-6 space-y-5">
-          <!-- Nome e Tipo lado a lado -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-200 mb-2">
-                <i class="fa-solid fa-tag mr-1 text-slate-400"></i>
-                Nome da Conexão
-              </label>
-              <input
-                v-model="mcpForm.name"
-                class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300"
-                placeholder="Ex: Banco Principal"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-200 mb-2">
-                <i class="fa-solid fa-server mr-1 text-slate-400"></i>
-                Tipo de Banco
-              </label>
-              <select
-                v-model="mcpForm.type"
-                @change="updatePortPlaceholder"
-                class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300"
+        <div class="p-6 space-y-6">
+          <!-- Ollama Specific Controls -->
+          <div
+            v-if="currentProviderKey === 'ollama'"
+            class="bg-slate-800/30 border border-slate-600/30 rounded-lg p-4 space-y-3"
+          >
+            <h4 class="text-sm font-medium text-slate-200">
+              <i class="fa-solid fa-cogs mr-1 text-slate-400"></i>
+              Controles Locais do Ollama
+            </h4>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button
+                @click="startOllamaServer"
+                class="flex-1 w-full bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/30 text-slate-300 hover:text-white rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300"
               >
-                <option value="" class="bg-slate-800">Selecione o tipo</option>
-                <option value="postgresql" class="bg-slate-800">
-                  PostgreSQL
-                </option>
-                <option value="mongodb" class="bg-slate-800">MongoDB</option>
-                <option value="clickhouse" class="bg-slate-800">
-                  ClickHouse
-                </option>
-              </select>
+                <i class="fa-solid fa-power-off mr-2"></i>
+                Verificar/Iniciar Servidor
+              </button>
+              <button
+                @click="syncOllamaModels"
+                :disabled="isSyncingModels"
+                class="flex-1 w-full bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/30 text-slate-300 hover:text-white rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 disabled:opacity-50"
+              >
+                <i
+                  :class="[
+                    isSyncingModels ? 'fa-spinner fa-spin' : 'fa-sync',
+                    'fa-solid mr-2',
+                  ]"
+                ></i>
+                Sincronizar Modelos
+              </button>
+            </div>
+            <!-- In-Modal Console -->
+            <div
+              v-if="showConsole"
+              class="w-full bg-black/50 rounded-lg border border-slate-700 mt-4"
+            >
+              <div
+                class="flex items-center justify-between px-3 py-1 bg-slate-700/50 rounded-t-lg"
+              >
+                <h4
+                  class="font-['VT323',_monospace] text-base text-slate-300 tracking-wider"
+                >
+                  [XT-83 Terminal]
+                </h4>
+                <button
+                  @click="consoleOutput = []"
+                  class="text-slate-400 hover:text-white text-xs transition-all"
+                >
+                  <i class="fa-solid fa-ban mr-1"></i>
+                  Clear
+                </button>
+              </div>
+              <div
+                class="p-3 h-32 overflow-y-auto font-['VT323',_monospace] text-base text-green-400"
+              >
+                <div v-for="(line, index) in consoleOutput" :key="index">
+                  <span class="text-slate-500 mr-2">&gt;</span>
+                  <span :class="line.type === 'error' ? 'text-red-400' : ''">{{
+                    line.text
+                  }}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Host e Porta lado a lado -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-slate-200 mb-2">
-                <i class="fa-solid fa-globe mr-1 text-slate-400"></i>
-                Host
-              </label>
-              <input
-                v-model="mcpForm.host"
-                class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300"
-                placeholder="localhost ou IP do servidor"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-200 mb-2">
-                <i class="fa-solid fa-plug mr-1 text-slate-400"></i>
-                Porta
-              </label>
-              <input
-                v-model="mcpForm.port"
-                type="number"
-                class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300"
-                :placeholder="getDefaultPort(mcpForm.type)"
-              />
-            </div>
-          </div>
-
-          <!-- Database -->
-          <div>
+          <!-- API Key -->
+          <div v-if="currentProviderKey !== 'ollama'">
             <label class="block text-sm font-medium text-slate-200 mb-2">
-              <i class="fa-solid fa-database mr-1 text-slate-400"></i>
-              Database
+              <i class="fa-solid fa-key mr-1 text-slate-400"></i>
+              API Key
             </label>
             <input
-              v-model="mcpForm.database"
-              class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300"
-              placeholder="Nome do banco de dados"
+              v-model="providerForm.apiKey"
+              type="password"
+              class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
+              placeholder="Chave da API (será criptografada)"
             />
           </div>
 
-          <!-- Credenciais lado a lado -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Base URL -->
+          <div>
+            <label class="block text-sm font-medium text-slate-200 mb-2">
+              <i class="fa-solid fa-link mr-1 text-slate-400"></i>
+              Base URL (cURL)
+            </label>
+            <input
+              v-model="providerForm.baseUrl"
+              class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
+              placeholder="https://api.example.com/v1"
+            />
+          </div>
+
+          <!-- Model Management -->
+          <div
+            class="bg-slate-800/30 border border-slate-600/30 rounded-lg p-4 space-y-4"
+          >
             <div>
               <label class="block text-sm font-medium text-slate-200 mb-2">
-                <i class="fa-solid fa-user mr-1 text-slate-400"></i>
-                Usuário
+                <i class="fa-solid fa-robot mr-1 text-slate-400"></i>
+                Modelo Padrão
               </label>
-              <input
-                v-model="mcpForm.username"
-                class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300"
-                placeholder="Usuário do banco"
-              />
+              <select
+                v-model="providerForm.selectedModel"
+                class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
+              >
+                <option
+                  v-if="providerForm.models.length === 0"
+                  value=""
+                  disabled
+                  class="bg-slate-800"
+                >
+                  Sincronize os modelos para selecionar
+                </option>
+                <option
+                  v-for="model in providerForm.models"
+                  :key="model"
+                  :value="model"
+                  class="bg-slate-800"
+                >
+                  {{ model }}
+                </option>
+              </select>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-200 mb-2">
-                <i class="fa-solid fa-lock mr-1 text-slate-400"></i>
-                Senha
-              </label>
-              <input
-                v-model="mcpForm.password"
-                type="password"
-                class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300"
-                placeholder="Senha do banco"
-              />
+              <h4 class="text-sm font-medium text-slate-200 mb-2">
+                <i class="fa-solid fa-list-ul mr-1 text-slate-400"></i>
+                Gerenciar Modelos
+              </h4>
+              <div class="space-y-2 max-h-40 overflow-y-auto pr-2">
+                <div
+                  v-for="(model, index) in providerForm.models"
+                  :key="index"
+                  class="flex items-center justify-between bg-slate-700/30 rounded-lg p-2"
+                >
+                  <span class="text-sm text-slate-300">{{ model }}</span>
+                  <button
+                    @click="removeModel(index)"
+                    class="text-red-400 hover:text-red-300 p-1 rounded-md hover:bg-red-500/10 transition-colors"
+                    title="Remover Modelo"
+                  >
+                    <i class="fa-solid fa-trash-alt text-xs"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="flex gap-2 mt-3">
+                <input
+                  v-model="newModelName"
+                  @keyup.enter="addModel"
+                  class="flex-grow w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-2 text-sm backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
+                  placeholder="Adicionar novo modelo"
+                />
+                <button
+                  @click="addModel"
+                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Conexão de teste -->
+          <!-- Connection Test -->
           <div
             class="bg-slate-800/30 border border-slate-600/30 rounded-lg p-4"
           >
-            <div class="flex items-center gap-3 mb-3">
-              <i class="fa-solid fa-wifi text-cyan-400"></i>
-              <span class="text-sm font-medium text-white"
-                >Teste de Conexão</span
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-wifi text-indigo-400"></i>
+                <span class="text-sm font-medium text-white"
+                  >Teste de Conexão</span
+                >
+              </div>
+              <div
+                v-if="currentProvider.status !== 'unknown'"
+                class="flex items-center gap-2 text-xs"
               >
+                <span
+                  v-if="currentProvider.status === 'testing'"
+                  class="text-slate-400"
+                  ><i class="fa-solid fa-spinner fa-spin mr-1"></i
+                  >Testando...</span
+                >
+                <span
+                  v-if="currentProvider.status === 'valid'"
+                  class="text-green-400"
+                  ><i class="fa-solid fa-check-circle mr-1"></i>Conexão
+                  Válida</span
+                >
+                <span
+                  v-if="currentProvider.status === 'invalid'"
+                  class="text-red-400"
+                  ><i class="fa-solid fa-times-circle mr-1"></i>Conexão
+                  Inválida</span
+                >
+              </div>
             </div>
             <button
-              @click="testConnection"
-              class="w-full bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/30 text-slate-300 hover:text-white rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300"
+              @click="testProviderConnection"
+              :disabled="currentProvider.status === 'testing'"
+              class="w-full mt-3 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/30 text-slate-300 hover:text-white rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <i class="fa-solid fa-flask mr-2"></i>
               Testar Conexão
@@ -582,17 +710,17 @@
           class="flex items-center justify-end gap-3 p-6 border-t border-slate-600/30 bg-slate-800/20"
         >
           <button
-            @click="closeMcpModal"
+            @click="closeProviderModal"
             class="px-5 py-2.5 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white rounded-xl text-sm font-medium transition-all duration-300 backdrop-blur-sm"
           >
             Cancelar
           </button>
           <button
-            @click="saveMcp"
-            class="bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-cyan-500/25"
+            @click="saveProviderSettings"
+            class="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-indigo-500/25"
           >
             <i class="fa-solid fa-save mr-2"></i>
-            {{ editingMcp ? "Atualizar Conexão" : "Criar Conexão" }}
+            Salvar
           </button>
         </div>
       </div>
@@ -601,168 +729,350 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { useToast } from "../../../composables/useToast";
+
+const toast = useToast();
 
 definePageMeta({
   layout: "sidebar",
 });
 
-// Provider states
+// --- API Configuration ---
+const apiBaseUrl = "http://localhost:8080/api/v1";
+
+// --- Component State ---
 const providers = ref({
-  openai: false,
-  gemini: false,
-  claude: false,
-  groq: false,
-  ollama: false,
+  openai: {
+    active: false,
+    apiKey: "",
+    baseUrl: "https://api.openai.com/v1",
+    models: [],
+    selectedModel: "",
+    status: "unknown",
+    name: "OpenAI",
+  },
+  gemini: {
+    active: false,
+    apiKey: "",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+    models: [],
+    selectedModel: "",
+    status: "unknown",
+    name: "Gemini",
+  },
+  claude: {
+    active: false,
+    apiKey: "",
+    baseUrl: "https://api.anthropic.com/v1",
+    models: [],
+    selectedModel: "",
+    status: "unknown",
+    name: "Claude",
+  },
+  groq: {
+    active: false,
+    apiKey: "",
+    baseUrl: "https://api.groq.com/openai/v1",
+    models: [],
+    selectedModel: "",
+    status: "unknown",
+    name: "Groq",
+  },
+  ollama: {
+    active: false,
+    apiKey: "",
+    baseUrl: "http://localhost:11434",
+    models: [],
+    selectedModel: "",
+    status: "unknown",
+    name: "Ollama",
+  },
 });
 
-// MCP states
-const mcpConnections = ref([]);
-const showMcpModal = ref(false);
-const editingMcp = ref(false);
-const mcpForm = ref({
-  id: null,
-  name: "",
-  type: "",
-  host: "",
-  port: "",
-  database: "",
-  username: "",
-  password: "",
-  status: "disconnected",
+const showProviderModal = ref(false);
+const currentProviderKey = ref(null);
+const newModelName = ref("");
+const isSyncingModels = ref(false);
+const showConsole = ref(false);
+const consoleOutput = ref([]);
+
+const providerForm = ref({
+  apiKey: "",
+  baseUrl: "",
+  selectedModel: "",
+  models: [],
 });
 
-// Toggle provider function
-function toggleProvider(providerName) {
-  providers.value[providerName] = !providers.value[providerName];
-}
+const currentProvider = computed(() => {
+  return currentProviderKey.value
+    ? providers.value[currentProviderKey.value]
+    : null;
+});
 
-// MCP functions
-function getMcpTypeIcon(type) {
-  const icons = {
-    postgresql: {
-      icon: "fa-brands fa-postgresql text-blue-600",
-      bg: "bg-blue-100",
-    },
-    mongodb: {
-      icon: "fa-solid fa-leaf text-green-600",
-      bg: "bg-green-100",
-    },
-    clickhouse: {
-      icon: "fa-solid fa-chart-bar text-orange-600",
-      bg: "bg-orange-100",
-    },
-  };
-  return (
-    icons[type] || {
-      icon: "fa-solid fa-database text-slate-600",
-      bg: "bg-slate-100",
+// --- Lifecycle Hooks ---
+onMounted(async () => {
+  console.log("Fetching provider configurations from Java backend...");
+  try {
+    const fetchedProviders = await $fetch(`${apiBaseUrl}/ai-providers`);
+    if (fetchedProviders && fetchedProviders.length > 0) {
+      const newProvidersState = { ...providers.value };
+      fetchedProviders.forEach((p) => {
+        if (newProvidersState[p.id]) {
+          newProvidersState[p.id] = {
+            ...newProvidersState[p.id],
+            ...p,
+            apiKey: p.apiKey ? "********" : "",
+          };
+        }
+      });
+      providers.value = newProvidersState;
+      console.log("Successfully loaded provider configurations from backend.");
     }
-  );
-}
+  } catch (error) {
+    console.error("Could not fetch provider configurations:", error);
+    toast.warning("perda de conexão: Não foi possível conectar ao servidor");
+  }
+});
 
-function getDefaultPort(type) {
-  const ports = {
-    postgresql: "5432",
-    mongodb: "27017",
-    clickhouse: "8123",
+// --- Modal & Form Logic ---
+function openProviderModal(providerKey) {
+  currentProviderKey.value = providerKey;
+  const providerData = providers.value[providerKey];
+  providerForm.value = {
+    apiKey: "", // Always clear API key field for security
+    baseUrl: providerData.baseUrl,
+    selectedModel: providerData.selectedModel,
+    models: [...providerData.models],
   };
-  return ports[type] || "";
+  showConsole.value = false; // Hide console when opening a new modal
+  consoleOutput.value = [];
+  showProviderModal.value = true;
 }
 
-function openMcpModal() {
-  resetMcpForm();
-  editingMcp.value = false;
-  showMcpModal.value = true;
+function closeProviderModal() {
+  showProviderModal.value = false;
+  currentProviderKey.value = null;
+  newModelName.value = "";
 }
 
-function closeMcpModal() {
-  showMcpModal.value = false;
-  resetMcpForm();
-  editingMcp.value = false;
+function addModel() {
+  if (
+    newModelName.value &&
+    !providerForm.value.models.includes(newModelName.value)
+  ) {
+    providerForm.value.models.push(newModelName.value);
+    newModelName.value = "";
+  }
 }
 
-function resetMcpForm() {
-  mcpForm.value = {
-    id: null,
-    name: "",
-    type: "",
-    host: "",
-    port: "",
-    database: "",
-    username: "",
-    password: "",
-    status: "disconnected",
+function removeModel(index) {
+  providerForm.value.models.splice(index, 1);
+}
+
+// --- API & Shell Commands ---
+async function saveProviderSettings() {
+  if (!currentProviderKey.value) return;
+  const providerKey = currentProviderKey.value;
+
+  // For Ollama, the API key is not needed and should not be sent.
+  const apiKeyToSend =
+    providerKey === "ollama" ? "" : providerForm.value.apiKey;
+
+  const payload = {
+    apiKey: apiKeyToSend,
+    baseUrl: providerForm.value.baseUrl,
+    selectedModel: providerForm.value.selectedModel,
+    models: providerForm.value.models,
+    active: providerKey === "ollama" ? true : !!providerForm.value.apiKey,
   };
+
+  try {
+    console.log(`Calling API: PUT ${apiBaseUrl}/ai-providers/${providerKey}`);
+    const updatedProvider = await $fetch(
+      `${apiBaseUrl}/ai-providers/${providerKey}`,
+      {
+        method: "PUT",
+        body: payload,
+      }
+    );
+
+    providers.value[providerKey] = {
+      ...providers.value[providerKey],
+      ...updatedProvider,
+    };
+
+    console.log("Successfully saved provider settings.");
+    closeProviderModal();
+  } catch (error) {
+    console.error("Failed to save provider settings:", error);
+    alert("Error: Could not save settings to the Java server.");
+  }
 }
 
-function editMcp(mcp) {
-  mcpForm.value = { ...mcp };
-  editingMcp.value = true;
-  showMcpModal.value = true;
+async function startOllamaServer() {
+  showConsole.value = true;
+  consoleOutput.value = [
+    { text: "Attempting to start Ollama server via backend..." },
+  ];
+  try {
+    const result = await $fetch(`${apiBaseUrl}/ollama/start`, {
+      method: "POST",
+    });
+    result.stdout.forEach((line) => consoleOutput.value.push({ text: line }));
+    result.stderr.forEach((line) =>
+      consoleOutput.value.push({ text: line, type: "error" })
+    );
+  } catch (error) {
+    console.error("Failed to start Ollama server:", error);
+    consoleOutput.value.push({
+      text: `Error: ${error.data?.message || error.message}`,
+      type: "error",
+    });
+  }
 }
 
-function saveMcp() {
-  if (!mcpForm.value.name || !mcpForm.value.type || !mcpForm.value.host) {
-    alert("Preencha todos os campos obrigatórios");
+async function syncOllamaModels() {
+  isSyncingModels.value = true;
+  showConsole.value = true;
+  consoleOutput.value = [{ text: "$ ollama list" }];
+
+  try {
+    const result = await $fetch(`${apiBaseUrl}/ollama/list`);
+    result.stdout.forEach((line) => consoleOutput.value.push({ text: line }));
+
+    if (result.stderr && result.stderr.length > 0) {
+      throw new Error(result.stderr.join("\n"));
+    }
+
+    const lines = result.stdout;
+    if (lines.length > 1) {
+      // Assuming the first line is the header
+      const models = lines.slice(1).map((line) => line.split(/\s+/)[0]);
+      providerForm.value.models = models;
+      if (!providerForm.value.selectedModel && models.length > 0) {
+        providerForm.value.selectedModel = models[0];
+      }
+      console.log("Ollama models synced:", models);
+      consoleOutput.value.push({ text: "\nSync successful!" });
+    }
+  } catch (error) {
+    console.error("Failed to sync Ollama models:", error);
+    consoleOutput.value.push({
+      text: `Error syncing Ollama models: ${error.message}`,
+      type: "error",
+    });
+  } finally {
+    isSyncingModels.value = false;
+  }
+}
+
+async function testProviderConnection() {
+  if (!currentProviderKey.value) return;
+  const providerKey = currentProviderKey.value;
+  const provider = providers.value[providerKey];
+  provider.status = "testing";
+
+  console.log(`API CALL: POST ${apiBaseUrl}/ai-providers/${providerKey}/test`, {
+    apiKey: providerForm.value.apiKey,
+    baseUrl: providerForm.value.baseUrl,
+  });
+
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  if (
+    providerKey === "ollama" ||
+    (providerForm.value.apiKey && providerForm.value.apiKey.length > 5)
+  ) {
+    provider.status = "valid";
+  } else {
+    provider.status = "invalid";
+  }
+}
+
+// --- Chat Playground ---
+const selectedTestProvider = ref("");
+const selectedTestModel = ref("");
+const chatHistory = ref([]);
+const userMessage = ref("");
+const isModelResponding = ref(false);
+const chatHistoryRef = ref(null);
+
+const availableTestProviders = computed(() => {
+  return Object.entries(providers.value)
+    .filter(([key, provider]) => provider.active)
+    .map(([id, provider]) => ({ id, name: provider.name }));
+});
+
+const availableTestModels = computed(() => {
+  if (
+    selectedTestProvider.value &&
+    providers.value[selectedTestProvider.value]
+  ) {
+    return providers.value[selectedTestProvider.value].models;
+  }
+  return [];
+});
+
+watch(selectedTestProvider, (newProvider) => {
+  selectedTestModel.value = ""; // Reset model selection when provider changes
+  const provider = providers.value[newProvider];
+  if (provider && provider.selectedModel) {
+    selectedTestModel.value = provider.selectedModel;
+  }
+});
+
+watch(
+  chatHistory,
+  () => {
+    // Scroll to bottom of chat history
+    nextTick(() => {
+      if (chatHistoryRef.value) {
+        chatHistoryRef.value.scrollTop = chatHistoryRef.value.scrollHeight;
+      }
+    });
+  },
+  { deep: true }
+);
+
+async function sendChatMessage() {
+  if (
+    !userMessage.value ||
+    !selectedTestProvider.value ||
+    !selectedTestModel.value ||
+    isModelResponding.value
+  ) {
     return;
   }
 
-  // Set default port if not provided
-  if (!mcpForm.value.port) {
-    mcpForm.value.port = getDefaultPort(mcpForm.value.type);
-  }
+  const messageContent = userMessage.value;
+  chatHistory.value.push({ role: "user", content: messageContent });
+  userMessage.value = "";
+  isModelResponding.value = true;
 
-  if (editingMcp.value) {
-    // Update existing MCP
-    const index = mcpConnections.value.findIndex(
-      (m) => m.id === mcpForm.value.id
-    );
-    if (index !== -1) {
-      mcpConnections.value[index] = { ...mcpForm.value };
-    }
-  } else {
-    // Create new MCP
-    const newMcp = {
-      ...mcpForm.value,
-      id: Date.now().toString(),
-      status: "disconnected",
-    };
-    mcpConnections.value.push(newMcp);
-  }
+  try {
+    // NOTE: A new backend endpoint /api/v1/ai/chat is required for this to work.
+    const response = await $fetch(`${apiBaseUrl}/ai-providers/chat`, {
+      method: "POST",
+      body: {
+        provider: selectedTestProvider.value,
+        model: selectedTestModel.value,
+        prompt: messageContent,
+      },
+    });
 
-  closeMcpModal();
+    chatHistory.value.push({
+      role: "assistant",
+      content: response.content || "No content received.",
+    });
+  } catch (error) {
+    console.error("Error sending chat message:", error);
+    chatHistory.value.push({
+      role: "assistant",
+      content: `Error: ${error.data?.message || "Could not get response."}`,
+    });
+  } finally {
+    isModelResponding.value = false;
+  }
 }
-
-function deleteMcp(mcpId) {
-  if (confirm("Tem certeza que deseja remover esta conexão MCP?")) {
-    mcpConnections.value = mcpConnections.value.filter((m) => m.id !== mcpId);
-  }
-}
-
-// Add some sample data for demonstration
-mcpConnections.value = [
-  {
-    id: "1",
-    name: "Banco Principal",
-    type: "postgresql",
-    host: "localhost",
-    port: "5432",
-    database: "docheck_db",
-    username: "postgres",
-    password: "***",
-    status: "connected",
-  },
-  {
-    id: "2",
-    name: "Analytics DB",
-    type: "clickhouse",
-    host: "analytics.docheck.com",
-    port: "8123",
-    database: "analytics",
-    username: "analyst",
-    password: "***",
-    status: "disconnected",
-  },
-];
 </script>

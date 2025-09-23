@@ -3,7 +3,7 @@ package com.docheck.flow.application.service;
 import com.docheck.flow.application.port.StatusCategoryRepository;
 import com.docheck.flow.domain.model.StatusCategory;
 import com.docheck.flow.domain.model.StatusItem;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,7 +17,6 @@ public class StatusCategoryService {
 
     private final StatusCategoryRepository repository;
 
-    @Autowired
     public StatusCategoryService(StatusCategoryRepository repository) {
         this.repository = repository;
     }
@@ -110,7 +109,8 @@ public class StatusCategoryService {
         return repository.save(category);
     }
 
-    public StatusCategory updateStatus(String categoryId, String statusId, String statusName, String description, String color) {
+    public StatusCategory updateStatus(String categoryId, String statusId, String statusName, String description,
+            String color) {
         StatusCategory category = repository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
@@ -119,7 +119,8 @@ public class StatusCategoryService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Status not found"));
 
-        // Check if status name already exists in this category (excluding current status)
+        // Check if status name already exists in this category (excluding current
+        // status)
         boolean statusExists = category.getStatuses().stream()
                 .anyMatch(s -> !s.getId().equals(statusId) && s.getName().equalsIgnoreCase(statusName));
 

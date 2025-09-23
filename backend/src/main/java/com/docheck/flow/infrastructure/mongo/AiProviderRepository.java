@@ -1,25 +1,12 @@
 package com.docheck.flow.infrastructure.mongo;
 
+import com.docheck.flow.domain.model.AiProvider;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-
+/**
+ * Spring Data MongoDB repository for the {@link AiProvider} entity.
+ */
 @Repository
-public interface AiProviderRepository extends MongoRepository<AiProviderDocument, String> {
-
-    Optional<AiProviderDocument> findBySlug(String slug);
-
-    Optional<AiProviderDocument> findByName(String name);
-
-    List<AiProviderDocument> findByEnabledTrue();
-
-    @Query("{ 'enabled': true }")
-    List<AiProviderDocument> findAllActive();
-
-    boolean existsBySlug(String slug);
-
-    boolean existsByName(String name);
+public interface AiProviderRepository extends MongoRepository<AiProvider, String> {
 }

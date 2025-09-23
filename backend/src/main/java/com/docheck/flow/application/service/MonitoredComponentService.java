@@ -2,7 +2,7 @@ package com.docheck.flow.application.service;
 
 import com.docheck.flow.api.dto.MonitoredComponentDTO;
 import com.docheck.flow.api.dto.MonitoredComponentRequest;
-import com.docheck.flow.domain.model.MonitoredComponent;
+
 import com.docheck.flow.infrastructure.mongo.MonitoredComponentDocument;
 import com.docheck.flow.infrastructure.mongo.MonitoredComponentRepository;
 import org.springframework.stereotype.Service;

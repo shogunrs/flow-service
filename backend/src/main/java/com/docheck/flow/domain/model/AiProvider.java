@@ -1,20 +1,34 @@
 package com.docheck.flow.domain.model;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
+import java.util.List;
 
-@Value
-@Builder
+/**
+ * Represents an AI Provider configuration stored in MongoDB.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "ai_providers")
 public class AiProvider {
-    String id;
-    String name;
-    String slug;
-    String baseUrl;
-    String docsUrl;
-    String notes;
-    boolean enabled;
-    Instant createdAt;
-    Instant updatedAt;
+
+    @Id
+    private String id; // e.g., "openai", "gemini"
+
+    private String name;
+
+    private boolean active;
+
+    private String apiKey; // This should be stored encrypted
+
+    private String baseUrl;
+
+    private String selectedModel;
+
+    private List<String> models;
 }

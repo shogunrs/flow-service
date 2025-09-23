@@ -1,33 +1,51 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+  <div
+    class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden"
+  >
     <!-- Animated background particles -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
-      <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s"></div>
-      <div class="absolute top-1/2 left-1/3 w-60 h-60 bg-cyan-500/3 rounded-full blur-3xl animate-pulse" style="animation-delay: 4s"></div>
+      <div
+        class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl animate-pulse"
+      ></div>
+      <div
+        class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl animate-pulse"
+        style="animation-delay: 2s"
+      ></div>
+      <div
+        class="absolute top-1/2 left-1/3 w-60 h-60 bg-cyan-500/3 rounded-full blur-3xl animate-pulse"
+        style="animation-delay: 4s"
+      ></div>
     </div>
 
     <!-- Modern Header with Enhanced Glass Effect -->
-    <header class="app-header relative backdrop-blur-2xl border-b border-white/5 p-4 shadow-2xl">
+    <header
+      class="app-header relative backdrop-blur-2xl border-b border-white/5 p-4 shadow-2xl"
+    >
       <!-- Glass morphism background with gradient -->
-      <div class="absolute inset-0 bg-gradient-to-r from-slate-900/40 via-slate-800/50 to-slate-900/40 backdrop-blur-3xl"></div>
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-slate-900/40 via-slate-800/50 to-slate-900/40 backdrop-blur-3xl"
+      ></div>
       <!-- Shimmer effect -->
-      <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent animate-shimmer"></div>
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent animate-shimmer"
+      ></div>
 
       <div class="relative flex items-center justify-between">
         <div class="flex items-center gap-6">
           <!-- Enhanced icon with glow -->
           <div class="relative group">
-            <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
-            <div class="relative p-4 bg-gradient-to-br from-purple-600 via-purple-500 to-indigo-600 rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-300">
+            <div
+              class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"
+            ></div>
+            <div
+              class="relative p-4 bg-gradient-to-br from-purple-600 via-purple-500 to-indigo-600 rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-300"
+            >
               <i class="fa-solid fa-cog text-white text-lg"></i>
             </div>
           </div>
 
           <div class="space-y-1">
-            <h1 class="app-header-title">
-              Painel Administrativo
-            </h1>
+            <h1 class="app-header-title">Painel Administrativo</h1>
             <p class="app-header-subtitle">
               Gerencie usuários, configurações e sistema com total controle
             </p>
@@ -39,7 +57,9 @@
     <!-- Enhanced Admin navigation tabs -->
     <div class="relative backdrop-blur-xl border-b border-white/10">
       <!-- Glass morphism background -->
-      <div class="absolute inset-0 bg-gradient-to-r from-slate-900/30 via-slate-800/40 to-slate-900/30"></div>
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-slate-900/30 via-slate-800/40 to-slate-900/30"
+      ></div>
 
       <nav class="relative px-6">
         <div class="flex space-x-8 overflow-x-auto">
@@ -68,7 +88,9 @@
 
     <main class="relative z-10 p-6">
       <section v-if="activeTab === 'users'">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+        <div
+          class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3"
+        >
           <h2 class="text-xl font-semibold">Usuários</h2>
           <button
             class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-4 py-3 md:px-3 md:py-2 rounded-md text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
@@ -95,7 +117,9 @@
                   <th class="px-3 md:px-6 py-3 min-w-[150px]">Email</th>
                   <th class="px-3 md:px-6 py-3 min-w-[100px]">Roles</th>
                   <th class="px-3 md:px-6 py-3 min-w-[140px]">Documentos</th>
-                  <th class="px-3 md:px-6 py-3 min-w-[140px]">Dados Bancários</th>
+                  <th class="px-3 md:px-6 py-3 min-w-[140px]">
+                    Dados Bancários
+                  </th>
                   <th class="px-3 md:px-6 py-3 min-w-[120px]">PIX</th>
                   <th class="px-3 md:px-6 py-3 min-w-[100px]">Ações</th>
                 </tr>
@@ -107,7 +131,9 @@
                   class="border-b border-gray-700 hover:bg-slate-700/30"
                 >
                   <td class="px-3 md:px-6 py-3 font-medium">{{ user.name }}</td>
-                  <td class="px-3 md:px-6 py-3 text-slate-300">{{ user.email }}</td>
+                  <td class="px-3 md:px-6 py-3 text-slate-300">
+                    {{ user.email }}
+                  </td>
                   <td class="px-3 md:px-6 py-3">
                     <div class="flex gap-1 flex-wrap">
                       <span
@@ -205,15 +231,26 @@
                     'flex items-center justify-center w-9 h-9 rounded-md transition-all duration-200 border',
                     newProcFinanceiro
                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-lg shadow-emerald-500/25'
-                      : 'bg-slate-800/70 hover:bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-500'
+                      : 'bg-slate-800/70 hover:bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-500',
                   ]"
-                  :title="newProcFinanceiro ? 'Processo Financeiro (clique para desativar)' : 'Marcar como processo financeiro'"
+                  :title="
+                    newProcFinanceiro
+                      ? 'Processo Financeiro (clique para desativar)'
+                      : 'Marcar como processo financeiro'
+                  "
                 >
-                  <i :class="[
-                    'fa-solid transition-all duration-200',
-                    newProcFinanceiro ? 'fa-dollar-sign text-white animate-pulse' : 'fa-dollar-sign text-slate-400'
-                  ]"
-                  :style="newProcFinanceiro ? 'filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.8));' : ''"
+                  <i
+                    :class="[
+                      'fa-solid transition-all duration-200',
+                      newProcFinanceiro
+                        ? 'fa-dollar-sign text-white animate-pulse'
+                        : 'fa-dollar-sign text-slate-400',
+                    ]"
+                    :style="
+                      newProcFinanceiro
+                        ? 'filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.8));'
+                        : ''
+                    "
                   ></i>
                 </button>
               </div>
@@ -313,7 +350,9 @@
       </section>
 
       <section v-else-if="activeTab === 'status'">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+        <div
+          class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3"
+        >
           <h2 class="text-xl font-semibold">Gerenciar Status</h2>
           <button
             class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-4 py-3 md:px-3 md:py-2 rounded-md text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
@@ -379,7 +418,9 @@
                   class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg transition-all duration-300 hover:scale-105 whitespace-nowrap"
                   :style="getStatusStyle(status)"
                 >
-                  <div class="w-1.5 h-1.5 rounded-full bg-current opacity-60 flex-shrink-0"></div>
+                  <div
+                    class="w-1.5 h-1.5 rounded-full bg-current opacity-60 flex-shrink-0"
+                  ></div>
                   <span class="truncate">{{ status.name }}</span>
                 </span>
 
@@ -681,10 +722,18 @@
                   type="button"
                   @click="allowEmailEdit = !allowEmailEdit"
                   class="p-1 text-slate-400 hover:text-indigo-400 transition-colors"
-                  :title="allowEmailEdit ? 'Desabilitar edição do email' : 'Habilitar edição do email'"
+                  :title="
+                    allowEmailEdit
+                      ? 'Desabilitar edição do email'
+                      : 'Habilitar edição do email'
+                  "
                 >
                   <i
-                    :class="allowEmailEdit ? 'fa-regular fa-envelope' : 'fa-solid fa-envelope-circle-check'"
+                    :class="
+                      allowEmailEdit
+                        ? 'fa-regular fa-envelope'
+                        : 'fa-solid fa-envelope-circle-check'
+                    "
                     class="text-sm"
                   ></i>
                 </button>
@@ -696,27 +745,45 @@
                 type="email"
                 class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm pr-10"
                 placeholder="email@exemplo.com"
-                :disabled="(editingUser && !allowEmailEdit) || (!editingUser && currentUserId)"
+                :disabled="
+                  (editingUser && !allowEmailEdit) ||
+                  (!editingUser && currentUserId)
+                "
                 @blur="checkEmailAvailability"
                 @input="onEmailInput"
               />
-              <div v-if="emailCheckLoading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div
+                v-if="emailCheckLoading"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
                 <i class="fa-solid fa-spinner fa-spin text-orange-500"></i>
               </div>
-              <div v-else-if="emailAvailable === true" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div
+                v-else-if="emailAvailable === true"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
                 <i class="fa-solid fa-check text-green-500"></i>
               </div>
-              <div v-else-if="emailAvailable === false" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div
+                v-else-if="emailAvailable === false"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
                 <i class="fa-solid fa-times text-red-500"></i>
               </div>
             </div>
             <div v-if="emailError" class="text-[11px] text-red-400 mt-1">
               {{ emailError }}
             </div>
-            <div v-else-if="emailAvailable === true" class="text-[11px] text-green-400 mt-1">
+            <div
+              v-else-if="emailAvailable === true"
+              class="text-[11px] text-green-400 mt-1"
+            >
               Email disponível
             </div>
-            <div v-else-if="emailAvailable === false" class="text-[11px] text-red-400 mt-1">
+            <div
+              v-else-if="emailAvailable === false"
+              class="text-[11px] text-red-400 mt-1"
+            >
               Email já está em uso
             </div>
           </div>
@@ -755,7 +822,9 @@
             >
               <option value="">Selecione o tipo</option>
               <option value="RG">RG - Registro Geral</option>
-              <option value="CNH">CNH - Carteira Nacional de Habilitação</option>
+              <option value="CNH">
+                CNH - Carteira Nacional de Habilitação
+              </option>
             </select>
           </div>
 
@@ -779,7 +848,8 @@
             Comprovante de Endereço
           </h4>
           <p class="text-xs text-slate-400 mb-3">
-            Aceita conta de luz, água, telefone, internet, extrato bancário, etc.
+            Aceita conta de luz, água, telefone, internet, extrato bancário,
+            etc.
           </p>
           <UserFileUpload
             label="Comprovante de Endereço"
@@ -999,13 +1069,13 @@ import UserFileUpload from "~/components/ui/UserFileUpload.vue";
 import FaceRecognition from "~/components/ui/FaceRecognition.vue";
 import { useRoute } from "#imports";
 import PipelineManager from "~/components/admin/PipelineManager.vue";
-import BrandMark from "~/components/ui/BrandMark.vue";
+
 import { useGeolocation } from "~/composables/useGeolocation";
 import { useTemporaryFileUpload } from "~/composables/useTemporaryFileUpload";
 // CanvasFinance removido do Admin; ticker ficará apenas no Dashboard
 
 definePageMeta({
-  layout: 'sidebar'
+  layout: "sidebar",
 });
 import {
   listProcesses,
@@ -1022,7 +1092,7 @@ import {
 } from "~/composables/useStages";
 import { isApiEnabled } from "~/utils/api/index";
 import { useProcessSubmenu } from "~/composables/useProcessMenu";
-import { useMainMenu } from "~/composables/useMainMenu";
+
 import { useToast } from "~/composables/useToast";
 import {
   fetchStageFieldsApi,
@@ -1057,10 +1127,10 @@ const usersList = ref([]);
 
 // Dados da navegação para o menu mobile
 const tabs = [
-  { value: 'users', label: 'Usuários', icon: 'fa-solid fa-users' },
-  { value: 'pipeline', label: 'Esteira', icon: 'fa-solid fa-sitemap' },
-  { value: 'status', label: 'Status', icon: 'fa-solid fa-circle-info' },
-  { value: 'notifications', label: 'Notificações', icon: 'fa-solid fa-bell' }
+  { value: "users", label: "Usuários", icon: "fa-solid fa-users" },
+  { value: "pipeline", label: "Esteira", icon: "fa-solid fa-sitemap" },
+  { value: "status", label: "Status", icon: "fa-solid fa-circle-info" },
+  { value: "notifications", label: "Notificações", icon: "fa-solid fa-bell" },
 ];
 const showUserModal = ref(false);
 const userForm = ref({
@@ -1157,7 +1227,10 @@ async function createProcess() {
   if (creatingProcess.value) return;
   creatingProcess.value = true;
   // Otimista: atualiza DOM primeiro
-  processes.value = [...processes.value, { key, name, active: true, isFinanceiro: newProcFinanceiro.value }];
+  processes.value = [
+    ...processes.value,
+    { key, name, active: true, isFinanceiro: newProcFinanceiro.value },
+  ];
   const ok = await addProcess(key, name || key, newProcFinanceiro.value);
   if (ok) {
     currentProcessKey.value = key;
@@ -1626,7 +1699,9 @@ function getStatusStyle(status) {
       border: 1px solid rgba(156, 163, 175, 0.3);
       box-shadow: 0 2px 8px rgba(156, 163, 175, 0.15);
       backdrop-filter: blur(4px);
-    `.replace(/\s+/g, ' ').trim();
+    `
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   const baseColor = status.color;
@@ -1645,7 +1720,9 @@ function getStatusStyle(status) {
     border: 1px solid ${hexToRgba(baseColor, 0.3)};
     box-shadow: 0 2px 8px ${hexToRgba(baseColor, 0.15)};
     backdrop-filter: blur(4px);
-  `.replace(/\s+/g, ' ').trim();
+  `
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 // User management functions
@@ -1831,7 +1908,9 @@ async function saveUser() {
       if (created) {
         // Migrar arquivos temporários para o usuário criado (fluxo antigo)
         if (temporaryUploadedFiles.value.length > 0) {
-          console.log(`Migrando ${temporaryUploadedFiles.value.length} arquivos temporários para usuário ${created.id}`);
+          console.log(
+            `Migrando ${temporaryUploadedFiles.value.length} arquivos temporários para usuário ${created.id}`
+          );
 
           for (const tempFile of temporaryUploadedFiles.value) {
             try {
@@ -1843,7 +1922,10 @@ async function saveUser() {
               );
               console.log(`Arquivo migrado com sucesso:`, migratedFile);
             } catch (error) {
-              console.error(`Erro ao migrar arquivo ${tempFile.filename}:`, error);
+              console.error(
+                `Erro ao migrar arquivo ${tempFile.filename}:`,
+                error
+              );
               // Não falhar o processo inteiro por um arquivo
             }
           }
@@ -1920,10 +2002,10 @@ function onProfilePhotoUploaded(uploadData) {
   // Se é upload temporário, armazenar para migração posterior
   if (uploadData.isTemporary) {
     temporaryUploadedFiles.value.push({
-      type: 'PROFILE_PHOTO',
+      type: "PROFILE_PHOTO",
       tempObjectKey: uploadData.objectKey,
       filename: uploadData.filename,
-      sessionId: uploadData.sessionId
+      sessionId: uploadData.sessionId,
     });
   }
 }
@@ -1940,10 +2022,10 @@ function onAddressProofUploaded(uploadData) {
   // Se é upload temporário, armazenar para migração posterior
   if (uploadData.isTemporary) {
     temporaryUploadedFiles.value.push({
-      type: 'ADDRESS_PROOF',
+      type: "ADDRESS_PROOF",
       tempObjectKey: uploadData.objectKey,
       filename: uploadData.filename,
-      sessionId: uploadData.sessionId
+      sessionId: uploadData.sessionId,
     });
   }
 }
@@ -1960,10 +2042,10 @@ function onIdentityDocumentUploaded(uploadData) {
   // Se é upload temporário, armazenar para migração posterior
   if (uploadData.isTemporary) {
     temporaryUploadedFiles.value.push({
-      type: userForm.value.tipoIdentificacao || 'IDENTITY',
+      type: userForm.value.tipoIdentificacao || "IDENTITY",
       tempObjectKey: uploadData.objectKey,
       filename: uploadData.filename,
-      sessionId: uploadData.sessionId
+      sessionId: uploadData.sessionId,
     });
   }
 }
@@ -2050,7 +2132,12 @@ function onEmailInput() {
 
   // Only check if we have a valid email format and it's not empty
   const email = userForm.value.email.trim();
-  if (email && email.includes('@') && !editingUser.value && !currentUserId.value) {
+  if (
+    email &&
+    email.includes("@") &&
+    !editingUser.value &&
+    !currentUserId.value
+  ) {
     // Debounce email check by 500ms
     emailCheckTimeout.value = setTimeout(() => {
       checkEmailAvailability();
@@ -2068,7 +2155,7 @@ async function checkEmailAvailability() {
   }
 
   // Don't check if email is empty or invalid
-  if (!email || !email.includes('@')) {
+  if (!email || !email.includes("@")) {
     emailAvailable.value = null;
     emailError.value = "";
     return;
@@ -2078,8 +2165,10 @@ async function checkEmailAvailability() {
     emailCheckLoading.value = true;
     emailError.value = "";
 
-    const { apiFetch } = await import('~/utils/api/index');
-    const response = await apiFetch(`/api/v1/users/check-email?email=${encodeURIComponent(email)}`);
+    const { apiFetch } = await import("~/utils/api/index");
+    const response = await apiFetch(
+      `/api/v1/users/check-email?email=${encodeURIComponent(email)}`
+    );
 
     if (response.available) {
       emailAvailable.value = true;
@@ -2091,10 +2180,9 @@ async function checkEmailAvailability() {
     } else {
       emailAvailable.value = false;
     }
-
   } catch (error) {
-    console.error('Erro ao verificar email:', error);
-    emailError.value = 'Erro ao verificar email';
+    console.error("Erro ao verificar email:", error);
+    emailError.value = "Erro ao verificar email";
     emailAvailable.value = null;
   } finally {
     emailCheckLoading.value = false;
@@ -2110,15 +2198,15 @@ async function createBasicUser() {
   }
 
   try {
-    const { apiFetch } = await import('~/utils/api/index');
+    const { apiFetch } = await import("~/utils/api/index");
 
-    const response = await apiFetch('/api/v1/users/create-basic', {
-      method: 'POST',
+    const response = await apiFetch("/api/v1/users/create-basic", {
+      method: "POST",
       body: {
         name,
         email,
-        password: 'temp123' // Senha temporária
-      }
+        password: "temp123", // Senha temporária
+      },
     });
 
     if (response.id) {
@@ -2127,12 +2215,11 @@ async function createBasicUser() {
 
       toastInfo(`Usuário ${name} salvo. Continue preenchendo os dados.`);
 
-      console.log('Usuário básico criado:', response);
+      console.log("Usuário básico criado:", response);
     }
-
   } catch (error) {
-    console.error('Erro ao criar usuário básico:', error);
-    toastError('Erro ao salvar usuário. Tente novamente.');
+    console.error("Erro ao criar usuário básico:", error);
+    toastError("Erro ao salvar usuário. Tente novamente.");
   }
 }
 </script>
@@ -2142,8 +2229,12 @@ async function createBasicUser() {
 
 /* Shimmer animation for header */
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .animate-shimmer {
@@ -2152,7 +2243,8 @@ async function createBasicUser() {
 
 /* Pulse animation for background particles */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
@@ -2174,13 +2266,21 @@ async function createBasicUser() {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.4));
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.4),
+    rgba(99, 102, 241, 0.4)
+  );
   border-radius: 6px;
   transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(99, 102, 241, 0.6));
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.6),
+    rgba(99, 102, 241, 0.6)
+  );
 }
 
 /* Glassmorphism effects */
@@ -2206,7 +2306,9 @@ async function createBasicUser() {
 
 /* Smooth transitions for all interactive elements */
 * {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-property:
+    color, background-color, border-color, text-decoration-color, fill, stroke,
+    opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 

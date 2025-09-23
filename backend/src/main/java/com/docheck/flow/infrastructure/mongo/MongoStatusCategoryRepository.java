@@ -2,7 +2,7 @@ package com.docheck.flow.infrastructure.mongo;
 
 import com.docheck.flow.application.port.StatusCategoryRepository;
 import com.docheck.flow.domain.model.StatusCategory;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,7 +14,6 @@ public class MongoStatusCategoryRepository implements StatusCategoryRepository {
 
     private final SpringDataStatusCategoryRepository springRepository;
 
-    @Autowired
     public MongoStatusCategoryRepository(SpringDataStatusCategoryRepository springRepository) {
         this.springRepository = springRepository;
     }

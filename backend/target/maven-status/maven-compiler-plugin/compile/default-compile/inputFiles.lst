@@ -5,6 +5,7 @@
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/FaceRecognitionController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/FileController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/MobileDocumentController.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/OllamaController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/ProcessController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/ProposalController.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/StageController.java
@@ -21,8 +22,14 @@
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiCredentialSecretResponse.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiModelConfigDTO.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiModelConfigRequest.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiPromptTestResponse.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiProviderDTO.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiProviderRequest.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiProviderResponse.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiProviderUpdateRequest.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/AiTestResult.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/ChatRequest.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/ChatResponse.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/CreateUserDTO.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/DocumentApprovalDecisionRequest.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/api/dto/DocumentFileDTO.java
@@ -55,6 +62,7 @@
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/DataMigrationService.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/DocumentApprovalService.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/MonitoredComponentService.java
+/Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/OllamaCommandService.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/OrphanDataCleanupService.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/PasswordHasher.java
 /Users/jean/development/docheck/flow-service/backend/src/main/java/com/docheck/flow/application/service/ProcessCascadeService.java
