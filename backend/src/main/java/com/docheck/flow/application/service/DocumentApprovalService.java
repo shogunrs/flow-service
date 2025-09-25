@@ -24,6 +24,7 @@ public class DocumentApprovalService {
         Entity entity = resolveEntity(entityType);
         switch (entity) {
             case USER:
+                // Esta chamada agora é segura e filtrada por organização dentro do UserService
                 User user = userService.get(entityId)
                         .orElseThrow(() -> new IllegalArgumentException("User not found"));
                 return user.getAllFiles();
@@ -38,8 +39,8 @@ public class DocumentApprovalService {
         switch (entity) {
             case USER:
                 User.DocumentReviewStatus status = User.DocumentReviewStatus.valueOf(body.getStatus().toUpperCase());
-                userService.updateFileStatus(entityId, fileType.toUpperCase(), status,
-                        body.getReviewerId(), body.getReviewerName(), body.getReviewNotes());
+                // Chamada corrigida para a nova assinatura do método em UserService
+                userService.updateFileStatus(entityId, fileType.toUpperCase(), status, body.getReviewNotes());
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported entity type: " + entityType);
@@ -50,6 +51,7 @@ public class DocumentApprovalService {
         Entity entity = resolveEntity(entityType);
         switch (entity) {
             case USER:
+                // Esta chamada agora é segura e filtrada por organização dentro do UserService
                 User.UserFileReference ref = Optional.ofNullable(
                         userService.getUserFileByType(entityId, fileType.toUpperCase()))
                         .orElseThrow(() -> new IllegalArgumentException("File not found for type " + fileType));

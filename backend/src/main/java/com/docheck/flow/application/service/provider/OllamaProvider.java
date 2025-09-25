@@ -9,10 +9,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,27 +23,34 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OllamaProvider implements ChatProvider {
 
-    // Ollama may not need an API key, but we inject the service for consistency.
     private final EncryptionService encryptionService;
 
     @Override
     public ChatResponse getChatResponse(ChatRequest request, AiProvider provider) {
-        // Ollama doesn't typically use an API key, but we can decrypt if one is provided.
         String apiKey = encryptionService.decrypt(provider.getApiKey());
-
         String baseUrl = provider.getBaseUrl();
         String model = request.getModel();
         String prompt = request.getPrompt();
+        MultipartFile file = request.getFile();
 
-        // Ollama API uses a specific request structure
         Map<String, Object> message = new HashMap<>();
         message.put("role", "user");
         message.put("content", prompt);
 
+        if (file != null && !file.isEmpty()) {
+            try {
+                byte[] imageBytes = file.getBytes();
+                String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+                message.put("images", List.of(base64Image));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read image file", e);
+            }
+        }
+
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", model);
         requestBody.put("messages", List.of(message));
-        requestBody.put("stream", false); // We want a single response
+        requestBody.put("stream", false);
 
         String fullUrl = baseUrl;
         if (!fullUrl.endsWith("/")) {
@@ -51,7 +60,6 @@ public class OllamaProvider implements ChatProvider {
 
         WebClient.Builder webClientBuilder = WebClient.builder();
 
-        // Add Authorization header only if an API key is present
         if (apiKey != null && !apiKey.isEmpty()) {
             webClientBuilder.defaultHeader("Authorization", "Bearer " + apiKey);
         }
@@ -82,7 +90,6 @@ public class OllamaProvider implements ChatProvider {
     }
 
     private String extractContentFromJson(String jsonResponse) {
-        // Ollama API has a different response structure
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode rootNode = objectMapper.readTree(jsonResponse);

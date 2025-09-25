@@ -31,6 +31,8 @@ public class MongoUserRepository implements UserRepository {
                 .passwordHash(doc.getPasswordHash())
                 .roles(copyRoles(doc.getRoles()))
                 .superUser(doc.isSuperUser())
+                .organizationId(doc.getOrganizationId())
+                .createdBy(doc.getCreatedBy())
                 .cpf(doc.getCpf())
                 .cnpj(doc.getCnpj())
                 .rg(doc.getRg())
@@ -99,6 +101,8 @@ public class MongoUserRepository implements UserRepository {
                 .passwordHash(user.getPasswordHash())
                 .roles(copyRoles(user.getRoles()))
                 .superUser(user.isSuperUser())
+                .organizationId(user.getOrganizationId())
+                .createdBy(user.getCreatedBy())
                 .cpf(user.getCpf())
                 .cnpj(user.getCnpj())
                 .rg(user.getRg())
@@ -183,8 +187,8 @@ public class MongoUserRepository implements UserRepository {
     }
 
     @Override
-    public Optional<User> findById(String id) {
-        return repo.findById(id).map(MongoUserRepository::toDomain);
+    public Optional<User> findByIdAndOrganizationId(String id, String organizationId) {
+        return repo.findByIdAndOrganizationId(id, organizationId).map(MongoUserRepository::toDomain);
     }
 
     @Override
@@ -193,8 +197,8 @@ public class MongoUserRepository implements UserRepository {
     }
 
     @Override
-    public List<User> findAll() {
-        return repo.findAll().stream()
+    public List<User> findAllByOrganizationId(String organizationId) {
+        return repo.findAllByOrganizationId(organizationId).stream()
                 .map(MongoUserRepository::toDomain)
                 .collect(Collectors.toList());
     }
@@ -205,7 +209,12 @@ public class MongoUserRepository implements UserRepository {
     }
 
     @Override
-    public void deleteById(String id) {
-        repo.deleteById(id);
+    public void deleteByIdAndOrganizationId(String id, String organizationId) {
+        repo.deleteByIdAndOrganizationId(id, organizationId);
+    }
+
+    @Override
+    public Optional<User> findAny() {
+        return repo.findAll().stream().findFirst().map(MongoUserRepository::toDomain);
     }
 }

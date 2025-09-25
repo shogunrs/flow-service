@@ -27,6 +27,10 @@ public class User {
     @Builder.Default
     private boolean superUser = false;
 
+    // Hierarquia e Multi-Tenancy
+    private String organizationId;
+    private String createdBy; // ID do usuário que criou este usuário
+
     // Documentos pessoais
     private String cpf;
     private String cnpj;

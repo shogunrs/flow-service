@@ -323,8 +323,43 @@
                 </div>
               </div>
 
+              <!-- Anexo Preview -->
+              <div
+                v-if="attachedFile"
+                class="relative bg-slate-800/50 border border-slate-700/50 rounded-lg p-2 mb-3 flex items-center gap-3"
+              >
+                <i class="fa-solid fa-file-alt text-slate-400"></i>
+                <div class="text-sm text-slate-300 truncate">
+                  <span class="font-medium">{{ attachedFile.name }}</span>
+                  <span class="text-slate-400 text-xs ml-2">({{ formatFileSize(attachedFile.size) }})</span>
+                </div>
+                <button
+                  @click="removeAttachedFile"
+                  class="ml-auto text-slate-400 hover:text-white hover:bg-red-500/20 rounded-full p-1.5 transition-colors"
+                  title="Remover arquivo"
+                >
+                  <i class="fa-solid fa-times text-xs"></i>
+                </button>
+              </div>
+
               <!-- Chat Input -->
               <div class="flex gap-3">
+                <!-- Botão de Anexo -->
+                <input
+                  type="file"
+                  ref="fileInputRef"
+                  @change="handleFileSelect"
+                  hidden
+                />
+                <button
+                  @click="triggerFileInput"
+                  :disabled="!selectedTestModel"
+                  class="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Anexar arquivo"
+                >
+                  <i class="fa-solid fa-paperclip"></i>
+                </button>
+
                 <input
                   v-model="userMessage"
                   @keyup.enter="sendChatMessage"
@@ -335,7 +370,7 @@
                 <button
                   @click="sendChatMessage"
                   :disabled="
-                    !userMessage || !selectedTestModel || isModelResponding
+                    (!userMessage && !attachedFile) || !selectedTestModel || isModelResponding
                   "
                   class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -1043,6 +1078,10 @@ const userMessage = ref("");
 const isModelResponding = ref(false);
 const chatHistoryRef = ref(null);
 
+// --- Refs para upload de arquivo ---
+const fileInputRef = ref(null);
+const attachedFile = ref(null);
+
 const availableTestProviders = computed(() => {
   return Object.entries(providers.value)
     .filter(([key, provider]) => provider.active)
@@ -1080,9 +1119,36 @@ watch(
   { deep: true }
 );
 
+// --- Funções de Upload ---
+function triggerFileInput() {
+  fileInputRef.value.click();
+}
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) {
+    attachedFile.value = file;
+  }
+}
+
+function removeAttachedFile() {
+  attachedFile.value = null;
+  if (fileInputRef.value) {
+    fileInputRef.value.value = null;
+  }
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 async function sendChatMessage() {
   if (
-    !userMessage.value ||
+    (!userMessage.value && !attachedFile.value) ||
     !selectedTestProvider.value ||
     !selectedTestModel.value ||
     isModelResponding.value
@@ -1091,19 +1157,24 @@ async function sendChatMessage() {
   }
 
   const messageContent = userMessage.value;
+  // TODO: Adicionar lógica para mostrar o anexo na hitória do chat
   chatHistory.value.push({ role: "user", content: messageContent });
   userMessage.value = "";
   isModelResponding.value = true;
 
+  const formData = new FormData();
+  formData.append("provider", selectedTestProvider.value);
+  formData.append("model", selectedTestModel.value);
+  formData.append("prompt", messageContent);
+
+  if (attachedFile.value) {
+    formData.append("file", attachedFile.value);
+  }
+
   try {
-    // NOTE: A new backend endpoint /api/v1/ai/chat is required for this to work.
     const response = await $fetch(`${apiBaseUrl}/ai-providers/chat`, {
       method: "POST",
-      body: {
-        provider: selectedTestProvider.value,
-        model: selectedTestModel.value,
-        prompt: messageContent,
-      },
+      body: formData,
     });
 
     chatHistory.value.push({
@@ -1118,6 +1189,7 @@ async function sendChatMessage() {
     });
   } finally {
     isModelResponding.value = false;
+    removeAttachedFile();
   }
 }
 </script>

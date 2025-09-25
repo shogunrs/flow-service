@@ -7,6 +7,7 @@ import com.docheck.flow.api.dto.ChatResponse;
 import com.docheck.flow.application.service.AiProviderService;
 import com.docheck.flow.domain.model.AiProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -47,8 +48,8 @@ public class AiProviderController {
         return ResponseEntity.ok(responses);
     }
 
-    @PostMapping("/chat")
-    public ResponseEntity<ChatResponse> getChatResponse(@RequestBody ChatRequest request) {
+    @PostMapping(value = "/chat", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<ChatResponse> getChatResponse(@ModelAttribute ChatRequest request) {
         ChatResponse response = aiProviderService.getChatResponse(request);
         return ResponseEntity.ok(response);
     }

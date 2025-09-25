@@ -31,6 +31,12 @@ public class UserDocument {
     private Set<String> roles = new HashSet<>();
     private boolean superUser;
 
+    // Hierarquia e Multi-Tenancy
+    @Indexed
+    private String organizationId;
+    @Indexed
+    private String createdBy;
+
     // Documentos pessoais
     private String cpf;
     private String cnpj;

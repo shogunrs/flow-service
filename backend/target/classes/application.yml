@@ -2,6 +2,10 @@ server:
   port: 8080
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/flow}
@@ -42,6 +46,8 @@ app:
       encryption:
         password: ${APP_AI_ENCRYPTION_PASSWORD:changeit}
         salt: ${APP_AI_ENCRYPTION_SALT:0123456789abcdef}
+    jwt:
+      secret: ${JWT_SECRET:uma-chave-secreta-muito-longa-e-segura-para-jwt}
 
 management:
   endpoints:

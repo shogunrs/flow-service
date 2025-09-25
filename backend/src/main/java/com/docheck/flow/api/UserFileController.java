@@ -33,7 +33,6 @@ public class UserFileController {
     public ResponseEntity<?> getUploadUrl(@PathVariable("userId") String userId,
                                         @Valid @RequestBody FileUploadRequestDTO request) {
         try {
-            // Validar e converter o tipo de arquivo
             UserFileStorageService.FileType fileType;
             try {
                 fileType = UserFileStorageService.FileType.valueOf(request.fileType().toUpperCase());
@@ -43,7 +42,6 @@ public class UserFileController {
                 );
             }
 
-            // Gerar URL de upload presignada
             Map<String, Object> uploadData = userFileStorageService.presignUserFileUpload(
                 userId,
                 request.filename(),
@@ -67,7 +65,6 @@ public class UserFileController {
     public ResponseEntity<?> getDownloadUrl(@PathVariable("userId") String userId,
                                           @PathVariable("objectKey") String objectKey) {
         try {
-            // Verificar se a objectKey pertence ao usuário (segurança básica)
             if (!objectKey.startsWith("users/" + userId + "/")) {
                 return ResponseEntity.status(403).body(
                     Map.of("error", "Access denied to this file")
@@ -88,48 +85,6 @@ public class UserFileController {
         }
     }
 
-    @PostMapping("/{userId}/files/profile-photo/upload-url")
-    public ResponseEntity<?> getProfilePhotoUploadUrl(@PathVariable("userId") String userId,
-                                                     @RequestParam(value = "filename") String filename,
-                                                     @RequestParam(value = "contentType") String contentType) {
-        try {
-            Map<String, Object> uploadData = userFileStorageService.presignUserFileUpload(
-                userId,
-                filename,
-                contentType,
-                UserFileStorageService.FileType.PROFILE_PHOTO
-            );
-
-            return ResponseEntity.ok(uploadData);
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                Map.of("error", "Error generating profile photo upload URL: " + e.getMessage())
-            );
-        }
-    }
-
-    @PostMapping("/{userId}/files/address-proof/upload-url")
-    public ResponseEntity<?> getAddressProofUploadUrl(@PathVariable("userId") String userId,
-                                                     @RequestParam(value = "filename") String filename,
-                                                     @RequestParam(value = "contentType") String contentType) {
-        try {
-            Map<String, Object> uploadData = userFileStorageService.presignUserFileUpload(
-                userId,
-                filename,
-                contentType,
-                UserFileStorageService.FileType.ADDRESS_PROOF
-            );
-
-            return ResponseEntity.ok(uploadData);
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                Map.of("error", "Error generating address proof upload URL: " + e.getMessage())
-            );
-        }
-    }
-
     @PostMapping("/{userId}/files/confirm-upload")
     public ResponseEntity<?> confirmFileUpload(@PathVariable("userId") String userId,
                                              @RequestBody Map<String, Object> confirmData,
@@ -143,11 +98,9 @@ public class UserFileController {
             Long fileSize = ((Number) confirmData.get("fileSize")).longValue();
             Boolean isMobileUpload = (Boolean) confirmData.getOrDefault("isMobileUpload", false);
 
-            // Capturar IP e localização
             String ipAddress = getClientIpAddress(request);
-            String location = (String) confirmData.get("location"); // Enviado pelo frontend
+            String location = (String) confirmData.get("location");
 
-            // Salvar referência do arquivo no banco
             userService.addFileReference(
                 userId, objectKey, publicUrl, filename, fileType,
                 contentType, fileSize, ipAddress, location, isMobileUpload
@@ -206,8 +159,8 @@ public class UserFileController {
                                              @RequestBody UpdateFileStatusRequest body) {
         try {
             User.DocumentReviewStatus status = User.DocumentReviewStatus.valueOf(body.status().toUpperCase());
-            userService.updateFileStatus(userId, fileType.toUpperCase(), status,
-                    body.reviewerId(), body.reviewerName(), body.reviewNotes());
+            // Chamada corrigida para a nova assinatura do método em UserService
+            userService.updateFileStatus(userId, fileType.toUpperCase(), status, body.reviewNotes());
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -222,7 +175,8 @@ public class UserFileController {
         }
     }
 
-    public record UpdateFileStatusRequest(String status, String reviewerId, String reviewerName, String reviewNotes) {}
+    // DTO atualizado para refletir a nova lógica de negócio
+    public record UpdateFileStatusRequest(String status, String reviewNotes) {}
 
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
