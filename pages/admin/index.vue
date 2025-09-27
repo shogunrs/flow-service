@@ -259,6 +259,35 @@
                   </button>
                 </div>
               </div>
+              <div class="flex-1 min-w-[16rem]">
+                <label class="text-[12px] text-slate-300">Usuários autorizados</label>
+                <div
+                  class="mt-2 bg-slate-900/40 border border-slate-700/60 rounded-xl max-h-32 overflow-y-auto p-2 space-y-1"
+                >
+                  <div
+                    v-if="!userSelectionOptions.length"
+                    class="text-[11px] text-slate-500"
+                  >
+                    Nenhum usuário cadastrado ou API indisponível.
+                  </div>
+                  <label
+                    v-for="user in userSelectionOptions"
+                    :key="user.id"
+                    class="flex items-center gap-2 text-xs text-slate-200"
+                  >
+                    <input
+                      type="checkbox"
+                      class="accent-indigo-500 rounded-sm"
+                      v-model="newProcessUsers"
+                      :value="user.id"
+                    />
+                    <span class="truncate">{{ user.label }}</span>
+                  </label>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">
+                  Deixe vazio para liberar o acesso a todos.
+                </p>
+              </div>
               <div class="flex items-center gap-2">
                 <button
                   class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
@@ -488,6 +517,35 @@
             class="mt-1 w-full bg-slate-800/70 border border-slate-700/60 text-slate-200 rounded-md px-3 py-2 text-sm"
             placeholder="ex.: ConsorEquity"
           />
+        </div>
+        <div>
+          <label class="text-[12px] text-slate-300">Usuários com acesso à esteira</label>
+          <div
+            class="mt-2 bg-slate-900/40 border border-slate-700/60 rounded-xl max-h-40 overflow-y-auto p-3 space-y-1"
+          >
+            <div
+              v-if="!userSelectionOptions.length"
+              class="text-[11px] text-slate-500"
+            >
+              Nenhum usuário disponível. Cadastre usuários ou habilite a API.
+            </div>
+            <label
+              v-for="user in userSelectionOptions"
+              :key="user.id"
+              class="flex items-center gap-2 text-xs text-slate-200"
+            >
+              <input
+                type="checkbox"
+                class="accent-indigo-500 rounded-sm"
+                v-model="selectedProcessUsers"
+                :value="user.id"
+              />
+              <span class="truncate">{{ user.label }}</span>
+            </label>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">
+            Sem seleção, todos os usuários com acesso ao sistema enxergam esta esteira.
+          </p>
         </div>
         <PipelineManager
           v-model:stages="pipelineStages"
@@ -1320,6 +1378,7 @@ const currentProcessKey = ref(processes.value[0]?.key || "");
 const newProcName = ref("");
 const newProcessType = ref('GENERIC');
 const creatingProcess = ref(false);
+const newProcessUsers = ref([]);
 
 const processTypeOptions = [
   {
@@ -1400,6 +1459,7 @@ async function createProcess() {
   const blueprint = DEFAULT_PIPELINES[selectedType]
     ? [...DEFAULT_PIPELINES[selectedType]]
     : [];
+  const allowedIds = sanitizeUserSelection(newProcessUsers.value);
   // Otimista: atualiza DOM primeiro
   processes.value = [
     ...processes.value,
@@ -1409,9 +1469,10 @@ async function createProcess() {
       active: true,
       type: selectedType,
       isFinanceiro: selectedType === 'FINANCIAL',
+      allowedUserIds: allowedIds,
     },
   ];
-  const ok = await addProcess(key, name || key, selectedType);
+  const ok = await addProcess(key, name || key, selectedType, allowedIds);
   if (ok) {
     currentProcessKey.value = key;
     setLastKey(key);
@@ -1425,6 +1486,8 @@ async function createProcess() {
     }
     newProcName.value = "";
     newProcessType.value = 'GENERIC';
+    newProcessUsers.value = [];
+    selectedProcessUsers.value = sanitizeUserSelection(allowedIds);
     toastSuccess("Processo criado");
   } else {
     // rollback visual
@@ -1436,6 +1499,56 @@ async function createProcess() {
 
 const pipelineStages = ref([...DEFAULT_PIPELINES.GENERIC]);
 const processName = ref("");
+const selectedProcessUsers = ref([]);
+
+const userSelectionOptions = computed(() =>
+  (usersList.value || [])
+    .filter((user) => typeof user?.id === "string" && user.id)
+    .map((user) => ({
+      id: String(user.id),
+      label: [user.name, user.email]
+        .filter((value) => typeof value === "string" && value.trim())
+        .join(" — ") || String(user.id),
+    }))
+);
+
+function syncCurrentProcessUsers() {
+  const current = processes.value.find((p) => p.key === currentProcessKey.value);
+  const allowed = sanitizeUserSelection(current?.allowedUserIds || []);
+  const validIds = new Set(userSelectionOptions.value.map((user) => user.id));
+  selectedProcessUsers.value = allowed.filter((id) => validIds.size ? validIds.has(id) : true);
+}
+
+function sanitizeUserSelection(ids) {
+  return Array.from(
+    new Set(
+      (ids || [])
+        .filter((id) => typeof id === "string")
+        .map((id) => id.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+watch(userSelectionOptions, () => {
+  const validIds = new Set(userSelectionOptions.value.map((user) => user.id));
+  newProcessUsers.value = sanitizeUserSelection(
+    newProcessUsers.value.filter((id) => (validIds.size ? validIds.has(id) : true))
+  );
+  selectedProcessUsers.value = sanitizeUserSelection(
+    selectedProcessUsers.value.filter((id) => (validIds.size ? validIds.has(id) : true))
+  );
+});
+
+watch(currentProcessKey, () => {
+  syncCurrentProcessUsers();
+});
+
+watch(processes, () => {
+  syncCurrentProcessUsers();
+});
+
+syncCurrentProcessUsers();
 
 // Modal Gestão da Esteira
 const showPipelineModal = ref(false);
@@ -1468,11 +1581,17 @@ async function savePipelineModal() {
       }
     }
     const newName = processName.value || currentProcessKey.value;
-    const okName = await setProcessName(currentProcessKey.value, newName);
-    if (okName) {
+    const sanitizedSelection = sanitizeUserSelection(selectedProcessUsers.value);
+    const okSettings = await setProcessName(currentProcessKey.value, {
+      name: newName,
+      allowedUserIds: sanitizedSelection,
+    });
+    if (okSettings) {
       // Atualiza lista local sem novo GET
       processes.value = processes.value.map((p) =>
-        p.key === currentProcessKey.value ? { ...p, name: newName } : p
+        p.key === currentProcessKey.value
+          ? { ...p, name: newName, allowedUserIds: sanitizedSelection }
+          : p
       );
     }
     try {
@@ -1524,8 +1643,8 @@ async function savePipelineModal() {
           localStorage.setItem(storageKey, JSON.stringify(nextMap));
         } catch (_) {}
       }
-      if (okName) toastSuccess("Esteira salva");
-      else toastInfo("Etapas salvas; falha ao renomear o processo");
+      if (okSettings) toastSuccess("Esteira salva");
+      else toastInfo("Etapas salvas; falha ao atualizar dados do processo");
       showPipelineModal.value = false;
     } catch (e) {
       toastError("Falha ao salvar etapas. Verifique a conexão.");
@@ -1613,6 +1732,7 @@ async function editProcess(p) {
   }
   setLastKey(p.key);
   processName.value = p.name || p.key;
+  selectedProcessUsers.value = sanitizeUserSelection(p.allowedUserIds);
   await prefetchStageFields();
   openPipelineModal();
 }
@@ -1924,6 +2044,7 @@ async function loadUsersList() {
     console.error("Failed to load users list:", error);
     toastError("Erro ao carregar usuários");
   }
+  syncCurrentProcessUsers();
 }
 
 const { getCurrentLocation, formatLocation } = useGeolocation();

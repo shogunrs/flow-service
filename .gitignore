@@ -152,3 +152,8 @@ out/
 *.class
 # Maven cache local (não versionar)
 .m2/
+backend/.m2/
+backend/target/
+backend/build/
+backend/out/
+

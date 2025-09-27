@@ -3,6 +3,7 @@ import { sanitizeProcessKey } from '~/utils/strings/sanitize'
 import { isApiEnabled, apiFetch } from '~/utils/api/index'
 import type { StageField } from '~/composables/useStageFields'
 import { saveStagesPreservingIdsApi } from '~/composables/useStages'
+import { useCurrentUser } from '~/composables/useCurrentUser'
 
 export type Stage = { id: string; title: string; slaDays: number; color: string; status?: string }
 
@@ -14,6 +15,11 @@ function safeParse<T>(raw: string | null, fallback: T): T {
   try { return raw ? (JSON.parse(raw) as T) : fallback } catch { return fallback }
 }
 
+const currentUserStore = useCurrentUser()
+if (typeof window !== 'undefined') {
+  try { currentUserStore.load() } catch {}
+}
+
 function normalizeProcessInfo(raw: any): ProcessInfo {
   if (!raw) {
     return {
@@ -22,6 +28,7 @@ function normalizeProcessInfo(raw: any): ProcessInfo {
       active: true,
       type: 'GENERIC',
       isFinanceiro: false,
+      allowedUserIds: [],
     }
   }
 
@@ -33,12 +40,23 @@ function normalizeProcessInfo(raw: any): ProcessInfo {
       ? 'FINANCIAL'
       : 'GENERIC'
 
+  const allowedUsersSource = raw.allowedUserIds || raw.allowedUsers || raw.allowed_user_ids || []
+  const allowedUserIds = Array.isArray(allowedUsersSource)
+    ? Array.from(new Set(
+        allowedUsersSource
+          .filter((id: unknown) => typeof id === 'string')
+          .map((id: string) => id.trim())
+          .filter(Boolean)
+      ))
+    : []
+
   const info: ProcessInfo = {
     key: raw.key || raw.externalId || '',
     name: raw.name || raw.key || '',
     active: raw.active !== false,
     type,
     isFinanceiro: type === 'FINANCIAL',
+    allowedUserIds,
   }
 
   return info
@@ -52,6 +70,31 @@ export type ProcessInfo = {
   active?: boolean
   type?: ProcessType
   isFinanceiro?: boolean
+  allowedUserIds?: string[]
+}
+
+function viewerCanAccessProcess(process: ProcessInfo): boolean {
+  const allowed = Array.isArray(process.allowedUserIds)
+    ? process.allowedUserIds.filter((id) => typeof id === 'string' && id.trim())
+    : []
+  if (!allowed.length) return true
+  const actor = currentUserStore.user.value
+  if (!actor?.id) return false
+  if (actor.superUser) return true
+  return allowed.includes(actor.id)
+}
+
+function sanitizeAllowedUserIds(ids?: string[]): string[] | undefined {
+  if (!Array.isArray(ids)) return undefined
+  const normalized = Array.from(
+    new Set(
+      ids
+        .filter((id) => typeof id === 'string')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    )
+  )
+  return normalized
 }
 
 let apiProcessCache: Array<ProcessInfo> = []
@@ -103,7 +146,7 @@ export function ensureDefaultProcess(defaultKey = 'quotaequity', defaultName = '
   const arr = listProcesses()
   const key = sanitizeProcessKey(defaultKey)
   if (!arr.find(p => p.key === key)) {
-    const next = [...arr, { key, name: defaultName, active: true }]
+    const next = [...arr, { key, name: defaultName, active: true, allowedUserIds: [] as string[] }]
     localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(next))
   }
 }
@@ -125,16 +168,20 @@ export async function getProcessInfo(key: string): Promise<ProcessInfo | null> {
   return processes.find(p => p.key === key) || null
 }
 
-export async function addProcess(key: string, name: string, type: ProcessType = 'GENERIC'): Promise<boolean> {
+export async function addProcess(key: string, name: string, type: ProcessType = 'GENERIC', allowedUserIds: string[] = []): Promise<boolean> {
   if (!key) return
   if (isApiEnabled()) {
     // attempt API create first; if falhar, não espelha local para evitar inconsistência
     try {
-      await apiFetch('/api/v1/processes', { method: 'POST', body: { key, name, type } })
+      const sanitizedAllowed = sanitizeAllowedUserIds(allowedUserIds) ?? []
+      await apiFetch('/api/v1/processes', {
+        method: 'POST',
+        body: { key, name, type, allowedUserIds: sanitizedAllowed }
+      })
       // update in-memory cache otimista
       apiProcessCache = [
         ...apiProcessCache.filter((p) => p.key !== key),
-        normalizeProcessInfo({ key, name, active: true, type }),
+        normalizeProcessInfo({ key, name, active: true, type, allowedUserIds: sanitizedAllowed }),
       ]
       try { localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(apiProcessCache)) } catch {}
       try { window.dispatchEvent(new Event('processes:changed')) } catch {}
@@ -146,7 +193,8 @@ export async function addProcess(key: string, name: string, type: ProcessType = 
   const k = sanitizeProcessKey(key)
   if (!k) return
   if (!arr.find(p => p.key === k)) {
-    arr.push(normalizeProcessInfo({ key: k, name: name || k, active: true, type }))
+    const sanitizedAllowed = sanitizeAllowedUserIds(allowedUserIds) ?? []
+    arr.push(normalizeProcessInfo({ key: k, name: name || k, active: true, type, allowedUserIds: sanitizedAllowed }))
     localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(arr))
     try { window.dispatchEvent(new Event('processes:changed')) } catch (_) {}
   }
@@ -332,22 +380,53 @@ export function setProcessActive(key: string, active: boolean): void {
 }
 
 export function listActiveProcesses(): Array<ProcessInfo> {
-  return listProcesses().filter(p => p.active !== false)
+  return listProcesses().filter(p => p.active !== false && viewerCanAccessProcess(p))
 }
 
-export async function setProcessName(key: string, name: string): Promise<boolean> {
+type ProcessUpdateOptions = { name?: string; allowedUserIds?: string[] }
+
+export async function setProcessName(key: string, nameOrOptions: string | ProcessUpdateOptions): Promise<boolean> {
+  if (!key) return false
+  const options: ProcessUpdateOptions = typeof nameOrOptions === 'string' ? { name: nameOrOptions } : (nameOrOptions || {})
+  const sanitizedKey = sanitizeProcessKey(key)
+  const allowedProvided = Object.prototype.hasOwnProperty.call(options, 'allowedUserIds')
+  const sanitizedAllowed = allowedProvided ? sanitizeAllowedUserIds(options.allowedUserIds) ?? [] : undefined
+
+  const hasNameUpdate = Object.prototype.hasOwnProperty.call(options, 'name')
+  const payload: Record<string, unknown> = {}
+  if (hasNameUpdate) payload.name = options.name
+  if (allowedProvided) payload.allowedUserIds = sanitizedAllowed
+
   if (isApiEnabled()) {
+    if (!Object.keys(payload).length) return true
     try {
-      await apiFetch(`/api/v1/processes/${encodeURIComponent(sanitizeProcessKey(key))}`, { method: 'PUT', body: { name } })
-      apiProcessCache = apiProcessCache.map(p => p.key === sanitizeProcessKey(key) ? { ...p, name } : p)
+      await apiFetch(`/api/v1/processes/${encodeURIComponent(sanitizedKey)}`, { method: 'PUT', body: payload })
+      apiProcessCache = apiProcessCache.map((p) => {
+        if (p.key !== sanitizedKey) return p
+        const next = {
+          ...p,
+          name: hasNameUpdate ? (options.name || sanitizedKey) : p.name,
+          allowedUserIds: allowedProvided ? sanitizedAllowed : p.allowedUserIds,
+        }
+        return normalizeProcessInfo(next)
+      })
       try { localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(apiProcessCache)) } catch {}
       try { window.dispatchEvent(new Event('processes:changed')) } catch {}
       return true
     } catch { return false }
   }
-  if (typeof localStorage === 'undefined') return
-  const k = sanitizeProcessKey(key)
-  const arr = listProcesses().map(p => (p.key === k ? { ...p, name: name || k } : p))
+
+  if (typeof localStorage === 'undefined') return false
+
+  const arr = listProcesses().map((p) => {
+    if (p.key !== sanitizedKey) return p
+    const updated = {
+      ...p,
+      name: hasNameUpdate ? (options.name || sanitizedKey) : p.name,
+      allowedUserIds: allowedProvided ? sanitizedAllowed : p.allowedUserIds,
+    }
+    return normalizeProcessInfo(updated)
+  })
   localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(arr))
   try { window.dispatchEvent(new Event('processes:changed')) } catch (_) {}
   return true

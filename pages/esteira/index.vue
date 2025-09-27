@@ -2,8 +2,9 @@
   <div
     class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
   >
-    <!-- Header (sem busca/IA; serão acionados pela sidebar) -->
-    <header
+    <template v-if="canViewProcess">
+      <!-- Header (sem busca/IA; serão acionados pela sidebar) -->
+      <header
       class="app-header relative bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 px-4 py-4"
     >
       <div
@@ -371,7 +372,23 @@
           </table>
         </div>
       </div>
-    </main>
+      </main>
+    </template>
+    <div
+      v-else
+      class="flex flex-col items-center justify-center py-20 px-6 text-center text-slate-300 gap-3"
+    >
+      <div class="w-16 h-16 rounded-full bg-slate-800/70 border border-slate-700/60 flex items-center justify-center">
+        <i class="fa-solid fa-lock text-2xl text-slate-400"></i>
+      </div>
+      <h2 class="text-lg font-semibold text-slate-100">
+        Acesso restrito a esta esteira
+      </h2>
+      <p class="max-w-md text-sm text-slate-400">
+        Você ainda não foi adicionado aos usuários autorizados para acompanhar este processo.
+        Solicite acesso a um administrador para visualizar o fluxo desta esteira.
+      </p>
+    </div>
 
     <!-- New Proposal Modal using BaseModal -->
     <BaseModal
@@ -1178,6 +1195,7 @@ import {
   fetchStatuses,
   fetchDetailedStatuses,
 } from "~/composables/useStatuses";
+import { useCurrentUser } from "~/composables/useCurrentUser";
 
 useHead({ title: "Esteira" });
 
@@ -1201,6 +1219,22 @@ const isFinancialProcess = computed(() => currentProcessType.value === 'FINANCIA
 const isLeadQualificationProcess = computed(
   () => currentProcessType.value === 'LEAD_QUALIFICATION'
 );
+const allowedProcessUserIds = computed(() => {
+  const allowed = currentProcessInfo.value?.allowedUserIds;
+  if (!Array.isArray(allowed)) return [];
+  return allowed
+    .filter((id) => typeof id === 'string')
+    .map((id) => id.trim())
+    .filter(Boolean);
+});
+const canViewProcess = computed(() => {
+  const allowed = allowedProcessUserIds.value;
+  if (!allowed.length) return true;
+  const viewer = currentUser.value;
+  if (!viewer?.id) return false;
+  if (viewer.superUser) return true;
+  return allowed.includes(viewer.id);
+});
 const financialStatsRef = ref(null);
 let refreshTimeout;
 
@@ -1267,6 +1301,7 @@ const loadProcessInfo = async () => {
 
 // Modal global de novo registro
 const { openModal: openGlobalModal } = useNewRecordModal();
+const { user: currentUser, load: loadCurrentUser } = useCurrentUser();
 // Modal de pesquisa (acionado pelo item da sidebar)
 const showSearchModal = ref(false);
 const searchText = ref("");
@@ -1364,6 +1399,9 @@ async function syncProposalsFromApi() {
 }
 
 onMounted(async () => {
+  try {
+    loadCurrentUser();
+  } catch (_) {}
   loadPipelineConfig();
   loadProcessInfo(); // Carregar informações do processo
   syncProposalsFromApi();
@@ -2248,6 +2286,11 @@ const formErrors = ref({ name: "", cpf: "", amountDesired: "" });
 
 // Função para abrir o modal global
 const openGlobalNewRecordModal = async () => {
+  if (!canViewProcess.value) {
+    const { warning } = useToast();
+    warning("Você não tem permissão para criar registros nesta esteira.");
+    return;
+  }
   // Sempre garantir que use a primeira etapa
   const firstStageId = stages.value[0]?.id || "dados_basicos";
 
