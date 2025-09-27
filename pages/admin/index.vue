@@ -261,28 +261,29 @@
               </div>
               <div class="flex-1 min-w-[16rem]">
                 <label class="text-[12px] text-slate-300">Usuários autorizados</label>
-                <div
-                  class="mt-2 bg-slate-900/40 border border-slate-700/60 rounded-xl max-h-32 overflow-y-auto p-2 space-y-1"
-                >
-                  <div
-                    v-if="!userSelectionOptions.length"
-                    class="text-[11px] text-slate-500"
-                  >
-                    Nenhum usuário cadastrado ou API indisponível.
-                  </div>
-                  <label
-                    v-for="user in userSelectionOptions"
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <span
+                    v-for="user in newProcessUserDetails"
                     :key="user.id"
-                    class="flex items-center gap-2 text-xs text-slate-200"
+                    class="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 text-[11px] text-indigo-200"
                   >
-                    <input
-                      type="checkbox"
-                      class="accent-indigo-500 rounded-sm"
-                      v-model="newProcessUsers"
-                      :value="user.id"
-                    />
-                    <span class="truncate">{{ user.label }}</span>
-                  </label>
+                    <span class="truncate max-w-[160px]">{{ user.label }}</span>
+                    <button
+                      class="text-indigo-200/80 hover:text-white"
+                      type="button"
+                      @click="removeNewProcessUser(user.id)"
+                    >
+                      <i class="fa-solid fa-xmark text-[10px]"></i>
+                    </button>
+                  </span>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-[12px] text-slate-200 hover:border-indigo-500/50 hover:text-white"
+                    @click="openUserSelector('create')"
+                  >
+                    <i class="fa-solid fa-user-plus text-xs"></i>
+                    Gerenciar acesso
+                  </button>
                 </div>
                 <p class="text-[11px] text-slate-400 mt-1">
                   Deixe vazio para liberar o acesso a todos.
@@ -520,28 +521,29 @@
         </div>
         <div>
           <label class="text-[12px] text-slate-300">Usuários com acesso à esteira</label>
-          <div
-            class="mt-2 bg-slate-900/40 border border-slate-700/60 rounded-xl max-h-40 overflow-y-auto p-3 space-y-1"
-          >
-            <div
-              v-if="!userSelectionOptions.length"
-              class="text-[11px] text-slate-500"
-            >
-              Nenhum usuário disponível. Cadastre usuários ou habilite a API.
-            </div>
-            <label
-              v-for="user in userSelectionOptions"
+          <div class="mt-2 flex flex-wrap gap-2">
+            <span
+              v-for="user in selectedProcessUserDetails"
               :key="user.id"
-              class="flex items-center gap-2 text-xs text-slate-200"
+              class="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 text-[11px] text-indigo-200"
             >
-              <input
-                type="checkbox"
-                class="accent-indigo-500 rounded-sm"
-                v-model="selectedProcessUsers"
-                :value="user.id"
-              />
-              <span class="truncate">{{ user.label }}</span>
-            </label>
+              <span class="truncate max-w-[160px]">{{ user.label }}</span>
+              <button
+                class="text-indigo-200/80 hover:text-white"
+                type="button"
+                @click="removeSelectedProcessUser(user.id)"
+              >
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+              </button>
+            </span>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-[12px] text-slate-200 hover:border-indigo-500/50 hover:text-white"
+              @click="openUserSelector('edit')"
+            >
+              <i class="fa-solid fa-user-plus text-xs"></i>
+              Gerenciar acesso
+            </button>
           </div>
           <p class="text-[11px] text-slate-400 mt-1">
             Sem seleção, todos os usuários com acesso ao sistema enxergam esta esteira.
@@ -565,6 +567,82 @@
             @click="savePipelineModal"
           >
             Salvar
+          </button>
+        </div>
+      </template>
+    </BaseModal>
+
+    <BaseModal
+      v-model="showUserSelectorModal"
+      title="Selecionar usuários"
+      size="md"
+    >
+      <div class="space-y-3">
+        <input
+          v-model="userSearch"
+          type="search"
+          class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+          placeholder="Buscar por nome ou e-mail"
+        />
+        <div class="max-h-64 overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/60">
+          <div
+            v-if="!filteredModalUsers.length"
+            class="px-3 py-4 text-center text-sm text-slate-500"
+          >
+            Nenhum usuário encontrado.
+          </div>
+          <button
+            v-for="user in filteredModalUsers"
+            :key="user.id"
+            type="button"
+            :class="[
+              'w-full flex items-center justify-between px-3 py-2 text-sm transition-colors border-b border-slate-800 last:border-b-0',
+              modalSelectionSet.has(user.id)
+                ? 'bg-indigo-500/10 text-indigo-200 border-indigo-500/30'
+                : 'text-slate-200 hover:bg-slate-800/60'
+            ]"
+            @click="toggleUserInSelection(user.id)"
+          >
+            <span class="truncate max-w-[220px] text-left">{{ user.label }}</span>
+            <i
+              :class="modalSelectionSet.has(user.id)
+                ? 'fa-solid fa-check text-indigo-300'
+                : 'fa-regular fa-circle text-slate-500'"
+            ></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <span
+            v-for="id in userSelectorSelection"
+            :key="id"
+            class="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 text-[11px] text-indigo-200"
+          >
+            <span class="truncate max-w-[160px]">
+              {{ userMap.get(id)?.label || id }}
+            </span>
+            <button
+              class="text-indigo-200/80 hover:text-white"
+              type="button"
+              @click="toggleUserInSelection(id)"
+            >
+              <i class="fa-solid fa-xmark text-[10px]"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex items-center justify-end gap-2">
+          <button
+            class="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
+            @click="closeUserSelectorModal"
+          >
+            Cancelar
+          </button>
+          <button
+            class="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500"
+            @click="confirmUserSelection"
+          >
+            Confirmar
           </button>
         </div>
       </template>
@@ -1379,6 +1457,11 @@ const newProcName = ref("");
 const newProcessType = ref('GENERIC');
 const creatingProcess = ref(false);
 const newProcessUsers = ref([]);
+const selectedProcessUsers = ref([]);
+const showUserSelectorModal = ref(false);
+const userSelectorMode = ref('create');
+const userSelectorSelection = ref([]);
+const userSearch = ref('');
 
 const processTypeOptions = [
   {
@@ -1499,7 +1582,6 @@ async function createProcess() {
 
 const pipelineStages = ref([...DEFAULT_PIPELINES.GENERIC]);
 const processName = ref("");
-const selectedProcessUsers = ref([]);
 
 const userSelectionOptions = computed(() =>
   (usersList.value || [])
@@ -1510,6 +1592,35 @@ const userSelectionOptions = computed(() =>
         .filter((value) => typeof value === "string" && value.trim())
         .join(" — ") || String(user.id),
     }))
+);
+
+const userMap = computed(() => {
+  const map = new Map();
+  for (const user of usersList.value || []) {
+    if (!user?.id) continue;
+    map.set(String(user.id), {
+      id: String(user.id),
+      name: user.name,
+      email: user.email,
+      label:
+        [user.name, user.email]
+          .filter((value) => typeof value === "string" && value.trim())
+          .join(" — ") || String(user.id),
+    });
+  }
+  return map;
+});
+
+const newProcessUserDetails = computed(() =>
+  sanitizeUserSelection(newProcessUsers.value).map((id) =>
+    userMap.value.get(id) || { id, label: id }
+  )
+);
+
+const selectedProcessUserDetails = computed(() =>
+  sanitizeUserSelection(selectedProcessUsers.value).map((id) =>
+    userMap.value.get(id) || { id, label: id }
+  )
 );
 
 function syncCurrentProcessUsers() {
@@ -1549,6 +1660,69 @@ watch(processes, () => {
 });
 
 syncCurrentProcessUsers();
+
+async function openUserSelector(mode) {
+  if (!usersList.value.length) {
+    try {
+      await loadUsersList();
+    } catch (_) {}
+  }
+  userSelectorMode.value = mode;
+  userSelectorSelection.value = mode === 'create'
+    ? [...sanitizeUserSelection(newProcessUsers.value)]
+    : [...sanitizeUserSelection(selectedProcessUsers.value)];
+  userSearch.value = '';
+  showUserSelectorModal.value = true;
+}
+
+function closeUserSelectorModal() {
+  showUserSelectorModal.value = false;
+  userSelectorSelection.value = [];
+  userSearch.value = '';
+}
+
+function toggleUserInSelection(id) {
+  const normalized = String(id);
+  const list = new Set(userSelectorSelection.value.map((value) => String(value)));
+  if (list.has(normalized)) {
+    list.delete(normalized);
+  } else {
+    list.add(normalized);
+  }
+  userSelectorSelection.value = Array.from(list);
+}
+
+function confirmUserSelection() {
+  const sanitized = sanitizeUserSelection(userSelectorSelection.value);
+  if (userSelectorMode.value === 'create') {
+    newProcessUsers.value = sanitized;
+  } else {
+    selectedProcessUsers.value = sanitized;
+  }
+  closeUserSelectorModal();
+}
+
+function removeNewProcessUser(id) {
+  newProcessUsers.value = sanitizeUserSelection(
+    newProcessUsers.value.filter((value) => value !== id)
+  );
+}
+
+function removeSelectedProcessUser(id) {
+  selectedProcessUsers.value = sanitizeUserSelection(
+    selectedProcessUsers.value.filter((value) => value !== id)
+  );
+}
+
+const filteredModalUsers = computed(() => {
+  const term = userSearch.value.trim().toLowerCase();
+  if (!term) return userSelectionOptions.value;
+  return userSelectionOptions.value.filter((user) =>
+    user.label.toLowerCase().includes(term)
+  );
+});
+
+const modalSelectionSet = computed(() => new Set(userSelectorSelection.value));
 
 // Modal Gestão da Esteira
 const showPipelineModal = ref(false);
