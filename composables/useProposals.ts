@@ -75,6 +75,9 @@ export async function createProposalApi(processKey: string, payload: Partial<Pro
       stageId: payload.stageId,
       status: payload.status
     }
+    if (payload.details && Object.keys(payload.details).length > 0) {
+      body.details = payload.details
+    }
     const x = await apiFetch<any>(`/api/v1/processes/${encodeURIComponent(processKey)}/proposals`, { method: 'POST', body })
     return {
       id: x.id,

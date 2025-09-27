@@ -7,16 +7,18 @@ const modalData = ref({
   stageFields: [],
   pipelineKey: '',
   isFinancial: false,
+  leadOptions: [],
   onSave: null,
 })
 
 export function useNewRecordModal() {
-  function openModal({ stages, stageFields, pipelineKey, isFinancial, onSave }) {
+  function openModal({ stages, stageFields, pipelineKey, isFinancial, leadOptions, onSave }) {
     modalData.value = {
       stages: stages || [],
       stageFields: stageFields || [],
       pipelineKey: pipelineKey || '',
       isFinancial: Boolean(isFinancial),
+      leadOptions: Array.isArray(leadOptions) ? leadOptions : [],
       onSave: onSave || (() => {}),
     }
     isModalOpen.value = true
@@ -29,6 +31,7 @@ export function useNewRecordModal() {
       stageFields: [],
       pipelineKey: '',
       isFinancial: false,
+      leadOptions: [],
       onSave: null,
     }
   }

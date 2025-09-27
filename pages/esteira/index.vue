@@ -202,7 +202,7 @@
                   <div class="font-medium leading-tight text-sm text-white">
                     {{ p.name }}
                   </div>
-                  <div class="text-xs text-slate-300 mt-1">
+                  <div v-if="isFinancialProcess" class="text-xs text-slate-300 mt-1">
                     R$ {{ p.amount.toLocaleString("pt-BR") }}
                   </div>
                 </div>
@@ -263,7 +263,7 @@
                 <!-- Nome e valor -->
                 <div>
                   <div class="font-medium text-sm text-white">{{ p.name }}</div>
-                  <div class="mt-1 text-xs text-slate-300">
+                  <div v-if="isFinancialProcess" class="mt-1 text-xs text-slate-300">
                     R$ {{ p.amount.toLocaleString("pt-BR") }}
                   </div>
                 </div>
@@ -305,7 +305,7 @@
             <thead class="bg-slate-700/60 text-xs text-slate-300 uppercase">
               <tr>
                 <th class="px-3 sm:px-6 py-2 sm:py-3">Cliente</th>
-                <th class="px-3 sm:px-6 py-2 sm:py-3">Valor</th>
+                <th v-if="isFinancialProcess" class="px-3 sm:px-6 py-2 sm:py-3">Valor</th>
                 <th class="px-3 sm:px-6 py-2 sm:py-3">Etapa</th>
                 <th class="px-3 sm:px-6 py-2 sm:py-3">Status</th>
                 <th class="px-3 sm:px-6 py-2 sm:py-3 text-right">Ações</th>
@@ -318,7 +318,10 @@
                 class="border-b border-slate-700 hover:bg-slate-700/50"
               >
                 <td class="px-3 sm:px-6 py-2 sm:py-3">{{ p.name }}</td>
-                <td class="px-3 sm:px-6 py-2 sm:py-3">
+                <td
+                  v-if="isFinancialProcess"
+                  class="px-3 sm:px-6 py-2 sm:py-3"
+                >
                   R$ {{ p.amount.toLocaleString("pt-BR") }}
                 </td>
                 <td class="px-3 sm:px-6 py-2 sm:py-3">
@@ -1195,8 +1198,60 @@ const currentProcessType = computed(() => {
 });
 
 const isFinancialProcess = computed(() => currentProcessType.value === 'FINANCIAL');
+const isLeadQualificationProcess = computed(
+  () => currentProcessType.value === 'LEAD_QUALIFICATION'
+);
 const financialStatsRef = ref(null);
 let refreshTimeout;
+
+const leadOptions = ref([]);
+let leadOptionsLoadedFor = '';
+
+const resetLeadOptions = () => {
+  leadOptions.value = [];
+  leadOptionsLoadedFor = '';
+};
+
+const loadLeadOptions = async (force = false) => {
+  if (!isLeadQualificationProcess.value || !isApiEnabled()) {
+    resetLeadOptions();
+    return;
+  }
+
+  const key = pipelineKey.value || '';
+  if (!force && leadOptionsLoadedFor === key && leadOptions.value.length) {
+    return;
+  }
+
+  try {
+    const { fetchLeadsApi } = await import('~/composables/useLeadsApi');
+    const leads = await fetchLeadsApi();
+    leadOptions.value = Array.isArray(leads)
+      ? leads.map((lead) => ({
+          id: lead.id,
+          name: lead.name || '',
+          email: lead.email || '',
+          phone: lead.phone || '',
+        }))
+      : [];
+    leadOptionsLoadedFor = key;
+  } catch (error) {
+    console.error('Failed to load leads for modal:', error);
+    resetLeadOptions();
+  }
+};
+
+watch(
+  () => [pipelineKey.value, isLeadQualificationProcess.value],
+  ([, isLead]) => {
+    if (!isLead) {
+      resetLeadOptions();
+      return;
+    }
+    loadLeadOptions();
+  },
+  { immediate: true }
+);
 
 // Carregar informações do processo
 const loadProcessInfo = async () => {
@@ -2179,12 +2234,16 @@ const newProposal = ref({
 const formErrors = ref({ name: "", cpf: "", amountDesired: "" });
 
 // Função para abrir o modal global
-const openGlobalNewRecordModal = () => {
+const openGlobalNewRecordModal = async () => {
   // Sempre garantir que use a primeira etapa
   const firstStageId = stages.value[0]?.id || "dados_basicos";
 
   // Carregar campos dinâmicos da primeira etapa
   initStageFields();
+
+  if (isLeadQualificationProcess.value) {
+    await loadLeadOptions(true);
+  }
 
   // Abrir modal global
   openGlobalModal({
@@ -2192,6 +2251,7 @@ const openGlobalNewRecordModal = () => {
     stageFields: stageDynamicFields.value,
     pipelineKey: pipelineKey.value,
     isFinancial: isFinancialProcess.value,
+    leadOptions: isLeadQualificationProcess.value ? leadOptions.value : [],
     onSave: (recordData) => {
       handleGlobalModalSave(recordData);
     },
@@ -2271,6 +2331,7 @@ const handleGlobalModalSave = (recordData) => {
     stageEnteredAt: new Date().toISOString(),
     stageValues: recordData.fieldValues || {},
     files: recordData.fieldFiles || {},
+    details: recordData.leadId ? { leadId: recordData.leadId } : undefined,
   };
 
   // Adicionar à lista local
@@ -2285,6 +2346,9 @@ const handleGlobalModalSave = (recordData) => {
       stageId: recordData.stageId,
       status: recordData.status,
     };
+    if (recordData.leadId) {
+      payload.details = { leadId: recordData.leadId };
+    }
     console.log("Creating proposal via API with payload:", payload);
     createProposalApi(pipelineKey.value, payload)
       .then(async (created) => {
@@ -2293,6 +2357,7 @@ const handleGlobalModalSave = (recordData) => {
           const localIndex = proposals.value.findIndex((p) => p.id === newId);
           if (localIndex >= 0) {
             proposals.value[localIndex].id = createdId;
+            proposals.value[localIndex].details = created.details || proposals.value[localIndex].details;
             saveProposals(pipelineKey.value, proposals.value);
             refreshData(); // Atualizar estatísticas após criar proposta
           }

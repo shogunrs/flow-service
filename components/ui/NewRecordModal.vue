@@ -24,7 +24,26 @@
       </div>
 
       <!-- Campo Nome -->
-      <div>
+      <div class="space-y-3">
+        <div v-if="hasLeadOptions" class="text-left">
+          <label class="block text-xs text-slate-300 uppercase tracking-wide mb-1">
+            Selecionar lead cadastrado (opcional)
+          </label>
+          <select
+            v-model="selectedLeadId"
+            class="w-full rounded-xl bg-slate-900/80 border border-slate-700/60 text-slate-100 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          >
+            <option value="">Digitar manualmente</option>
+            <option
+              v-for="lead in selectableLeadOptions"
+              :key="lead.id"
+              :value="lead.id"
+            >
+              {{ lead.label }}
+            </option>
+          </select>
+        </div>
+
         <BaseInput
           v-model="recordName"
           label="Nome do Registro"
@@ -79,6 +98,7 @@ const props = defineProps({
   stages: { type: Array, default: () => [] },
   pipelineKey: { type: String, default: "" },
   isFinancialProcess: { type: Boolean, default: false },
+  leadOptions: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(["update:modelValue", "save", "close"]);
@@ -97,6 +117,7 @@ const recordName = ref("");
 const recordAmount = ref(0);
 const nameError = ref("");
 const amountError = ref("");
+const selectedLeadId = ref("");
 
 // Cores das etapas (mesmo mapeamento usado na esteira)
 const colorMap = {
@@ -134,6 +155,26 @@ watch(isOpen, (newValue) => {
     nameError.value = "";
     recordAmount.value = 0;
     amountError.value = "";
+    selectedLeadId.value = "";
+  }
+});
+
+const availableLeads = computed(() => props.leadOptions || []);
+const selectableLeadOptions = computed(() =>
+  availableLeads.value.map((lead) => ({
+    ...lead,
+    label: [lead.name, lead.email || lead.phone]
+      .filter(Boolean)
+      .join(" — ") || lead.name,
+  }))
+);
+const hasLeadOptions = computed(() => selectableLeadOptions.value.length > 0);
+
+watch(selectedLeadId, (leadId) => {
+  if (!leadId) return;
+  const lead = availableLeads.value.find((item) => item.id === leadId);
+  if (lead?.name) {
+    recordName.value = lead.name;
   }
 });
 
@@ -158,6 +199,7 @@ function handleSave() {
     amount: props.isFinancialProcess ? recordAmount.value || 0 : 0,
     stageId: firstStage.value?.id,
     status: firstStage.value?.status || "Pendente",
+    leadId: selectedLeadId.value || null,
     fieldValues: {},
     fieldFiles: {},
   };

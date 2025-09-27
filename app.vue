@@ -11,6 +11,7 @@
     :stage-fields="modalData.stageFields"
     :pipeline-key="modalData.pipelineKey"
     :is-financial-process="modalData.isFinancial"
+    :lead-options="modalData.leadOptions"
     @save="handleSave"
     @close="closeModal"
   />
