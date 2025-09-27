@@ -4,9 +4,10 @@ export type CurrentUser = {
   id: string
   roles: string[]
   name?: string
+  superUser?: boolean
 }
 
-const state = ref<CurrentUser>({ id: 'u-guest', roles: ['guest'], name: 'Guest' })
+const state = ref<CurrentUser>({ id: 'u-guest', roles: ['guest'], name: 'Guest', superUser: false })
 
 export function useCurrentUser(){
   function setUser(u: CurrentUser){

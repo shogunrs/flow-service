@@ -252,7 +252,7 @@
                 </div>
               </div>
 
-              <!-- Model Selection -->
+              <!-- Model & Agent Selection -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <select
                   v-model="selectedTestProvider"
@@ -281,6 +281,22 @@
                     {{ model }}
                   </option>
                 </select>
+                <div class="sm:col-span-2">
+                  <select
+                    v-model="selectedAgentId"
+                    :disabled="!selectedTestProvider"
+                    class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 disabled:opacity-50"
+                  >
+                    <option :value="null">Nenhum Agente (Chat Padrão)</option>
+                    <option
+                      v-for="agent in promptAgents"
+                      :key="agent.id"
+                      :value="agent.id"
+                    >
+                      {{ agent.name }}
+                    </option>
+                  </select>
+                </div>
               </div>
 
               <!-- Chat History -->
@@ -379,42 +395,49 @@
               </div>
             </div>
 
-            <!-- Dataset Management -->
+            <!-- Prompt Engineering Center -->
             <div
               class="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl p-6"
             >
-              <div class="flex items-center gap-3 mb-6">
-                <i class="fa-solid fa-database text-xl text-purple-400"></i>
-                <h2 class="text-sm font-medium text-white">
-                  Gestão de Datasets
-                </h2>
+              <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-brain text-xl text-purple-400"></i>
+                  <h2 class="text-sm font-medium text-white">
+                    Central de Engenharia de Prompt
+                  </h2>
+                </div>
+                <button
+                  @click="openAgentModal()"
+                  class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-white font-medium text-sm transition-colors"
+                >
+                  <i class="fa-solid fa-plus mr-2"></i>
+                  Criar Agente
+                </button>
               </div>
 
-              <div class="space-y-4">
-                <!-- Upload Dataset -->
-                <div
-                  class="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center hover:border-purple-400/50 transition-colors"
-                >
-                  <i
-                    class="fa-solid fa-cloud-upload-alt text-3xl text-slate-400 mb-3"
-                  ></i>
-                  <h3 class="text-sm font-medium text-white mb-2">
-                    Upload de Dataset
-                  </h3>
-                  <p class="text-slate-400 mb-4">
-                    Faça upload de arquivos JSON, CSV ou TXT para treinar a IA
-                  </p>
-                  <button
-                    class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-white font-medium transition-colors"
-                  >
-                    <i class="fa-solid fa-plus mr-2"></i>
-                    Selecionar Arquivos
-                  </button>
+              <!-- Agent List -->
+              <div class="space-y-0 border border-slate-700/50 rounded-lg overflow-hidden">
+                <div v-if="promptAgents.length === 0" class="text-center py-8 text-slate-500 w-full">
+                  <i class="fa-solid fa-box-open text-3xl mb-2"></i>
+                  <p>Nenhum agente criado ainda.</p>
                 </div>
-
-                <div class="text-center py-8 text-slate-500">
-                  <i class="fa-solid fa-inbox text-3xl mb-2"></i>
-                  <p>Nenhum dataset encontrado</p>
+                <div
+                  v-for="(agent, index) in promptAgents"
+                  :key="agent.id"
+                  class="flex items-center justify-between py-2 px-4 transition-colors hover:bg-slate-700/30"
+                  :class="{ 'border-b border-slate-700/50': index < promptAgents.length - 1 }"
+                >
+                  <div>
+                    <h3 class="text-sm font-medium text-white">{{ agent.name }}</h3>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button @click="openAgentModal(agent)" class="text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-600/50 transition-colors" title="Editar Agente">
+                      <i class="fa-solid fa-pencil-alt text-xs"></i>
+                    </button>
+                    <button @click="deleteAgent(agent.id)" class="text-red-400 hover:text-white p-1 rounded-md hover:bg-red-500/20 transition-colors" title="Excluir Agente">
+                      <i class="fa-solid fa-trash-alt text-xs"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -422,6 +445,74 @@
 
           <!-- Monitoring & Training -->
           <div class="space-y-6">
+            <!-- Base de Conhecimento (RAG) -->
+            <div class="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl p-6">
+              <div class="flex items-center gap-3 mb-6">
+                <i class="fa-solid fa-book text-xl text-sky-400"></i>
+                <h2 class="text-sm font-medium text-white">Base de Conhecimento (RAG)</h2>
+              </div>
+
+              <div class="space-y-4">
+                <!-- Agent Selection for RAG -->
+                <select
+                  v-model="selectedRagAgentId"
+                  class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50"
+                >
+                  <option :value="null" disabled>Selecione um Agente para associar</option>
+                  <option
+                    v-for="agent in promptAgents"
+                    :key="agent.id"
+                    :value="agent.id"
+                  >
+                    {{ agent.name }}
+                  </option>
+                </select>
+
+                <!-- File Upload -->
+                <div v-if="!ragFile">
+                  <input type="file" ref="ragFileInputRef" @change="handleRagFileSelect" hidden />
+                  <div
+                    @click="ragFileInputRef.click()"
+                    class="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center hover:border-sky-400/50 transition-colors cursor-pointer"
+                  >
+                    <i class="fa-solid fa-cloud-upload-alt text-3xl text-slate-400 mb-3"></i>
+                    <h3 class="text-sm font-medium text-white mb-2">
+                      Anexar Conhecimento
+                    </h3>
+                    <p class="text-xs text-slate-400">
+                      Arraste ou clique para selecionar um arquivo
+                    </p>
+                  </div>
+                </div>
+
+                <!-- File Preview -->
+                <div v-else class="relative bg-slate-800/50 border border-slate-700/50 rounded-lg p-2 flex items-center gap-3">
+                  <i class="fa-solid fa-file-alt text-slate-400"></i>
+                  <div class="text-sm text-slate-300 truncate">
+                    <span class="font-medium">{{ ragFile.name }}</span>
+                    <span class="text-slate-400 text-xs ml-2">({{ formatFileSize(ragFile.size) }})</span>
+                  </div>
+                  <button
+                    @click="removeRagFile"
+                    class="ml-auto text-slate-400 hover:text-white hover:bg-red-500/20 rounded-full p-1.5 transition-colors"
+                    title="Remover arquivo"
+                  >
+                    <i class="fa-solid fa-times text-xs"></i>
+                  </button>
+                </div>
+
+                <button
+                  @click="uploadRagFile"
+                  :disabled="!selectedRagAgentId || !ragFile || isUploadingRag"
+                  class="w-full bg-sky-600 hover:bg-sky-700 px-4 py-2 rounded-lg text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i v-if="isUploadingRag" class="fa-solid fa-spinner fa-spin mr-2"></i>
+                  <i v-else class="fa-solid fa-upload mr-2"></i>
+                  {{ isUploadingRag ? 'Processando...' : 'Enviar para o Agente' }}
+                </button>
+              </div>
+            </div>
+
             <!-- Training Status -->
             <div
               class="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl p-6"
@@ -775,6 +866,80 @@
         </div>
       </div>
     </div>
+
+    <!-- Agent Settings Modal -->
+    <div
+      v-if="showAgentModal"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      @click.self="closeAgentModal"
+    >
+      <div
+        class="bg-gradient-to-br from-slate-800/95 via-slate-700/95 to-slate-800/95 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"
+      >
+        <!-- Header -->
+        <div
+          class="flex items-center justify-between p-6 border-b border-slate-600/30"
+        >
+          <div class="flex items-center gap-3">
+            <h3 class="text-lg font-semibold text-white">
+              {{ agentForm.id ? 'Editar Agente' : 'Criar Novo Agente' }}
+            </h3>
+          </div>
+          <button
+            @click="closeAgentModal"
+            class="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg p-2 transition-all"
+          >
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Form -->
+        <div class="p-6 space-y-6 overflow-y-auto flex-grow">
+          <div>
+            <label class="block text-sm font-medium text-slate-200 mb-2">
+              <i class="fa-solid fa-user-shield mr-1 text-slate-400"></i>
+              Nome do Agente
+            </label>
+            <input
+              v-model="agentForm.name"
+              class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300"
+              placeholder="Ex: Analista de Dados Sênior"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-200 mb-2">
+              <i class="fa-solid fa-scroll mr-1 text-slate-400"></i>
+              Prompt do Sistema
+            </label>
+            <textarea
+              v-model="agentForm.prompt"
+              rows="12"
+              class="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-lg px-4 py-3 text-sm backdrop-blur-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300"
+              placeholder="Você é um assistente de IA..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div
+          class="flex items-center justify-end gap-3 p-6 border-t border-slate-600/30 bg-slate-800/20"
+        >
+          <button
+            @click="closeAgentModal"
+            class="px-5 py-2.5 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white rounded-xl text-sm font-medium transition-all duration-300 backdrop-blur-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="saveAgent"
+            class="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-purple-500/25"
+          >
+            <i class="fa-solid fa-save mr-2"></i>
+            Salvar Agente
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -862,8 +1027,41 @@ const currentProvider = computed(() => {
     : null;
 });
 
+// --- Prompt Engineering State ---
+const promptAgents = ref([]);
+const showAgentModal = ref(false);
+const agentForm = ref({
+  id: null,
+  name: "",
+  prompt: "",
+});
+
+// --- Chat Playground State ---
+const selectedTestProvider = ref("");
+const selectedTestModel = ref("");
+const selectedAgentId = ref(null);
+const chatHistory = ref([]);
+const userMessage = ref("");
+const isModelResponding = ref(false);
+const chatHistoryRef = ref(null);
+
+// --- RAG State ---
+const selectedRagAgentId = ref(null);
+const ragFile = ref(null);
+const ragFileInputRef = ref(null);
+const isUploadingRag = ref(false);
+
+// --- Refs para upload de arquivo ---
+const fileInputRef = ref(null);
+const attachedFile = ref(null);
+
 // --- Lifecycle Hooks ---
 onMounted(async () => {
+  await fetchProviders();
+  await fetchAgents();
+});
+
+async function fetchProviders() {
   console.log("Fetching provider configurations from Java backend...");
   try {
     const fetchedProviders = await $fetch(`${apiBaseUrl}/ai-providers`);
@@ -886,7 +1084,18 @@ onMounted(async () => {
     console.error("Could not fetch provider configurations:", error);
     toast.error("Falha ao carregar as configurações de IA do servidor.");
   }
-});
+}
+
+async function fetchAgents() {
+  console.log("Fetching prompt agents from backend...");
+  try {
+    promptAgents.value = await $fetch(`${apiBaseUrl}/prompt-agents`);
+    toast.info("Agentes de prompt carregados.");
+  } catch (error) {
+    console.error("Could not fetch prompt agents:", error);
+    toast.error("Falha ao carregar os agentes de prompt.");
+  }
+}
 
 // --- Modal & Form Logic ---
 function maskApiKey(apiKey) {
@@ -946,6 +1155,57 @@ function removeModel(index) {
   providerForm.value.models.splice(index, 1);
 }
 
+// --- Agent Modal Logic ---
+function openAgentModal(agent = null) {
+  if (agent) {
+    agentForm.value = { ...agent };
+  } else {
+    agentForm.value = { id: null, name: "", prompt: "" };
+  }
+  showAgentModal.value = true;
+}
+
+function closeAgentModal() {
+  showAgentModal.value = false;
+}
+
+async function saveAgent() {
+  const isEditing = !!agentForm.value.id;
+  const url = isEditing
+    ? `${apiBaseUrl}/prompt-agents/${agentForm.value.id}`
+    : `${apiBaseUrl}/prompt-agents`;
+  const method = isEditing ? "PUT" : "POST";
+
+  try {
+    await $fetch(url, {
+      method: method,
+      body: {
+        name: agentForm.value.name,
+        prompt: agentForm.value.prompt,
+      },
+    });
+    toast.success(`Agente "${agentForm.value.name}" salvo com sucesso!`);
+    await fetchAgents(); // Refresh the list
+    closeAgentModal();
+  } catch (error) {
+    console.error("Failed to save agent:", error);
+    toast.error(`Erro ao salvar o agente: ${error.data?.message || error.message}`);
+  }
+}
+
+async function deleteAgent(agentId) {
+  try {
+    await $fetch(`${apiBaseUrl}/prompt-agents/${agentId}`, {
+      method: "DELETE",
+    });
+    toast.info("Agente excluído.");
+    await fetchAgents(); // Refresh the list
+  } catch (error) {
+    console.error("Failed to delete agent:", error);
+    toast.error(`Erro ao excluir o agente: ${error.data?.message || error.message}`);
+  }
+}
+
 // --- API & Shell Commands ---
 async function saveProviderSettings() {
   if (!currentProviderKey.value) return;
@@ -962,7 +1222,7 @@ async function saveProviderSettings() {
     apiKey: apiKeyToSend,
     baseUrl: providerForm.value.baseUrl,
     selectedModel: providerForm.value.selectedModel,
-    models: providerForm.value.models,
+    models: [...providerForm.value.models],
     active: providerKey === "ollama" ? true : (!!newApiKey.value || !!providers.value[providerKey].apiKey),
   };
 
@@ -1070,18 +1330,7 @@ async function testProviderConnection() {
   }
 }
 
-// --- Chat Playground ---
-const selectedTestProvider = ref("");
-const selectedTestModel = ref("");
-const chatHistory = ref([]);
-const userMessage = ref("");
-const isModelResponding = ref(false);
-const chatHistoryRef = ref(null);
-
-// --- Refs para upload de arquivo ---
-const fileInputRef = ref(null);
-const attachedFile = ref(null);
-
+// --- Chat Playground Logic ---
 const availableTestProviders = computed(() => {
   return Object.entries(providers.value)
     .filter(([key, provider]) => provider.active)
@@ -1157,15 +1406,27 @@ async function sendChatMessage() {
   }
 
   const messageContent = userMessage.value;
-  // TODO: Adicionar lógica para mostrar o anexo na hitória do chat
   chatHistory.value.push({ role: "user", content: messageContent });
   userMessage.value = "";
   isModelResponding.value = true;
 
+  // --- Prompt Injection Logic ---
+  let finalPrompt = messageContent;
+  if (selectedAgentId.value) {
+    const selectedAgent = promptAgents.value.find(
+      (agent) => agent.id === selectedAgentId.value
+    );
+    if (selectedAgent) {
+      // TODO: A more robust solution would be to send the agentId to the backend
+      // and let it handle the system prompt injection.
+      finalPrompt = `${selectedAgent.prompt}\n\n---\n\n${messageContent}`;
+    }
+  }
+
   const formData = new FormData();
   formData.append("provider", selectedTestProvider.value);
   formData.append("model", selectedTestModel.value);
-  formData.append("prompt", messageContent);
+  formData.append("prompt", finalPrompt);
 
   if (attachedFile.value) {
     formData.append("file", attachedFile.value);
@@ -1190,6 +1451,53 @@ async function sendChatMessage() {
   } finally {
     isModelResponding.value = false;
     removeAttachedFile();
+  }
+}
+
+// --- RAG Functions ---
+function handleRagFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) {
+    ragFile.value = file;
+  }
+}
+
+function removeRagFile() {
+  ragFile.value = null;
+  if (ragFileInputRef.value) {
+    ragFileInputRef.value.value = null;
+  }
+}
+
+async function uploadRagFile() {
+  if (!selectedRagAgentId.value || !ragFile.value) {
+    toast.error("Por favor, selecione um agente e um arquivo.");
+    return;
+  }
+
+  isUploadingRag.value = true;
+  toast.info(`Enviando arquivo ${ragFile.value.name}...`);
+
+  const formData = new FormData();
+  formData.append("agentId", selectedRagAgentId.value);
+  formData.append("file", ragFile.value);
+
+  try {
+    // REMOVIDO: console.log("Uploading RAG file...");
+    // REMOVIDO: await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate upload
+    await $fetch(`${apiBaseUrl}/rag/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    toast.success(`Arquivo enviado com sucesso para o agente!`);
+    removeRagFile();
+    selectedRagAgentId.value = null;
+  } catch (error) {
+    console.error("Failed to upload RAG file:", error);
+    toast.error(`Falha ao enviar o arquivo: ${error.data?.message || error.message}`);
+  } finally {
+    isUploadingRag.value = false;
   }
 }
 </script>

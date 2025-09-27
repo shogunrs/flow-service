@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,20 +44,44 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> create(@Valid @RequestBody CreateUserDTO dto, HttpServletRequest request) {
+    public ResponseEntity<?> create(@Valid @RequestBody CreateUserDTO dto, HttpServletRequest request) {
         String clientIp = getClientIpAddress(request);
         UserWriteCommand command = UserMapper.toCreateCommand(dto, clientIp);
-        User created = userService.create(command);
-        return ResponseEntity
-                .created(URI.create("/api/v1/users/" + created.getId()))
-                .body(UserMapper.toDto(created));
+        try {
+            User created = userService.create(command);
+            return ResponseEntity
+                    .created(URI.create("/api/v1/users/" + created.getId()))
+                    .body(UserMapper.toDto(created));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "error", "access_denied",
+                    "message", e.getMessage()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "invalid_request",
+                    "message", e.getMessage()
+            ));
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> update(@PathVariable("id") String id, @Valid @RequestBody UserDTO dto) {
+    public ResponseEntity<?> update(@PathVariable("id") String id, @Valid @RequestBody UserDTO dto) {
         UserWriteCommand command = UserMapper.toUpdateCommand(id, dto);
-        User updated = userService.update(command);
-        return ResponseEntity.ok(UserMapper.toDto(updated));
+        try {
+            User updated = userService.update(command);
+            return ResponseEntity.ok(UserMapper.toDto(updated));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "error", "access_denied",
+                    "message", e.getMessage()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "invalid_request",
+                    "message", e.getMessage()
+            ));
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -83,7 +106,7 @@ public class UserController {
     }
 
     @PostMapping("/save-complete")
-    public ResponseEntity<UserDTO> saveComplete(@RequestBody Map<String, Object> userData,
+    public ResponseEntity<?> saveComplete(@RequestBody Map<String, Object> userData,
                                                 HttpServletRequest request) {
         String clientIp = getClientIpAddress(request);
 
@@ -158,14 +181,26 @@ public class UserController {
                 .localizacaoCadastro(stringValue(userData.get("localizacaoCadastro")))
                 .build();
 
-        User created = userService.create(command);
-        return ResponseEntity
-                .created(URI.create("/api/v1/users/" + created.getId()))
-                .body(UserMapper.toDto(created));
+        try {
+            User created = userService.create(command);
+            return ResponseEntity
+                    .created(URI.create("/api/v1/users/" + created.getId()))
+                    .body(UserMapper.toDto(created));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "error", "access_denied",
+                    "message", e.getMessage()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "invalid_request",
+                    "message", e.getMessage()
+            ));
+        }
     }
 
     @PostMapping("/create-basic")
-    public ResponseEntity<UserDTO> createBasicUser(@RequestBody Map<String, String> basicData,
+    public ResponseEntity<?> createBasicUser(@RequestBody Map<String, String> basicData,
                                                    HttpServletRequest request) {
         String name = basicData.get("name");
         String email = basicData.get("email");
@@ -188,15 +223,26 @@ public class UserController {
                 .name(name)
                 .email(email)
                 .rawPassword(password)
-                .roles(Set.of("user"))
                 .superUser(Boolean.FALSE)
                 .ipCadastro(clientIp)
                 .build();
 
-        User created = userService.create(command);
-        return ResponseEntity
-                .created(URI.create("/api/v1/users/" + created.getId()))
-                .body(UserMapper.toDto(created));
+        try {
+            User created = userService.create(command);
+            return ResponseEntity
+                    .created(URI.create("/api/v1/users/" + created.getId()))
+                    .body(UserMapper.toDto(created));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "error", "access_denied",
+                    "message", e.getMessage()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "invalid_request",
+                    "message", e.getMessage()
+            ));
+        }
     }
 
     private String getClientIpAddress(HttpServletRequest request) {
@@ -244,6 +290,6 @@ public class UserController {
                     .filter(role -> !role.isBlank())
                     .collect(Collectors.toSet());
         }
-        return new HashSet<>(Collections.singleton("user"));
+        return new HashSet<>();
     }
 }

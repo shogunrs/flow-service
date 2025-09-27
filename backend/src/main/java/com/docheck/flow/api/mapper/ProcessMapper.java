@@ -5,6 +5,8 @@ import com.docheck.flow.domain.model.Process;
 
 public class ProcessMapper {
     public static ProcessDTO toDto(Process p) {
-        return new ProcessDTO(p.getExternalId(), p.getName(), p.isActive(), p.isFinanceiro());
+        Process.ProcessType type = p.getType() != null ? p.getType() : Process.ProcessType.GENERIC;
+        return new ProcessDTO(p.getExternalId(), p.getName(), p.isActive(),
+                type.name(), type == Process.ProcessType.FINANCIAL);
     }
 }

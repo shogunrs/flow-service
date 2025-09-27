@@ -1,9 +1,10 @@
 import { ref } from 'vue'
 import { sanitizeProcessKey } from '~/utils/strings/sanitize'
 import { isApiEnabled, apiFetch } from '~/utils/api/index'
+import type { StageField } from '~/composables/useStageFields'
+import { saveStagesPreservingIdsApi } from '~/composables/useStages'
 
 export type Stage = { id: string; title: string; slaDays: number; color: string; status?: string }
-export type StageField = { id: string; label: string; type: string; required?: boolean; placeholder?: string; options?: string[] }
 
 const PROCESS_REGISTRY_KEY = 'pipeline_processes'
 const PIPELINE_CONFIG_KEY = (k: string) => `pipeline_config__${k}`
@@ -13,7 +14,45 @@ function safeParse<T>(raw: string | null, fallback: T): T {
   try { return raw ? (JSON.parse(raw) as T) : fallback } catch { return fallback }
 }
 
-export type ProcessInfo = { key: string; name: string; active?: boolean; isFinanceiro?: boolean }
+function normalizeProcessInfo(raw: any): ProcessInfo {
+  if (!raw) {
+    return {
+      key: '',
+      name: '',
+      active: true,
+      type: 'GENERIC',
+      isFinanceiro: false,
+    }
+  }
+
+  const rawType = typeof raw.type === 'string' ? raw.type.trim().toUpperCase() : undefined
+  const allowed: ProcessType[] = ['GENERIC', 'FINANCIAL', 'TODO_LIST', 'LEAD_QUALIFICATION']
+  const type: ProcessType = rawType && allowed.includes(rawType as ProcessType)
+    ? (rawType as ProcessType)
+    : raw.isFinanceiro
+      ? 'FINANCIAL'
+      : 'GENERIC'
+
+  const info: ProcessInfo = {
+    key: raw.key || raw.externalId || '',
+    name: raw.name || raw.key || '',
+    active: raw.active !== false,
+    type,
+    isFinanceiro: type === 'FINANCIAL',
+  }
+
+  return info
+}
+
+export type ProcessType = 'GENERIC' | 'FINANCIAL' | 'TODO_LIST' | 'LEAD_QUALIFICATION'
+
+export type ProcessInfo = {
+  key: string
+  name: string
+  active?: boolean
+  type?: ProcessType
+  isFinanceiro?: boolean
+}
 
 let apiProcessCache: Array<ProcessInfo> = []
 let processesRefreshInFlight: Promise<void> | null = null
@@ -27,7 +66,7 @@ async function refreshProcessesCacheOnce(): Promise<void> {
   if (now - processesLastRefresh < 800 && apiProcessCache.length) return
   processesRefreshInFlight = apiFetch<Array<ProcessInfo>>('/api/v1/processes')
     .then(arr => {
-      apiProcessCache = (arr || []).map(p => ({ ...p, active: p.active !== false }))
+      apiProcessCache = (arr || []).map((p) => normalizeProcessInfo(p))
       processesLastRefresh = Date.now()
       try { localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(apiProcessCache)) } catch {}
     })
@@ -42,15 +81,19 @@ export function listProcesses(): Array<ProcessInfo> {
     // Note: callers expect sync; here we return cached local immediately if present.
     try {
       // Return in-memory cache first
-      const cached = apiProcessCache.length ? apiProcessCache : (typeof localStorage !== 'undefined' ? safeParse<Array<ProcessInfo>>(localStorage.getItem(PROCESS_REGISTRY_KEY), []) : [])
+      const cached = apiProcessCache.length
+        ? apiProcessCache
+        : (typeof localStorage !== 'undefined'
+            ? safeParse<Array<ProcessInfo>>(localStorage.getItem(PROCESS_REGISTRY_KEY), [])
+            : [])
       // Fire-and-forget refresh (without rebroadcast to avoid loops)
       refreshProcessesCacheOnce()
-      return (cached || []).map(p => ({ ...p, active: p.active !== false }))
+      return (cached || []).map((p) => normalizeProcessInfo(p))
     } catch { return [] }
   }
   if (typeof localStorage === 'undefined') return []
   const arr = safeParse<Array<ProcessInfo>>(localStorage.getItem(PROCESS_REGISTRY_KEY), [])
-  return arr.map(p => ({ ...p, active: p.active !== false }))
+  return arr.map((p) => normalizeProcessInfo(p))
 }
 
 export function ensureDefaultProcess(defaultKey = 'quotaequity', defaultName = 'QuotaEquity'): void {
@@ -70,8 +113,8 @@ export async function getProcessInfo(key: string): Promise<ProcessInfo | null> {
 
   if (isApiEnabled()) {
     try {
-      const process = await apiFetch<ProcessInfo>(`/api/v1/processes/${encodeURIComponent(key)}`)
-      return process
+      const process = await apiFetch<any>(`/api/v1/processes/${encodeURIComponent(key)}`)
+      return normalizeProcessInfo(process)
     } catch {
       return null
     }
@@ -82,14 +125,17 @@ export async function getProcessInfo(key: string): Promise<ProcessInfo | null> {
   return processes.find(p => p.key === key) || null
 }
 
-export async function addProcess(key: string, name: string, isFinanceiro: boolean = false): Promise<boolean> {
+export async function addProcess(key: string, name: string, type: ProcessType = 'GENERIC'): Promise<boolean> {
   if (!key) return
   if (isApiEnabled()) {
     // attempt API create first; if falhar, não espelha local para evitar inconsistência
     try {
-      await apiFetch('/api/v1/processes', { method: 'POST', body: { key, name, isFinanceiro } })
+      await apiFetch('/api/v1/processes', { method: 'POST', body: { key, name, type } })
       // update in-memory cache otimista
-      apiProcessCache = [...apiProcessCache.filter(p => p.key !== key), { key, name, active: true, isFinanceiro }]
+      apiProcessCache = [
+        ...apiProcessCache.filter((p) => p.key !== key),
+        normalizeProcessInfo({ key, name, active: true, type }),
+      ]
       try { localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(apiProcessCache)) } catch {}
       try { window.dispatchEvent(new Event('processes:changed')) } catch {}
       return true
@@ -100,11 +146,41 @@ export async function addProcess(key: string, name: string, isFinanceiro: boolea
   const k = sanitizeProcessKey(key)
   if (!k) return
   if (!arr.find(p => p.key === k)) {
-    arr.push({ key: k, name: name || k, active: true, isFinanceiro })
+    arr.push(normalizeProcessInfo({ key: k, name: name || k, active: true, type }))
     localStorage.setItem(PROCESS_REGISTRY_KEY, JSON.stringify(arr))
     try { window.dispatchEvent(new Event('processes:changed')) } catch (_) {}
   }
   return true
+}
+
+export async function applyProcessBlueprint(key: string, stages: Array<{ id: string; title: string; slaDays: number; color: string; defaultStatus?: string }>): Promise<void> {
+  const k = sanitizeProcessKey(key)
+  if (!k || !Array.isArray(stages) || !stages.length) return
+
+  const normalizedStages = stages.map((stage, index) => ({
+    id: stage.id || `stage_${index}_${Date.now()}`,
+    title: stage.title,
+    slaDays: stage.slaDays ?? 0,
+    color: stage.color || 'sky',
+    defaultStatus: stage.defaultStatus || '',
+  }))
+
+  if (isApiEnabled()) {
+    try {
+      await saveStagesPreservingIdsApi(k, [], normalizedStages)
+    } catch (error) {
+      console.error('Falha ao aplicar blueprint via API:', error)
+    }
+    return
+  }
+
+  if (typeof localStorage === 'undefined') return
+  try {
+    const storageKey = PIPELINE_CONFIG_KEY(k)
+    localStorage.setItem(storageKey, JSON.stringify(normalizedStages))
+  } catch (error) {
+    console.warn('Não foi possível persistir blueprint local:', error)
+  }
 }
 
 export async function removeProcess(key: string, options: { backup?: boolean, skipConfirmation?: boolean } = {}): Promise<{ success: boolean, backup?: Record<string, any>, deletedKeys?: string[] }> {

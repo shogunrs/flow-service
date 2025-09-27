@@ -10,4 +10,6 @@ public interface MongoStatusRepository extends MongoRepository<StatusDocument, S
     List<StatusDocument> findByOrderByCreatedAtAsc();
     boolean existsByName(String name);
     boolean existsByNameAndIdNot(String name, String id);
+    List<StatusDocument> findByCategoryIgnoreCase(String category);
+    boolean existsByNameIgnoreCaseAndCategoryIgnoreCase(String name, String category);
 }

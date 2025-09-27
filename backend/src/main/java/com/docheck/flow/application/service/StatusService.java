@@ -7,12 +7,27 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class StatusService {
 
     private final MongoStatusRepository repository;
+
+    private record StatusSeed(String name, String color, String category) {}
+
+    private static final String LEAD_CATEGORY = "LEADS";
+    private static final List<StatusSeed> DEFAULT_LEAD_STATUSES = List.of(
+            new StatusSeed("Novo Lead", "#6366F1", LEAD_CATEGORY),
+            new StatusSeed("Contato Realizado", "#22D3EE", LEAD_CATEGORY),
+            new StatusSeed("Qualificado", "#10B981", LEAD_CATEGORY),
+            new StatusSeed("Em Negociação", "#F59E0B", LEAD_CATEGORY),
+            new StatusSeed("Convertido", "#8B5CF6", LEAD_CATEGORY),
+            new StatusSeed("Descartado", "#EF4444", LEAD_CATEGORY)
+    );
 
     public StatusService(MongoStatusRepository repository) {
         this.repository = repository;
@@ -33,7 +48,7 @@ public class StatusService {
     }
 
     public Status create(String name, String color, String category) {
-        if (repository.existsByName(name)) {
+        if (repository.existsByNameIgnoreCaseAndCategoryIgnoreCase(name, category)) {
             throw new IllegalArgumentException("Status com este nome já existe");
         }
 
@@ -84,5 +99,26 @@ public class StatusService {
         status.setCreatedAt(document.getCreatedAt());
         status.setUpdatedAt(document.getUpdatedAt());
         return status;
+    }
+
+    public void ensureLeadStatuses() {
+        List<Status> statuses = findAll();
+        Set<String> existing = statuses.stream()
+                .filter(s -> LEAD_CATEGORY.equalsIgnoreCase(s.getCategory()))
+                .map(Status::getName)
+                .map(name -> name == null ? null : name.toLowerCase(Locale.ROOT))
+                .filter(name -> name != null)
+                .collect(Collectors.toSet());
+
+        for (StatusSeed seed : DEFAULT_LEAD_STATUSES) {
+            String normalizedName = seed.name().toLowerCase(Locale.ROOT);
+            if (!existing.contains(normalizedName)) {
+                try {
+                    create(seed.name(), seed.color(), seed.category());
+                    existing.add(normalizedName);
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
     }
 }

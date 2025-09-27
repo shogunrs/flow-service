@@ -3,123 +3,126 @@
     <!-- Mobile overlay -->
     <div
       v-if="mobileMenuOpen"
-      class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
       @click="closeMobileMenu"
     ></div>
 
     <!-- Sidebar -->
     <nav
       :class="[
-        'fixed top-0 left-0 h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 transform transition-all duration-300 ease-in-out z-[100]',
+        'fixed top-0 left-0 h-screen bg-gradient-to-b from-slate-950 via-slate-900/95 to-slate-950/90 border-r border-slate-900/60 backdrop-blur-xl transform transition-all duration-300 ease-in-out z-[100]',
         'lg:translate-x-0',
         collapsed ? 'w-16' : 'w-64',
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       ]"
     >
-      <!-- Header/Brand -->
-      <div
-        class="flex items-center justify-between p-4 border-b border-slate-700/50"
-      >
-        <div class="flex items-center gap-3">
-          <BrandMark size="sm" />
-          <h1
-            v-show="!collapsed"
-            class="text-lg font-bold text-white transition-opacity duration-300"
-          >
-            FourCon
-          </h1>
-        </div>
-        <div class="flex items-center gap-2">
-          <button
-            @click="toggleCollapse"
-            class="hidden lg:block p-1 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-            :title="collapsed ? 'Expandir sidebar' : 'Recolher sidebar'"
-          >
-            <i
-              :class="
-                collapsed
-                  ? 'fa-solid fa-chevron-right'
-                  : 'fa-solid fa-chevron-left'
-              "
-              class="text-sm"
-            ></i>
-          </button>
-          <button
-            v-if="mobileMenuOpen"
-            @click="closeMobileMenu"
-            class="lg:hidden p-1 rounded-md text-gray-400 hover:text-white hover:bg-gray-800"
-          >
-            <i class="fa-solid fa-times text-lg"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- User info -->
-      <div class="p-4 border-b border-slate-700/50">
-        <div class="flex items-center gap-3">
-          <div
-            class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-            :title="collapsed ? currentUser?.name : ''"
-          >
-            <i class="fa-solid fa-user text-white text-sm"></i>
+      <div class="flex flex-col h-full">
+        <!-- User Capsule -->
+        <div class="px-4 pt-6 pb-5 border-b border-slate-900/70">
+          <div class="flex items-center gap-3">
+            <div
+              class="relative flex-shrink-0 overflow-hidden rounded-2xl ring-2 ring-indigo-500/40 shadow-lg shadow-indigo-500/10 bg-slate-900/70"
+              :class="collapsed ? 'w-10 h-10 rounded-full cursor-pointer' : 'w-12 h-12'"
+              @click="collapsed && toggleCollapse()"
+            >
+              <img
+                v-if="userAvatar"
+                :src="userAvatar"
+                alt="Avatar"
+                class="w-full h-full object-cover"
+              />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center text-sm font-semibold text-indigo-200"
+              >
+                {{ userInitials }}
+              </div>
+            </div>
+            <div v-show="!collapsed" class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-slate-100 truncate">
+                {{ currentUserDisplay.name }}
+              </p>
+              <p class="text-xs text-slate-400 truncate">
+                {{ currentUserDisplay.email }}
+              </p>
+            </div>
+            <button
+              v-if="!collapsed"
+              @click="toggleCollapse"
+              class="hidden lg:inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              :title="collapsed ? 'Expandir sidebar' : 'Recolher sidebar'"
+            >
+              <i
+                :class="
+                  collapsed
+                    ? 'fa-solid fa-chevron-right'
+                    : 'fa-solid fa-chevron-left'
+                "
+              ></i>
+            </button>
+            <button
+              v-if="mobileMenuOpen"
+              @click="closeMobileMenu"
+              class="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900/60 text-slate-300 hover:text-white"
+            >
+              <i class="fa-solid fa-times"></i>
+            </button>
           </div>
-          <div
-            v-show="!collapsed"
-            class="flex-1 min-w-0 transition-opacity duration-300"
-          >
-            <p class="text-sm font-medium text-white truncate">
-              {{ currentUser?.name || "Usuário" }}
-            </p>
-            <p class="text-xs text-gray-400 truncate">
-              {{ currentUser?.email || "user@example.com" }}
-            </p>
+          <div v-show="!collapsed" class="mt-4 flex items-center gap-2 text-[11px] text-slate-400">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/70 border border-slate-800/70 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              Online
+            </span>
+            <span v-if="currentUserRoles.length" class="truncate">
+              {{ currentUserRoles.join(' • ') }}
+            </span>
           </div>
         </div>
-      </div>
 
-      <!-- Navigation Menu -->
-      <div class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-        <SidebarItem
-          v-for="item in menuItems"
-          :key="item.path"
-          :item="item"
-          :is-active="isActive(item.path)"
-          :collapsed="collapsed"
-          @click="navigateTo"
-          @fetch-esteira="handleEsteiraFetch"
-        />
-      </div>
+        <!-- Navigation -->
+        <div class="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+          <SidebarItem
+            v-for="item in menuItems"
+            :key="item.path"
+            :item="item"
+            :is-active="isActive(item.path)"
+            :collapsed="collapsed"
+            @click="navigateTo"
+            @fetch-esteira="handleEsteiraFetch"
+          />
+        </div>
 
-      <!-- Footer/Settings -->
-      <div class="p-4 border-t border-slate-700/50">
-        <SidebarItem
-          :item="settingsItem"
-          :is-active="false"
-          :collapsed="collapsed"
-          @click="openSettings"
-        />
+        <!-- Footer -->
+        <div class="px-4 pb-5 pt-4 border-t border-slate-900/70 backdrop-blur-sm">
+          <SidebarItem
+            :item="settingsItem"
+            :is-active="false"
+            :collapsed="collapsed"
+            @click="openSettings"
+          />
 
-        <button
-          @click="logout"
-          :class="[
-            'w-full mt-2 flex items-center gap-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-md transition-colors text-sm',
-            collapsed ? 'justify-center' : '',
-          ]"
-          :title="collapsed ? 'Sair' : ''"
-        >
-          <i class="fa-solid fa-sign-out-alt w-5"></i>
-          <span v-show="!collapsed" class="transition-opacity duration-300"
-            >Sair</span
+          <button
+            @click="logout"
+            :class="[
+              'w-full mt-2 flex items-center gap-3 px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-xl transition-colors text-sm',
+              collapsed ? 'justify-center' : 'justify-start',
+            ]"
+            :title="collapsed ? 'Sair' : ''"
           >
-        </button>
+            <i class="fa-solid fa-arrow-right-from-bracket w-5"></i>
+            <span v-show="!collapsed" class="transition-opacity duration-300"
+              >Sair</span
+            >
+          </button>
+        </div>
       </div>
     </nav>
 
-    <!-- Mobile menu button -->
+    <!-- Mobile toggle -->
     <button
       v-if="!mobileMenuOpen"
       @click="openMobileMenu"
-      class="fixed top-4 left-4 z-[110] lg:hidden p-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+      class="fixed top-4 left-4 z-[110] lg:hidden p-2 rounded-xl bg-slate-900/90 text-white hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/40"
     >
       <i class="fa-solid fa-bars text-lg"></i>
     </button>
@@ -140,10 +143,10 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "#imports";
-import BrandMark from "./BrandMark.vue";
 import SidebarItem from "./SidebarItem.vue";
 import ChatModal from "./ChatModal.vue";
 import { useProcesses } from "~/composables/useProcesses";
+import { useCurrentUser } from "~/composables/useCurrentUser";
 
 // Props
 const props = defineProps({
@@ -161,10 +164,8 @@ const route = useRoute();
 const router = useRouter();
 
 // State
-const currentUser = ref({
-  name: "Admin User",
-  email: "admin@docheck.com",
-});
+const { user: userState, load: loadCurrentUser } = useCurrentUser();
+const currentUser = computed(() => userState.value || {});
 
 const collapsed = ref(false);
 
@@ -191,12 +192,39 @@ onMounted(() => {
 
   // Não carregar processos automaticamente mais
   // Eles serão carregados quando clicar na Esteira
+  loadCurrentUser();
 });
 
 // Mobile menu state
 const mobileMenuOpen = computed({
   get: () => props.modelValue,
   set: (value) => emit("update:modelValue", value),
+});
+
+const currentUserDisplay = computed(() => ({
+  name: currentUser.value?.name || "Usuário",
+  email: currentUser.value?.email || "sem-email",
+}));
+
+const currentUserRoles = computed(() => {
+  const roles = Array.isArray(currentUser.value?.roles)
+    ? currentUser.value.roles
+    : [];
+  return roles.slice(0, 3).map((role) => role.toString());
+});
+
+const userAvatar = computed(() => {
+  if (currentUser.value?.fotoPerfilUrl) return currentUser.value.fotoPerfilUrl;
+  if (currentUser.value?.profileImage) return currentUser.value.profileImage;
+  return null;
+});
+
+const userInitials = computed(() => {
+  const name = currentUser.value?.name || "Usuário";
+  const parts = name.trim().split(/\s+/);
+  if (!parts.length) return "U";
+  const initials = parts.slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
+  return initials || "U";
 });
 
 // Menu items configuration - computed para reagir aos processos
@@ -233,10 +261,10 @@ const menuItems = computed(() => [
           ],
   },
   {
-    label: "Processos",
-    path: "/processos",
-    icon: "fa-solid fa-clipboard-list",
-    description: "Gerenciar processos",
+    label: "Cadastro de Leads",
+    path: "/leads",
+    icon: "fa-solid fa-address-card",
+    description: "Gerencie leads e qualificações",
   },
   {
     label: "Configurações",

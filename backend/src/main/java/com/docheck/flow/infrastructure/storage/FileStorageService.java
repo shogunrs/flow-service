@@ -2,6 +2,7 @@ package com.docheck.flow.infrastructure.storage;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile; // Adicionado
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -13,7 +14,9 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.core.sync.RequestBody; // Adicionado
 
+import java.io.IOException; // Adicionado
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
@@ -65,6 +68,25 @@ public class FileStorageService {
         return out;
     }
 
+    // NOVO MÉTODO: Faz o upload direto de um MultipartFile para o S3/MinIO
+    public String uploadFile(MultipartFile file, String prefix) throws IOException {
+        if (s3 == null) throw new IllegalStateException("S3 storage disabled");
+
+        String safeFileName = sanitize(file.getOriginalFilename());
+        String key = (prefix != null && !prefix.isBlank() ? prefix.replaceAll("/+", "/") + "/" : "")
+                + Instant.now().toEpochMilli() + "_" + safeFileName;
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream")
+                .contentLength(file.getSize())
+                .build();
+
+        s3.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+        return key; // Retorna a chave (caminho) do objeto armazenado
+    }
+
     public Map<String, Object> presignDownload(String key) {
         if (presigner == null) throw new IllegalStateException("S3 storage disabled");
         GetObjectRequest get = GetObjectRequest.builder()
@@ -98,4 +120,3 @@ public class FileStorageService {
         return n.length() == 0 ? "file" : n;
     }
 }
-

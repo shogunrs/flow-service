@@ -19,11 +19,13 @@ public class ProcessService {
     private final ProcessRepository repo;
     private final StageRepository stageRepo;
     private final EventPublisher publisher;
+    private final StatusService statusService;
 
-    public ProcessService(ProcessRepository repo, StageRepository stageRepo, EventPublisher publisher) {
+    public ProcessService(ProcessRepository repo, StageRepository stageRepo, EventPublisher publisher, StatusService statusService) {
         this.repo = repo;
         this.stageRepo = stageRepo;
         this.publisher = publisher;
+        this.statusService = statusService;
     }
 
     public List<Process> list() { return repo.findAll(); }
@@ -32,16 +34,33 @@ public class ProcessService {
 
     @Transactional
     public Process create(String externalId, String name) {
-        return create(externalId, name, false);
+        return create(externalId, name, Process.ProcessType.GENERIC);
     }
 
     @Transactional
     public Process create(String externalId, String name, boolean isFinanceiro) {
+        return create(externalId, name, isFinanceiro ? Process.ProcessType.FINANCIAL : Process.ProcessType.GENERIC);
+    }
+
+    @Transactional
+    public Process create(String externalId, String name, Process.ProcessType type) {
         String ex = (externalId == null || externalId.isBlank()) ? java.util.UUID.randomUUID().toString() : externalId;
         if (repo.existsByExternalId(ex)) throw new IllegalArgumentException("process id already exists");
-        Process p = new Process(null, ex, name, true, isFinanceiro, Instant.now(), Instant.now());
+        Process.ProcessType resolvedType = type == null ? Process.ProcessType.GENERIC : type;
+        if (resolvedType == Process.ProcessType.LEAD_QUALIFICATION) {
+            try {
+                statusService.ensureLeadStatuses();
+            } catch (Exception ignored) {
+            }
+        }
+        Process p = new Process(null, ex, name, true, resolvedType, Instant.now(), Instant.now());
         Process saved = repo.save(p);
-        publisher.publish("process.created", Map.of("id", ex, "name", name, "isFinanceiro", isFinanceiro));
+        publisher.publish("process.created", Map.of(
+                "id", ex,
+                "name", name,
+                "type", resolvedType.name(),
+                "isFinanceiro", resolvedType == Process.ProcessType.FINANCIAL
+        ));
         return saved;
     }
 

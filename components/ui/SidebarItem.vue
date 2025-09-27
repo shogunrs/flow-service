@@ -5,22 +5,30 @@
       @mouseenter="handleMouseEnter"
       @mouseleave="handleMouseLeave"
       :class="[
-        'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all duration-200 relative',
+        'w-full flex items-center gap-3 px-3 py-1.5 text-sm rounded-2xl transition-all duration-200 relative overflow-hidden border border-transparent',
         isActive
-          ? 'bg-indigo-600 text-white shadow-lg'
-          : 'text-slate-300 hover:text-white hover:bg-slate-800',
+          ? 'text-slate-100'
+          : 'text-slate-300 hover:text-white hover:bg-white/5 hover:border-white/10',
         collapsed ? 'justify-center' : ''
       ]"
       :title="collapsed ? item.label : item.description"
     >
-      <i :class="[item.icon, 'w-5 flex-shrink-0']"></i>
+      <i :class="[item.icon, 'w-5 flex-shrink-0', isActive ? 'text-slate-100' : 'text-slate-300']"></i>
       <span v-show="!collapsed" class="flex-1 text-left truncate transition-opacity duration-300">{{ item.label }}</span>
 
       <!-- Active indicator -->
-      <div
-        v-if="isActive && !collapsed"
-        class="w-2 h-2 bg-white rounded-full opacity-80"
-      ></div>
+      <i
+        v-if="hasChildren && !collapsed"
+        :class="[
+          'fa-solid text-xs transition-transform',
+          isExpanded ? 'fa-chevron-down' : 'fa-chevron-right'
+        ]"
+      ></i>
+
+      <span
+        v-if="isChild && isActive"
+        class="pointer-events-none absolute right-3 top-2.5 w-1.5 h-1.5 rounded-full bg-white/80 shadow-[0_0_12px_rgba(255,255,255,0.55)]"
+      ></span>
 
       <!-- Badge/Count (if needed) -->
       <span
@@ -31,14 +39,6 @@
       </span>
 
       <!-- Submenu arrow (if has children) -->
-      <i
-        v-if="hasChildren && !collapsed"
-        :class="[
-          'fa-solid fa-chevron-right text-xs transition-transform',
-          isExpanded ? 'rotate-90' : ''
-        ]"
-      ></i>
-
     </button>
 
     <!-- Tooltip for collapsed mode -->
@@ -66,6 +66,7 @@
         :item="child"
         :is-active="childIsActive(child.path)"
         :collapsed="false"
+        :is-child="true"
         @click="handleChildClick(child)"
       />
     </div>
@@ -88,6 +89,10 @@ const props = defineProps({
     default: false
   },
   collapsed: {
+    type: Boolean,
+    default: false
+  },
+  isChild: {
     type: Boolean,
     default: false
   }

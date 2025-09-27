@@ -36,6 +36,7 @@
         />
 
         <BaseInput
+          v-if="isFinancialProcess"
           v-model="recordAmount"
           type="text"
           mask="currency"
@@ -77,6 +78,7 @@ const props = defineProps({
   modelValue: { type: Boolean, default: false },
   stages: { type: Array, default: () => [] },
   pipelineKey: { type: String, default: "" },
+  isFinancialProcess: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["update:modelValue", "save", "close"]);
@@ -153,7 +155,7 @@ function handleSave() {
   // Preparar dados simples para salvar
   const recordData = {
     name: recordName.value.trim(),
-    amount: recordAmount.value || 0,
+    amount: props.isFinancialProcess ? recordAmount.value || 0 : 0,
     stageId: firstStage.value?.id,
     status: firstStage.value?.status || "Pendente",
     fieldValues: {},

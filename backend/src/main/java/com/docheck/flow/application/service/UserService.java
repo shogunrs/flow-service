@@ -11,16 +11,32 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
+
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_MANAGER = "manager";
+    private static final String ROLE_ANALYST = "analyst";
+    private static final String ROLE_USER = "user";
+    private static final String ROLE_VIEWER = "viewer";
+    private static final Set<String> KNOWN_ROLES = Set.of(
+            ROLE_ADMIN,
+            ROLE_MANAGER,
+            ROLE_ANALYST,
+            ROLE_USER,
+            ROLE_VIEWER
+    );
 
     public Optional<User> findByEmail(String email) {
         if (email == null) {
@@ -45,20 +61,26 @@ public class UserService {
         }
 
         User manager = getAuthenticatedUser();
+        ensureCanManageUsers(manager);
 
         String email = normalizeEmail(command.getEmail());
         String password = normalizePassword(command.getRawPassword());
         Instant now = Instant.now();
 
-        Set<String> roles = copyRoles(command.getRoles());
-        boolean superUser = Boolean.TRUE.equals(command.getSuperUser());
+        Set<String> desiredRoles = normalizeRoles(command.getRoles());
+        if (desiredRoles.isEmpty()) {
+            desiredRoles = defaultRolesFor(manager);
+        }
+        ensureRolesAllowed(manager, desiredRoles, Collections.emptySet());
+
+        boolean superUser = resolveSuperUserFlag(manager, command.getSuperUser(), false);
         String fotoPerfil = resolveProfilePhoto(command);
 
         User user = User.builder()
                 .name(command.getName())
                 .email(email)
                 .passwordHash(passwordEncoder.encode(password))
-                .roles(roles)
+                .roles(new HashSet<>(desiredRoles))
                 .superUser(superUser)
                 .organizationId(manager.getOrganizationId())
                 .createdBy(manager.getId())
@@ -115,6 +137,7 @@ public class UserService {
         }
 
         User manager = getAuthenticatedUser();
+        ensureCanManageUsers(manager);
         User existing = repo.findByIdAndOrganizationId(command.getId(), manager.getOrganizationId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found in this organization"));
 
@@ -135,10 +158,15 @@ public class UserService {
             existing.setPasswordHash(passwordEncoder.encode(command.getRawPassword()));
         }
 
+        Set<String> existingRoles = currentRoles(existing);
         if (command.getRoles() != null) {
-            existing.setRoles(copyRoles(command.getRoles()));
+            Set<String> desiredRoles = normalizeRoles(command.getRoles());
+            ensureRolesAllowed(manager, desiredRoles, existingRoles);
+            existing.setRoles(new HashSet<>(desiredRoles));
+            existingRoles = desiredRoles;
         }
-        existing.setSuperUser(Boolean.TRUE.equals(command.getSuperUser()));
+        boolean superUser = resolveSuperUserFlag(manager, command.getSuperUser(), existing.isSuperUser());
+        existing.setSuperUser(superUser);
 
         // ... (o resto das atualizações de campo permanecem as mesmas)
 
@@ -281,10 +309,6 @@ public class UserService {
         return password.trim();
     }
 
-    private static Set<String> copyRoles(Set<String> roles) {
-        return roles == null ? new HashSet<>() : new HashSet<>(roles);
-    }
-
     private static String resolveProfilePhoto(UserWriteCommand command) {
         if (command.getProfileImage() != null) {
             return command.getProfileImage();
@@ -294,5 +318,112 @@ public class UserService {
 
     private static boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private void ensureCanManageUsers(User actor) {
+        if (!canManageUsers(actor)) {
+            throw new IllegalStateException("Usuário autenticado não tem permissão para gerenciar usuários nesta organização");
+        }
+    }
+
+    private boolean canManageUsers(User actor) {
+        if (actor.isSuperUser()) {
+            return true;
+        }
+        Set<String> roles = currentRoles(actor);
+        return roles.contains(ROLE_ADMIN) || roles.contains(ROLE_MANAGER);
+    }
+
+    private Set<String> resolveAssignableRoles(User actor) {
+        if (actor.isSuperUser()) {
+            return new HashSet<>(KNOWN_ROLES);
+        }
+        Set<String> roles = currentRoles(actor);
+        if (roles.contains(ROLE_ADMIN)) {
+            return new HashSet<>(Set.of(ROLE_USER, ROLE_MANAGER, ROLE_ANALYST));
+        }
+        if (roles.contains(ROLE_MANAGER)) {
+            return new HashSet<>(Set.of(ROLE_ANALYST));
+        }
+        return new HashSet<>();
+    }
+
+    private Set<String> defaultRolesFor(User actor) {
+        Set<String> roles = currentRoles(actor);
+        if (actor.isSuperUser() || roles.contains(ROLE_ADMIN)) {
+            return new HashSet<>(Set.of(ROLE_USER));
+        }
+        if (roles.contains(ROLE_MANAGER)) {
+            return new HashSet<>(Set.of(ROLE_ANALYST));
+        }
+        throw new IllegalStateException("Usuário autenticado não tem permissão para criar usuários");
+    }
+
+    private void ensureRolesAllowed(User actor, Set<String> desiredRoles, Set<String> existingRoles) {
+        if (desiredRoles == null || desiredRoles.isEmpty()) {
+            throw new IllegalStateException("Usuário precisa ter ao menos uma role atribuída");
+        }
+
+        Set<String> unknownRoles = new HashSet<>(desiredRoles);
+        unknownRoles.removeAll(KNOWN_ROLES);
+        if (!unknownRoles.isEmpty()) {
+            throw new IllegalStateException("Roles desconhecidas: " + String.join(", ", unknownRoles));
+        }
+
+        if (actor.isSuperUser()) {
+            return;
+        }
+
+        Set<String> additions = new HashSet<>(desiredRoles);
+        if (existingRoles != null) {
+            additions.removeAll(existingRoles);
+        }
+
+        if (additions.isEmpty()) {
+            return;
+        }
+
+        Set<String> assignable = resolveAssignableRoles(actor);
+        if (!assignable.containsAll(additions)) {
+            Set<String> unauthorized = new HashSet<>(additions);
+            unauthorized.removeAll(assignable);
+            throw new IllegalStateException("Você não possui permissão para atribuir as roles: " + String.join(", ", unauthorized));
+        }
+    }
+
+    private boolean resolveSuperUserFlag(User actor, Boolean requestedSuperUser, boolean existingSuperUser) {
+        if (requestedSuperUser == null) {
+            return existingSuperUser;
+        }
+
+        boolean desired = requestedSuperUser;
+        if (desired == existingSuperUser) {
+            return desired;
+        }
+
+        if (!actor.isSuperUser()) {
+            throw new IllegalStateException("Somente super usuários podem alterar privilégios de super usuário");
+        }
+
+        return desired;
+    }
+
+    private static Set<String> normalizeRoles(Set<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return new HashSet<>();
+        }
+        return roles.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toLowerCase)
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    private Set<String> currentRoles(User user) {
+        if (user == null) {
+            return new HashSet<>();
+        }
+        return normalizeRoles(user.getRoles());
     }
 }

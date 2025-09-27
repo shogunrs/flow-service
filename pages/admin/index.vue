@@ -93,8 +93,9 @@
         >
           <h2 class="text-xl font-semibold">Usuários</h2>
           <button
-            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-4 py-3 md:px-3 md:py-2 rounded-md text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
+            class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white px-4 py-3 md:px-3 md:py-2 rounded-md text-sm flex items-center gap-2 w-full sm:w-auto justify-center disabled:opacity-60 disabled:cursor-not-allowed"
             @click="openNewUserModal"
+            :disabled="!canManageUsers"
           >
             <i class="fa-solid fa-user-plus"></i>
             Novo Usuário
@@ -212,8 +213,8 @@
         <h2 class="text-xl font-semibold mb-2">Configurações da Esteira</h2>
         <div class="bg-gray-800 rounded-lg p-4 space-y-3">
           <div class="space-y-3">
-            <div class="flex items-end gap-2 flex-wrap">
-              <div class="min-w-[16rem]">
+            <div class="flex flex-wrap gap-3 items-end">
+              <div class="min-w-[16rem] flex-1 sm:flex-none">
                 <label class="text-[12px] text-slate-300"
                   >Novo processo (nome)</label
                 >
@@ -223,58 +224,64 @@
                   placeholder="ex.: ConsorEquity"
                 />
               </div>
-              <div class="flex items-center">
+              <div class="flex-1 min-w-[16rem]">
+                <label class="text-[12px] text-slate-300">Tipo do processo</label>
+                <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  <button
+                    v-for="option in processTypeOptions"
+                    :key="option.value"
+                    type="button"
+                    @click="newProcessType = option.value"
+                    :class="[
+                      'relative flex items-start gap-3 px-3 py-3 rounded-xl border transition-all text-left',
+                      newProcessType === option.value
+                        ? 'border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/20'
+                        : 'border-slate-700/60 bg-slate-900/40 hover:border-indigo-500/40'
+                    ]"
+                  >
+                    <div
+                      class="w-9 h-9 rounded-lg bg-slate-900/70 flex items-center justify-center text-base"
+                    >
+                      <i :class="option.icon"></i>
+                    </div>
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-slate-100">
+                        {{ option.label }}
+                      </p>
+                      <p class="text-[11px] text-slate-400">
+                        {{ option.description }}
+                      </p>
+                    </div>
+                    <i
+                      v-if="newProcessType === option.value"
+                      class="fa-solid fa-circle-check text-indigo-400 absolute top-2 right-2"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
                 <button
-                  type="button"
-                  @click="newProcFinanceiro = !newProcFinanceiro"
-                  :class="[
-                    'flex items-center justify-center w-9 h-9 rounded-md transition-all duration-200 border',
-                    newProcFinanceiro
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-lg shadow-emerald-500/25'
-                      : 'bg-slate-800/70 hover:bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-500',
-                  ]"
-                  :title="
-                    newProcFinanceiro
-                      ? 'Processo Financeiro (clique para desativar)'
-                      : 'Marcar como processo financeiro'
-                  "
+                  class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
+                  :disabled="creatingProcess"
+                  @click="createProcess"
+                  title="Adicionar processo"
+                  aria-label="Adicionar processo"
                 >
                   <i
-                    :class="[
-                      'fa-solid transition-all duration-200',
-                      newProcFinanceiro
-                        ? 'fa-dollar-sign text-white animate-pulse'
-                        : 'fa-dollar-sign text-slate-400',
-                    ]"
-                    :style="
-                      newProcFinanceiro
-                        ? 'filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.8));'
-                        : ''
-                    "
+                    v-if="creatingProcess"
+                    class="fa-solid fa-spinner fa-spin"
                   ></i>
+                  <i v-else class="fa-solid fa-plus"></i>
+                </button>
+                <button
+                  class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-md text-sm w-9 h-9 flex items-center justify-center"
+                  @click="openResetModal"
+                  title="Zerar dados locais"
+                  aria-label="Zerar dados locais"
+                >
+                  <i class="fa-solid fa-rotate-left"></i>
                 </button>
               </div>
-              <button
-                class="bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-white p-2 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center w-9 h-9"
-                :disabled="creatingProcess"
-                @click="createProcess"
-                title="Adicionar processo"
-                aria-label="Adicionar processo"
-              >
-                <i
-                  v-if="creatingProcess"
-                  class="fa-solid fa-spinner fa-spin"
-                ></i>
-                <i v-else class="fa-solid fa-plus"></i>
-              </button>
-              <button
-                class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-md text-sm w-9 h-9 flex items-center justify-center"
-                @click="openResetModal"
-                title="Zerar dados locais"
-                aria-label="Zerar dados locais"
-              >
-                <i class="fa-solid fa-rotate-left"></i>
-              </button>
             </div>
             <div>
               <label class="text-[12px] text-slate-300">Processos</label>
@@ -297,6 +304,9 @@
                     <span class="text-[11px] text-slate-400"
                       >({{ p.key }})</span
                     >
+                    <span class="text-[11px] text-indigo-300">
+                      {{ resolveProcessTypeLabel(p.type, p.isFinanceiro) }}
+                    </span>
                   </label>
                   <div class="flex items-center gap-2">
                     <span
@@ -878,7 +888,7 @@
           <label class="text-[12px] text-slate-300">Roles *</label>
           <div class="mt-2 space-y-2">
             <label
-              v-for="role in availableRoles"
+              v-for="role in roleOptions"
               :key="role.value"
               class="flex items-center gap-2 cursor-pointer"
             >
@@ -886,10 +896,20 @@
                 type="checkbox"
                 :checked="userForm.roles.includes(role.value)"
                 @change="toggleRole(role.value)"
+                :disabled="!canToggleRole(role.value)"
                 class="accent-indigo-500"
               />
               <span class="text-sm text-slate-200">{{ role.label }}</span>
+              <span
+                v-if="!canToggleRole(role.value) && userForm.roles.includes(role.value)"
+                class="text-[10px] text-slate-400"
+              >
+                (bloqueado)
+              </span>
             </label>
+            <div v-if="extraRoles.length" class="text-[10px] text-slate-400">
+              Roles adicionais: {{ extraRoles.join(", ") }}
+            </div>
           </div>
         </div>
 
@@ -1072,6 +1092,7 @@ import PipelineManager from "~/components/admin/PipelineManager.vue";
 
 import { useGeolocation } from "~/composables/useGeolocation";
 import { useTemporaryFileUpload } from "~/composables/useTemporaryFileUpload";
+import { useCurrentUser } from "~/composables/useCurrentUser";
 // CanvasFinance removido do Admin; ticker ficará apenas no Dashboard
 
 definePageMeta({
@@ -1085,6 +1106,7 @@ import {
   removeProcess,
   setProcessName,
   renameProcessKey,
+  applyProcessBlueprint,
 } from "~/composables/usePipeline";
 import {
   fetchStagesApi,
@@ -1176,11 +1198,93 @@ const tempUploadSessionId = ref(null);
 // Array para armazenar arquivos temporários enviados
 const temporaryUploadedFiles = ref([]);
 
-const availableRoles = [
+const { user: currentUser, load: loadCurrentUser } = useCurrentUser();
+
+const roleOptions = [
   { value: "admin", label: "Administrador" },
+  { value: "manager", label: "Gerente" },
+  { value: "analyst", label: "Analista" },
   { value: "user", label: "Usuário" },
   { value: "viewer", label: "Visualizador" },
 ];
+
+const normalizedCurrentRoles = computed(() => {
+  const source = Array.isArray(currentUser.value?.roles)
+    ? currentUser.value.roles
+    : [];
+  return new Set(
+    source
+      .filter((role) => typeof role === "string")
+      .map((role) => role.trim().toLowerCase())
+      .filter(Boolean)
+  );
+});
+
+const isCurrentSuperUser = computed(() => currentUser.value?.superUser === true);
+
+const hasIdentifiedActor = computed(() => {
+  if (isCurrentSuperUser.value) {
+    return true;
+  }
+  const roles = normalizedCurrentRoles.value;
+  if (roles.size === 0) {
+    return false;
+  }
+  return !(roles.size === 1 && roles.has("guest"));
+});
+
+const canManageUsers = computed(() => {
+  if (isCurrentSuperUser.value) {
+    return true;
+  }
+  if (!hasIdentifiedActor.value) {
+    return true;
+  }
+  const roles = normalizedCurrentRoles.value;
+  return roles.has("admin") || roles.has("manager");
+});
+
+const assignableRoleOptions = computed(() => {
+  if (isCurrentSuperUser.value) {
+    return roleOptions;
+  }
+  if (!hasIdentifiedActor.value) {
+    return roleOptions;
+  }
+  const roles = normalizedCurrentRoles.value;
+  if (roles.has("admin")) {
+    return roleOptions.filter((role) =>
+      ["user", "manager", "analyst"].includes(role.value)
+    );
+  }
+  if (roles.has("manager")) {
+    return roleOptions.filter((role) => role.value === "analyst");
+  }
+  return roleOptions;
+});
+
+const assignableRoleValues = computed(
+  () => new Set(assignableRoleOptions.value.map((role) => role.value))
+);
+
+const canToggleRole = (roleValue) => {
+  if (isCurrentSuperUser.value) {
+    return true;
+  }
+  if (!hasIdentifiedActor.value) {
+    return true;
+  }
+  return assignableRoleValues.value.has(roleValue);
+};
+
+const extraRoles = computed(() => {
+  const currentRoles = Array.isArray(userForm.value?.roles)
+    ? userForm.value.roles
+    : [];
+  return currentRoles.filter(
+    (role) => !roleOptions.some((option) => option.value === role)
+  );
+});
 
 const tiposContas = [
   { value: "CORRENTE", label: "Conta Corrente" },
@@ -1214,8 +1318,74 @@ const currentProcessName = computed(() => {
 const processes = ref(listProcesses());
 const currentProcessKey = ref(processes.value[0]?.key || "");
 const newProcName = ref("");
-const newProcFinanceiro = ref(false);
+const newProcessType = ref('GENERIC');
 const creatingProcess = ref(false);
+
+const processTypeOptions = [
+  {
+    value: 'GENERIC',
+    label: 'Pipeline Livre',
+    description: 'Fluxo flexível para diferentes contextos.',
+    icon: 'fa-solid fa-diagram-project text-slate-300',
+  },
+  {
+    value: 'FINANCIAL',
+    label: 'Financeiro',
+    description: 'Controle de etapas com indicadores financeiros.',
+    icon: 'fa-solid fa-dollar-sign text-emerald-400',
+  },
+  {
+    value: 'TODO_LIST',
+    label: 'To-do List',
+    description: 'Gestão de tarefas e checklists colaborativos.',
+    icon: 'fa-solid fa-list-check text-sky-400',
+  },
+  {
+    value: 'LEAD_QUALIFICATION',
+    label: 'Qualificação de Leads',
+    description: 'Integração direta com o cadastro de leads.',
+    icon: 'fa-solid fa-user-check text-indigo-400',
+  },
+];
+
+const processTypeLabels = {
+  GENERIC: 'Pipeline Livre',
+  FINANCIAL: 'Financeiro',
+  TODO_LIST: 'To-do List',
+  LEAD_QUALIFICATION: 'Qualificação de Leads',
+};
+
+const DEFAULT_PIPELINES = {
+  GENERIC: [
+    { id: 'briefing', title: 'Briefing Inicial', slaDays: 2, color: 'sky' },
+    { id: 'execucao', title: 'Execução', slaDays: 5, color: 'violet' },
+    { id: 'revisao', title: 'Revisão', slaDays: 3, color: 'amber' },
+  ],
+  FINANCIAL: [
+    { id: 'entrada', title: 'Entrada de Dados', slaDays: 2, color: 'emerald' },
+    { id: 'analise_credito', title: 'Análise de Crédito', slaDays: 3, color: 'cyan' },
+    { id: 'formalizacao', title: 'Formalização', slaDays: 4, color: 'indigo' },
+  ],
+  TODO_LIST: [
+    { id: 'planejamento', title: 'Planejamento', slaDays: 1, color: 'blue' },
+    { id: 'execucao_tarefas', title: 'Execução de Tarefas', slaDays: 5, color: 'purple' },
+    { id: 'validacao', title: 'Validação', slaDays: 2, color: 'lime' },
+  ],
+  LEAD_QUALIFICATION: [
+    { id: 'captacao', title: 'Captação', slaDays: 1, color: 'blue', defaultStatus: 'Novo Lead' },
+    { id: 'contato', title: 'Contato Inicial', slaDays: 2, color: 'emerald', defaultStatus: 'Contato Realizado' },
+    { id: 'qualificacao', title: 'Qualificação', slaDays: 3, color: 'violet', defaultStatus: 'Qualificado' },
+    { id: 'negociacao', title: 'Negociação', slaDays: 2, color: 'amber', defaultStatus: 'Em Negociação' },
+  ],
+};
+
+function resolveProcessTypeLabel(type, isFinanceiro) {
+  const normalized = typeof type === 'string' ? type.trim().toUpperCase() : undefined;
+  if (!normalized) {
+    return isFinanceiro ? processTypeLabels.FINANCIAL : processTypeLabels.GENERIC;
+  }
+  return processTypeLabels[normalized] || processTypeLabels.GENERIC;
+}
 
 async function createProcess() {
   const name = newProcName.value.trim();
@@ -1226,17 +1396,35 @@ async function createProcess() {
     Math.random().toString(36).slice(2) + Date.now().toString(36);
   if (creatingProcess.value) return;
   creatingProcess.value = true;
+  const selectedType = newProcessType.value;
+  const blueprint = DEFAULT_PIPELINES[selectedType]
+    ? [...DEFAULT_PIPELINES[selectedType]]
+    : [];
   // Otimista: atualiza DOM primeiro
   processes.value = [
     ...processes.value,
-    { key, name, active: true, isFinanceiro: newProcFinanceiro.value },
+    {
+      key,
+      name,
+      active: true,
+      type: selectedType,
+      isFinanceiro: selectedType === 'FINANCIAL',
+    },
   ];
-  const ok = await addProcess(key, name || key, newProcFinanceiro.value);
+  const ok = await addProcess(key, name || key, selectedType);
   if (ok) {
     currentProcessKey.value = key;
     setLastKey(key);
+    if (blueprint.length) {
+      try {
+        await applyProcessBlueprint(key, blueprint);
+        pipelineStages.value = [...blueprint];
+      } catch (error) {
+        console.error('Failed to apply blueprint:', error);
+      }
+    }
     newProcName.value = "";
-    newProcFinanceiro.value = false;
+    newProcessType.value = 'GENERIC';
     toastSuccess("Processo criado");
   } else {
     // rollback visual
@@ -1246,10 +1434,7 @@ async function createProcess() {
   creatingProcess.value = false;
 }
 
-const pipelineStages = ref([
-  { id: "dados_basicos", title: "Dados Básicos", slaDays: 2, color: "sky" },
-  { id: "documentacao", title: "Documentação", slaDays: 5, color: "indigo" },
-]);
+const pipelineStages = ref([...DEFAULT_PIPELINES.GENERIC]);
 const processName = ref("");
 
 // Modal Gestão da Esteira
@@ -1365,6 +1550,7 @@ watch(
 
 // Load/save pipeline config locally
 onMounted(async () => {
+  loadCurrentUser();
   // Load status list independent of process
   await loadStatusList();
 
@@ -1422,6 +1608,9 @@ async function editProcess(p) {
         color: s.color,
       }))
     : [];
+  if (!pipelineStages.value.length && p.type && DEFAULT_PIPELINES[p.type]) {
+    pipelineStages.value = [...DEFAULT_PIPELINES[p.type]];
+  }
   setLastKey(p.key);
   processName.value = p.name || p.key;
   await prefetchStageFields();
@@ -1741,6 +1930,10 @@ const { getCurrentLocation, formatLocation } = useGeolocation();
 const { migrateTemporaryFileToUser } = useTemporaryFileUpload();
 
 async function openNewUserModal() {
+  if (!canManageUsers.value) {
+    toastError("Você não tem permissão para criar usuários");
+    return;
+  }
   // Capturar localização ao criar novo usuário
   let location = null;
   try {
@@ -1791,6 +1984,10 @@ async function openNewUserModal() {
 }
 
 function editUser(user) {
+  if (!canManageUsers.value) {
+    toastError("Você não tem permissão para editar usuários");
+    return;
+  }
   userForm.value = {
     id: user.id,
     name: user.name,
@@ -1819,6 +2016,10 @@ function editUser(user) {
 }
 
 async function saveUser() {
+  if (!canManageUsers.value) {
+    toastError("Você não tem permissão para salvar usuários");
+    return;
+  }
   try {
     const {
       id,
@@ -1943,6 +2144,10 @@ async function saveUser() {
 }
 
 async function deleteUser(userId) {
+  if (!canManageUsers.value) {
+    toastError("Você não tem permissão para excluir usuários");
+    return;
+  }
   if (!confirm("Tem certeza que deseja excluir este usuário?")) {
     return;
   }
@@ -2062,6 +2267,9 @@ function onFaceRegistrationError(error) {
 }
 
 function toggleRole(roleValue) {
+  if (!canToggleRole(roleValue)) {
+    return;
+  }
   const roles = userForm.value.roles;
   const index = roles.indexOf(roleValue);
   if (index > -1) {

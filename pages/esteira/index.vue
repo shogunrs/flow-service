@@ -1186,9 +1186,15 @@ const pipelineKey = computed(() => props.pipelineKey || "quotaequity");
 
 // Verificar se o processo é financeiro
 const currentProcessInfo = ref(null);
-const isFinancialProcess = computed(
-  () => currentProcessInfo.value?.isFinanceiro || false
-);
+const currentProcessType = computed(() => {
+  const info = currentProcessInfo.value || {};
+  if (typeof info.type === 'string') {
+    return info.type.trim().toUpperCase();
+  }
+  return info.isFinanceiro ? 'FINANCIAL' : 'GENERIC';
+});
+
+const isFinancialProcess = computed(() => currentProcessType.value === 'FINANCIAL');
 const financialStatsRef = ref(null);
 let refreshTimeout;
 
@@ -2185,6 +2191,7 @@ const openGlobalNewRecordModal = () => {
     stages: stages.value,
     stageFields: stageDynamicFields.value,
     pipelineKey: pipelineKey.value,
+    isFinancial: isFinancialProcess.value,
     onSave: (recordData) => {
       handleGlobalModalSave(recordData);
     },

@@ -86,6 +86,6 @@ export async function deleteStatus(id: string): Promise<boolean> {
 export const STATUS_CATEGORIES = [
   { value: 'ESTEIRA', label: 'Esteira' },
   { value: 'USUARIOS', label: 'Usuários' },
-  { value: 'SISTEMA', label: 'Sistema' }
+  { value: 'SISTEMA', label: 'Sistema' },
+  { value: 'LEADS', label: 'Leads' }
 ] as const
-

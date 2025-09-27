@@ -115,24 +115,27 @@
                 </div>
 
                 <div class="flex items-center justify-between text-xs">
-                  <span
-                    class="inline-flex items-center gap-2 rounded-full px-2 py-0.5 text-xs"
-                    :class="
-                      p.active !== false
-                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40'
-                        : 'bg-slate-800 text-slate-400 border border-slate-700'
-                    "
-                  >
-                    <i
-                      :class="[
-                        'fa-solid',
-                        p.isFinanceiro
-                          ? 'fa-coins text-emerald-300'
-                          : 'fa-diagram-project text-slate-400',
-                      ]"
-                    ></i>
-                    {{ p.active !== false ? "Ativo" : "Inativo" }}
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="inline-flex items-center gap-2 rounded-full px-2 py-0.5 text-xs"
+                      :class="processTypeBadgeClass(p.type, p.isFinanceiro)"
+                    >
+                      <i :class="['fa-solid', processTypeIcon(p.type, p.isFinanceiro)]"></i>
+                      {{ resolveProcessTypeLabel(p.type, p.isFinanceiro) }}
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1"
+                      :class="p.active !== false ? 'text-emerald-300' : 'text-slate-400'"
+                    >
+                      <span
+                        :class="[
+                          'inline-block w-2 h-2 rounded-full',
+                          p.active !== false ? 'bg-emerald-400' : 'bg-slate-500',
+                        ]"
+                      ></span>
+                      {{ p.active !== false ? 'Ativo' : 'Inativo' }}
+                    </span>
+                  </div>
 
                   <div class="flex items-center gap-2">
                     <button
@@ -178,26 +181,43 @@
           />
         </div>
 
-        <button
-          type="button"
-          class="app-toggle-card w-full justify-between"
-          :class="{ 'app-toggle-card--active': newProcFinanceiro }"
-          @click="newProcFinanceiro = !newProcFinanceiro"
-        >
-          <div class="flex items-center gap-3">
-            <div class="app-toggle-card-icon">
-              <i class="fa-solid fa-hand-holding-dollar"></i>
-            </div>
-            <div class="text-left">
-              <p class="text-sm font-semibold">Processo financeiro</p>
-              <p class="text-xs text-slate-400">
-                Identifica fluxos com etapas financeiras, cálculos e integrações
-                bancárias.
-              </p>
-            </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+            Tipo do processo
+          </label>
+          <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              v-for="option in processTypeOptions"
+              :key="option.value"
+              type="button"
+              @click="newProcessType = option.value"
+              :class="[
+                'flex items-start gap-3 rounded-xl border px-3 py-3 text-left transition-all',
+                newProcessType === option.value
+                  ? 'border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/20'
+                  : 'border-slate-700/60 bg-slate-900/40 hover:border-indigo-500/40'
+              ]"
+            >
+              <div
+                class="w-9 h-9 rounded-lg bg-slate-900/70 flex items-center justify-center text-base"
+              >
+                <i :class="option.icon"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-slate-100">
+                  {{ option.label }}
+                </p>
+                <p class="text-[11px] text-slate-400">
+                  {{ option.description }}
+                </p>
+              </div>
+              <i
+                v-if="newProcessType === option.value"
+                class="fa-solid fa-circle-check text-indigo-400"
+              ></i>
+            </button>
           </div>
-          <div v-if="newProcFinanceiro" class="app-toggle-card-pill">ON</div>
-        </button>
+        </div>
       </div>
 
       <template #footer>
@@ -376,6 +396,7 @@ import {
   setProcessName,
   sanitizeProcessKey,
   renameProcessKey,
+  applyProcessBlueprint,
 } from "~/composables/usePipeline";
 import {
   fetchStagesApi,
@@ -406,9 +427,73 @@ const {
 const processes = ref(listProcesses());
 const currentProcessKey = ref(processes.value[0]?.key || "");
 const newProcName = ref("");
-const newProcFinanceiro = ref(false);
+const newProcessType = ref('GENERIC');
 const creatingProcess = ref(false);
 const showCreateProcessModal = ref(false);
+
+const processTypeOptions = [
+  {
+    value: 'GENERIC',
+    label: 'Pipeline Livre',
+    description: 'Fluxo flexível para diferentes contextos.',
+    icon: 'fa-solid fa-diagram-project text-slate-300',
+  },
+  {
+    value: 'FINANCIAL',
+    label: 'Financeiro',
+    description: 'Controle de etapas com indicadores financeiros.',
+    icon: 'fa-solid fa-dollar-sign text-emerald-400',
+  },
+  {
+    value: 'TODO_LIST',
+    label: 'To-do List',
+    description: 'Gestão de tarefas e checklists colaborativos.',
+    icon: 'fa-solid fa-list-check text-sky-400',
+  },
+  {
+    value: 'LEAD_QUALIFICATION',
+    label: 'Qualificação de Leads',
+    description: 'Integração direta com o cadastro de leads.',
+    icon: 'fa-solid fa-user-check text-indigo-400',
+  },
+];
+
+const processTypeLabels = {
+  GENERIC: 'Pipeline Livre',
+  FINANCIAL: 'Financeiro',
+  TODO_LIST: 'To-do List',
+  LEAD_QUALIFICATION: 'Qualificação de Leads',
+};
+
+function resolveProcessTypeLabel(type, isFinanceiro) {
+  const normalized = typeof type === 'string' ? type.trim().toUpperCase() : undefined;
+  if (!normalized) {
+    return isFinanceiro ? processTypeLabels.FINANCIAL : processTypeLabels.GENERIC;
+  }
+  return processTypeLabels[normalized] || processTypeLabels.GENERIC;
+}
+
+function processTypeIcon(type, isFinanceiro) {
+  const normalized = typeof type === 'string' ? type.trim().toUpperCase() : undefined;
+  if (normalized === 'FINANCIAL' || (normalized == null && isFinanceiro)) return 'fa-coins text-emerald-300';
+  if (normalized === 'TODO_LIST') return 'fa-list-check text-sky-300';
+  if (normalized === 'LEAD_QUALIFICATION') return 'fa-user-check text-indigo-300';
+  return 'fa-diagram-project text-slate-300';
+}
+
+function processTypeBadgeClass(type, isFinanceiro) {
+  const normalized = typeof type === 'string' ? type.trim().toUpperCase() : undefined;
+  if (normalized === 'FINANCIAL' || (normalized == null && isFinanceiro)) {
+    return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40';
+  }
+  if (normalized === 'TODO_LIST') {
+    return 'bg-sky-500/10 text-sky-300 border border-sky-500/30';
+  }
+  if (normalized === 'LEAD_QUALIFICATION') {
+    return 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/30';
+  }
+  return 'bg-slate-800 text-slate-400 border border-slate-700';
+}
 
 async function createProcess() {
   const name = newProcName.value.trim();
@@ -419,17 +504,35 @@ async function createProcess() {
     Math.random().toString(36).slice(2) + Date.now().toString(36);
   if (creatingProcess.value) return;
   creatingProcess.value = true;
+  const selectedType = newProcessType.value;
+  const blueprint = DEFAULT_PIPELINES[selectedType]
+    ? [...DEFAULT_PIPELINES[selectedType]]
+    : [];
   // Otimista: atualiza DOM primeiro
   processes.value = [
     ...processes.value,
-    { key, name, active: true, isFinanceiro: newProcFinanceiro.value },
+    {
+      key,
+      name,
+      active: true,
+      type: selectedType,
+      isFinanceiro: selectedType === 'FINANCIAL',
+    },
   ];
-  const ok = await addProcess(key, name || key, newProcFinanceiro.value);
+  const ok = await addProcess(key, name || key, selectedType);
   if (ok) {
+    if (blueprint.length) {
+      try {
+        await applyProcessBlueprint(key, blueprint);
+        pipelineStages.value = [...blueprint];
+      } catch (error) {
+        console.error('Falha ao registrar blueprint do processo:', error);
+      }
+    }
     currentProcessKey.value = key;
     setLastKey(key);
     newProcName.value = "";
-    newProcFinanceiro.value = false;
+    newProcessType.value = 'GENERIC';
     toastSuccess("Processo criado");
     showCreateProcessModal.value = false;
   } else {
@@ -442,7 +545,7 @@ async function createProcess() {
 
 function openCreateProcessModal() {
   newProcName.value = "";
-  newProcFinanceiro.value = false;
+  newProcessType.value = 'GENERIC';
   showCreateProcessModal.value = true;
 }
 
@@ -450,10 +553,31 @@ function closeCreateProcessModal() {
   showCreateProcessModal.value = false;
 }
 
-const pipelineStages = ref([
-  { id: "dados_basicos", title: "Dados Básicos", slaDays: 2, color: "sky" },
-  { id: "documentacao", title: "Documentação", slaDays: 5, color: "indigo" },
-]);
+const DEFAULT_PIPELINES = {
+  GENERIC: [
+    { id: 'briefing', title: 'Briefing Inicial', slaDays: 2, color: 'sky' },
+    { id: 'execucao', title: 'Execução', slaDays: 5, color: 'violet' },
+    { id: 'revisao', title: 'Revisão', slaDays: 3, color: 'amber' },
+  ],
+  FINANCIAL: [
+    { id: 'entrada', title: 'Entrada de Dados', slaDays: 2, color: 'emerald' },
+    { id: 'analise_credito', title: 'Análise de Crédito', slaDays: 3, color: 'cyan' },
+    { id: 'formalizacao', title: 'Formalização', slaDays: 4, color: 'indigo' },
+  ],
+  TODO_LIST: [
+    { id: 'planejamento', title: 'Planejamento', slaDays: 1, color: 'pink' },
+    { id: 'execucao_tarefas', title: 'Execução de Tarefas', slaDays: 5, color: 'purple' },
+    { id: 'validacao', title: 'Validação', slaDays: 2, color: 'lime' },
+  ],
+  LEAD_QUALIFICATION: [
+    { id: 'captacao', title: 'Captação', slaDays: 1, color: 'blue', defaultStatus: 'Novo Lead' },
+    { id: 'contato', title: 'Contato Inicial', slaDays: 2, color: 'emerald', defaultStatus: 'Contato Realizado' },
+    { id: 'qualificacao', title: 'Qualificação', slaDays: 3, color: 'violet', defaultStatus: 'Qualificado' },
+    { id: 'negociacao', title: 'Negociação', slaDays: 2, color: 'amber', defaultStatus: 'Em Negociação' },
+  ],
+};
+
+const pipelineStages = ref([...DEFAULT_PIPELINES.GENERIC]);
 const processName = ref("");
 
 // Modal Gestão da Esteira
@@ -609,6 +733,9 @@ async function editProcess(p) {
         color: s.color,
       }))
     : [];
+  if (!pipelineStages.value.length && p.type && DEFAULT_PIPELINES[p.type]) {
+    pipelineStages.value = [...DEFAULT_PIPELINES[p.type]];
+  }
   setLastKey(p.key);
   processName.value = p.name || p.key;
   await prefetchStageFields();

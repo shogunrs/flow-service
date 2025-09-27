@@ -1,5 +1,6 @@
 package com.docheck.flow.infrastructure.mongo;
 
+import com.docheck.flow.domain.model.Process;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -15,6 +16,7 @@ public class ProcessDocument {
     public String name;
     public boolean active;
     public boolean isFinanceiro;
+    public Process.ProcessType type;
     public Instant createdAt;
     public Instant updatedAt;
 }
