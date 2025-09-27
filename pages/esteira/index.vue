@@ -1316,6 +1316,12 @@ async function loadPipelineConfig() {
           slaDays: Number(s.slaDays ?? 0),
           color: s.color || "sky",
           status: "Offline",
+          defaultStatus:
+            typeof s.defaultStatus === "string"
+              ? s.defaultStatus
+              : typeof s.default_status === "string"
+              ? s.default_status
+              : "",
         }));
         return;
       }
@@ -1336,6 +1342,12 @@ async function loadPipelineConfig() {
           slaDays: s.slaDays ?? 0,
           color: s.color || "sky",
           status: statusById[s.id] || "Offline",
+          defaultStatus:
+            typeof s.defaultStatus === "string"
+              ? s.defaultStatus
+              : typeof s.default_status === "string"
+              ? s.default_status
+              : "",
         }));
       }
     }
@@ -1481,6 +1493,7 @@ function ensureStagesCoverProposals() {
       slaDays: 0,
       status: "Offline",
       color: "sky",
+      defaultStatus: "",
       auto: true,
     }));
     stages.value = stages.value.concat(now);

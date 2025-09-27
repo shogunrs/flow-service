@@ -59,16 +59,26 @@ public class ProposalService {
         var now = Instant.now();
         Proposal p = opt.orElseThrow();
         boolean moved = false;
+        String sanitizedStatus = status != null && !status.isBlank() ? status : null;
         if (stageId != null && !stageId.isBlank() && !stageId.equals(p.getStageId())) {
             p.setStageId(stageId);
             p.setStageEnteredAt(now);
             moved = true;
-            // If status not explicitly provided, adopt stage defaultStatus
-            if (status == null || status.isBlank()) {
-                try { stageRepo.findById(stageId).ifPresent(st -> { if (st.getDefaultStatus()!=null && !st.getDefaultStatus().isBlank()) p.setStatus(st.getDefaultStatus()); }); } catch (Exception ignored) {}
+            String stageDefaultStatus = null;
+            try {
+                stageDefaultStatus = stageRepo.findById(stageId)
+                    .map(stage -> stage.getDefaultStatus())
+                    .filter(def -> def != null && !def.isBlank())
+                    .orElse(null);
+            } catch (Exception ignored) {}
+
+            if (stageDefaultStatus != null) {
+                p.setStatus(stageDefaultStatus);
+            } else if (sanitizedStatus != null) {
+                p.setStatus(sanitizedStatus);
             }
         }
-        if (status != null && !status.isBlank()) p.setStatus(status);
+        if (!moved && sanitizedStatus != null) p.setStatus(sanitizedStatus);
         if (name != null && !name.isBlank()) p.setName(name);
         if (amount != null) p.setAmount(amount);
         p.setUpdatedAt(now);

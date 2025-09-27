@@ -198,7 +198,8 @@ function handleSave() {
     name: recordName.value.trim(),
     amount: props.isFinancialProcess ? recordAmount.value || 0 : 0,
     stageId: firstStage.value?.id,
-    status: firstStage.value?.status || "Pendente",
+    status:
+      firstStage.value?.defaultStatus || firstStage.value?.status || "Pendente",
     leadId: selectedLeadId.value || null,
     fieldValues: {},
     fieldFiles: {},

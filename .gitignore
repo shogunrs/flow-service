@@ -142,5 +142,13 @@ vite.config.ts.timestamp-*
 storage/
 
 #java 
-.backend/target
+
+
+
+# Java/Spring
 target/
+build/
+out/
+*.class
+# Maven cache local (não versionar)
+.m2/
