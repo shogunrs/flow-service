@@ -3,6 +3,7 @@ package com.docheck.flow.application.service;
 import com.docheck.flow.application.port.EventPublisher;
 import com.docheck.flow.application.port.ProcessRepository;
 import com.docheck.flow.application.port.StageRepository;
+import com.docheck.flow.application.port.UserRepository;
 import com.docheck.flow.domain.model.Process;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProcessService {
@@ -20,12 +24,15 @@ public class ProcessService {
     private final StageRepository stageRepo;
     private final EventPublisher publisher;
     private final StatusService statusService;
+    private final UserRepository userRepository;
 
-    public ProcessService(ProcessRepository repo, StageRepository stageRepo, EventPublisher publisher, StatusService statusService) {
+    public ProcessService(ProcessRepository repo, StageRepository stageRepo, EventPublisher publisher,
+                          StatusService statusService, UserRepository userRepository) {
         this.repo = repo;
         this.stageRepo = stageRepo;
         this.publisher = publisher;
         this.statusService = statusService;
+        this.userRepository = userRepository;
     }
 
     public List<Process> list() { return repo.findAll(); }
@@ -34,16 +41,21 @@ public class ProcessService {
 
     @Transactional
     public Process create(String externalId, String name) {
-        return create(externalId, name, Process.ProcessType.GENERIC);
+        return create(externalId, name, Process.ProcessType.GENERIC, Collections.emptySet());
     }
 
     @Transactional
     public Process create(String externalId, String name, boolean isFinanceiro) {
-        return create(externalId, name, isFinanceiro ? Process.ProcessType.FINANCIAL : Process.ProcessType.GENERIC);
+        return create(externalId, name, isFinanceiro ? Process.ProcessType.FINANCIAL : Process.ProcessType.GENERIC, Collections.emptySet());
     }
 
     @Transactional
     public Process create(String externalId, String name, Process.ProcessType type) {
+        return create(externalId, name, type, Collections.emptySet());
+    }
+
+    @Transactional
+    public Process create(String externalId, String name, Process.ProcessType type, Collection<String> allowedUserIds) {
         String ex = (externalId == null || externalId.isBlank()) ? java.util.UUID.randomUUID().toString() : externalId;
         if (repo.existsByExternalId(ex)) throw new IllegalArgumentException("process id already exists");
         Process.ProcessType resolvedType = type == null ? Process.ProcessType.GENERIC : type;
@@ -53,7 +65,8 @@ public class ProcessService {
             } catch (Exception ignored) {
             }
         }
-        Process p = new Process(null, ex, name, true, resolvedType, Instant.now(), Instant.now());
+        Set<String> allowed = resolveAllowedUserIds(allowedUserIds);
+        Process p = new Process(null, ex, name, true, resolvedType, Instant.now(), Instant.now(), allowed);
         Process saved = repo.save(p);
         publisher.publish("process.created", Map.of(
                 "id", ex,
@@ -66,11 +79,29 @@ public class ProcessService {
 
     @Transactional
     public Process updateName(String externalId, String name) {
+        return updateSettings(externalId, name, null);
+    }
+
+    @Transactional
+    public Process updateSettings(String externalId, String name, Collection<String> allowedUserIds) {
         Process p = repo.findByExternalId(externalId).orElseThrow();
-        p.setName(name);
+        if (name != null && !name.isBlank()) {
+            p.setName(name);
+        }
+        if (allowedUserIds != null) {
+            p.setAllowedUserIds(resolveAllowedUserIds(allowedUserIds));
+        }
         p.setUpdatedAt(Instant.now());
         Process saved = repo.save(p);
-        publisher.publish("process.updated", Map.of("id", externalId, "name", name));
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", externalId);
+        if (name != null && !name.isBlank()) {
+            payload.put("name", name);
+        }
+        if (allowedUserIds != null) {
+            payload.put("allowedUserIds", new ArrayList<>(saved.getAllowedUserIds()));
+        }
+        publisher.publish("process.updated", payload);
         return saved;
     }
 
@@ -102,7 +133,7 @@ public class ProcessService {
         
         log.info("✅ Processo {} deletado (método legacy)", externalId);
     }
-    
+
     /**
      * Deleção com cascade completo - MÉTODO RECOMENDADO
      * Delega para ProcessCascadeService que implementa backup automático e cascade total
@@ -115,5 +146,17 @@ public class ProcessService {
         throw new UnsupportedOperationException(
             "Use ProcessCascadeService.deleteProcessWithCascade() diretamente para cascade completo"
         );
+    }
+
+    private Set<String> resolveAllowedUserIds(Collection<String> requestedIds) {
+        if (requestedIds == null) {
+            return Collections.emptySet();
+        }
+        return requestedIds.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(id -> !id.isEmpty())
+                .filter(userRepository::existsById)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

@@ -52,7 +52,8 @@ public class ProcessController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    public record CreateRequest(@NotBlank String key, @NotBlank String name, String type, Boolean isFinanceiro) {}
+    public record CreateRequest(@NotBlank String key, @NotBlank String name, String type, Boolean isFinanceiro,
+                                java.util.Set<String> allowedUserIds) {}
 
     @PostMapping
     public ResponseEntity<ProcessDTO> create(@Valid @RequestBody CreateRequest req) {
@@ -60,16 +61,16 @@ public class ProcessController {
         if (type == Process.ProcessType.GENERIC && Boolean.TRUE.equals(req.isFinanceiro())) {
             type = Process.ProcessType.FINANCIAL;
         }
-        Process created = service.create(req.key(), req.name(), type);
+        Process created = service.create(req.key(), req.name(), type, req.allowedUserIds());
         return ResponseEntity.created(URI.create("/api/v1/processes/" + created.getExternalId()))
                 .body(ProcessMapper.toDto(created));
     }
 
-    public record UpdateNameRequest(@NotBlank String name) {}
+    public record UpdateProcessRequest(String name, java.util.Set<String> allowedUserIds) {}
 
     @PutMapping("/{key}")
-    public ProcessDTO updateName(@PathVariable("key") String externalId, @Valid @RequestBody UpdateNameRequest req) {
-        return ProcessMapper.toDto(service.updateName(externalId, req.name()));
+    public ProcessDTO updateName(@PathVariable("key") String externalId, @Valid @RequestBody UpdateProcessRequest req) {
+        return ProcessMapper.toDto(service.updateSettings(externalId, req.name(), req.allowedUserIds()));
     }
 
     @DeleteMapping("/{key}")

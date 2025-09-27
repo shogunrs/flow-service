@@ -4,8 +4,11 @@ import com.docheck.flow.application.port.ProcessRepository;
 import com.docheck.flow.domain.model.Process;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -19,8 +22,8 @@ public class MongoProcessRepository implements ProcessRepository {
         Process.ProcessType type = d.type != null
                 ? d.type
                 : (d.isFinanceiro ? Process.ProcessType.FINANCIAL : Process.ProcessType.GENERIC);
-        Process process = new Process(d.id, d.externalId, d.name, d.active, type, d.createdAt, d.updatedAt);
-        return process;
+        Set<String> allowed = d.allowedUserIds != null ? new HashSet<>(d.allowedUserIds) : Collections.emptySet();
+        return new Process(d.id, d.externalId, d.name, d.active, type, d.createdAt, d.updatedAt, allowed);
     }
     private static ProcessDocument toDoc(Process p) {
         ProcessDocument d = new ProcessDocument();
@@ -32,6 +35,7 @@ public class MongoProcessRepository implements ProcessRepository {
         d.isFinanceiro = p.isFinanceiro();
         d.createdAt = p.getCreatedAt();
         d.updatedAt = p.getUpdatedAt();
+        d.allowedUserIds = new HashSet<>(p.getAllowedUserIds());
         return d;
     }
 

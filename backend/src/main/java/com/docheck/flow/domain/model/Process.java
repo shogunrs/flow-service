@@ -1,6 +1,10 @@
 package com.docheck.flow.domain.model;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Process {
     private String id;
@@ -10,14 +14,19 @@ public class Process {
     private ProcessType type = ProcessType.GENERIC;
     private Instant createdAt;
     private Instant updatedAt;
+    private Set<String> allowedUserIds = new HashSet<>();
 
     public Process() {}
 
     public Process(String id, String externalId, String name, boolean active, boolean isFinanceiro, Instant createdAt, Instant updatedAt) {
-        this(id, externalId, name, active, isFinanceiro ? ProcessType.FINANCIAL : ProcessType.GENERIC, createdAt, updatedAt);
+        this(id, externalId, name, active, isFinanceiro ? ProcessType.FINANCIAL : ProcessType.GENERIC, createdAt, updatedAt, Collections.emptySet());
     }
 
     public Process(String id, String externalId, String name, boolean active, ProcessType type, Instant createdAt, Instant updatedAt) {
+        this(id, externalId, name, active, type, createdAt, updatedAt, Collections.emptySet());
+    }
+
+    public Process(String id, String externalId, String name, boolean active, ProcessType type, Instant createdAt, Instant updatedAt, Collection<String> allowedUserIds) {
         this.id = id;
         this.externalId = externalId;
         this.name = name;
@@ -25,6 +34,7 @@ public class Process {
         this.type = type == null ? ProcessType.GENERIC : type;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        setAllowedUserIds(allowedUserIds == null ? Collections.emptySet() : new HashSet<>(allowedUserIds));
     }
 
     public String getId() { return id; }
@@ -43,6 +53,20 @@ public class Process {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    public Set<String> getAllowedUserIds() { return allowedUserIds == null ? Collections.emptySet() : Collections.unmodifiableSet(allowedUserIds); }
+    public void setAllowedUserIds(Collection<String> allowedUserIds) {
+        if (allowedUserIds == null) {
+            this.allowedUserIds = new HashSet<>();
+            return;
+        }
+        Set<String> normalized = new HashSet<>();
+        for (String idCandidate : allowedUserIds) {
+            if (idCandidate == null) continue;
+            String trimmed = idCandidate.trim();
+            if (!trimmed.isEmpty()) normalized.add(trimmed);
+        }
+        this.allowedUserIds = normalized;
+    }
 
     public enum ProcessType {
         GENERIC,

@@ -217,4 +217,12 @@ public class MongoUserRepository implements UserRepository {
     public Optional<User> findAny() {
         return repo.findAll().stream().findFirst().map(MongoUserRepository::toDomain);
     }
+
+    @Override
+    public boolean existsById(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            return false;
+        }
+        return repo.existsById(id);
+    }
 }

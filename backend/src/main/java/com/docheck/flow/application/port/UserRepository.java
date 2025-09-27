@@ -19,4 +19,6 @@ public interface UserRepository {
 
     // Novo método para obter um usuário qualquer (usado para fallback em desenvolvimento)
     Optional<User> findAny();
+
+    boolean existsById(String id);
 }

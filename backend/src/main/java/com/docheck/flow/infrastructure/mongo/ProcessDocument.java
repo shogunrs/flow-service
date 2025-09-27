@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.Set;
 
 @Document("processes")
 public class ProcessDocument {
@@ -19,4 +20,5 @@ public class ProcessDocument {
     public Process.ProcessType type;
     public Instant createdAt;
     public Instant updatedAt;
+    public Set<String> allowedUserIds;
 }
