@@ -87,6 +87,38 @@
     </div>
 
     <main class="relative z-10 p-6">
+      <section
+        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6"
+        aria-label="Resumo geral"
+      >
+        <article
+          v-for="card in summaryCards"
+          :key="card.key"
+          class="relative overflow-hidden rounded-2xl border border-slate-800/70 bg-slate-900/70 p-5 shadow-lg shadow-black/30"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="space-y-2 min-w-0">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                {{ card.label }}
+              </p>
+              <p class="text-3xl font-bold text-white">
+                <span v-if="metricsReady">{{ card.value }}</span>
+                <span v-else class="inline-flex items-center gap-2 text-slate-500 text-sm">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  Carregando
+                </span>
+              </p>
+              <p v-if="metricsReady && card.subLabel" class="text-xs text-slate-300/80">
+                {{ card.subLabel }}
+              </p>
+            </div>
+            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600/20 to-purple-600/20 text-indigo-300">
+              <i :class="card.icon"></i>
+            </div>
+          </div>
+        </article>
+      </section>
+
       <section v-if="activeTab === 'users'">
         <div
           class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3"
@@ -260,34 +292,14 @@
                 </div>
               </div>
               <div class="flex-1 min-w-[16rem]">
-                <label class="text-[12px] text-slate-300">Usuários autorizados</label>
-                <div class="mt-2 flex flex-wrap gap-2">
-                  <span
-                    v-for="user in newProcessUserDetails"
-                    :key="user.id"
-                    class="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 text-[11px] text-indigo-200"
-                  >
-                    <span class="truncate max-w-[160px]">{{ user.label }}</span>
-                    <button
-                      class="text-indigo-200/80 hover:text-white"
-                      type="button"
-                      @click="removeNewProcessUser(user.id)"
-                    >
-                      <i class="fa-solid fa-xmark text-[10px]"></i>
-                    </button>
-                  </span>
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-[12px] text-slate-200 hover:border-indigo-500/50 hover:text-white"
-                    @click="openUserSelector('create')"
-                  >
-                    <i class="fa-solid fa-user-plus text-xs"></i>
-                    Gerenciar acesso
-                  </button>
-                </div>
-                <p class="text-[11px] text-slate-400 mt-1">
-                  Deixe vazio para liberar o acesso a todos.
-                </p>
+                <UserAccessManager
+                  v-model="newProcessUsers"
+                  :users="usersList"
+                  label="Usuários autorizados"
+                  description="Deixe vazio para liberar o acesso a todos."
+                  button-text="Gerenciar acesso"
+                  :disabled="creatingProcess"
+                />
               </div>
               <div class="flex items-center gap-2">
                 <button
@@ -520,34 +532,13 @@
           />
         </div>
         <div>
-          <label class="text-[12px] text-slate-300">Usuários com acesso à esteira</label>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <span
-              v-for="user in selectedProcessUserDetails"
-              :key="user.id"
-              class="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 text-[11px] text-indigo-200"
-            >
-              <span class="truncate max-w-[160px]">{{ user.label }}</span>
-              <button
-                class="text-indigo-200/80 hover:text-white"
-                type="button"
-                @click="removeSelectedProcessUser(user.id)"
-              >
-                <i class="fa-solid fa-xmark text-[10px]"></i>
-              </button>
-            </span>
-            <button
-              type="button"
-              class="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-[12px] text-slate-200 hover:border-indigo-500/50 hover:text-white"
-              @click="openUserSelector('edit')"
-            >
-              <i class="fa-solid fa-user-plus text-xs"></i>
-              Gerenciar acesso
-            </button>
-          </div>
-          <p class="text-[11px] text-slate-400 mt-1">
-            Sem seleção, todos os usuários com acesso ao sistema enxergam esta esteira.
-          </p>
+          <UserAccessManager
+            v-model="selectedProcessUsers"
+            :users="usersList"
+            label="Usuários com acesso à esteira"
+            description="Sem seleção, todos os usuários com acesso ao sistema enxergam esta esteira."
+            button-text="Gerenciar acesso"
+          />
         </div>
         <PipelineManager
           v-model:stages="pipelineStages"
@@ -567,82 +558,6 @@
             @click="savePipelineModal"
           >
             Salvar
-          </button>
-        </div>
-      </template>
-    </BaseModal>
-
-    <BaseModal
-      v-model="showUserSelectorModal"
-      title="Selecionar usuários"
-      size="md"
-    >
-      <div class="space-y-3">
-        <input
-          v-model="userSearch"
-          type="search"
-          class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-          placeholder="Buscar por nome ou e-mail"
-        />
-        <div class="max-h-64 overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/60">
-          <div
-            v-if="!filteredModalUsers.length"
-            class="px-3 py-4 text-center text-sm text-slate-500"
-          >
-            Nenhum usuário encontrado.
-          </div>
-          <button
-            v-for="user in filteredModalUsers"
-            :key="user.id"
-            type="button"
-            :class="[
-              'w-full flex items-center justify-between px-3 py-2 text-sm transition-colors border-b border-slate-800 last:border-b-0',
-              modalSelectionSet.has(user.id)
-                ? 'bg-indigo-500/10 text-indigo-200 border-indigo-500/30'
-                : 'text-slate-200 hover:bg-slate-800/60'
-            ]"
-            @click="toggleUserInSelection(user.id)"
-          >
-            <span class="truncate max-w-[220px] text-left">{{ user.label }}</span>
-            <i
-              :class="modalSelectionSet.has(user.id)
-                ? 'fa-solid fa-check text-indigo-300'
-                : 'fa-regular fa-circle text-slate-500'"
-            ></i>
-          </button>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <span
-            v-for="id in userSelectorSelection"
-            :key="id"
-            class="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 text-[11px] text-indigo-200"
-          >
-            <span class="truncate max-w-[160px]">
-              {{ userMap.get(id)?.label || id }}
-            </span>
-            <button
-              class="text-indigo-200/80 hover:text-white"
-              type="button"
-              @click="toggleUserInSelection(id)"
-            >
-              <i class="fa-solid fa-xmark text-[10px]"></i>
-            </button>
-          </span>
-        </div>
-      </div>
-      <template #footer>
-        <div class="flex items-center justify-end gap-2">
-          <button
-            class="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
-            @click="closeUserSelectorModal"
-          >
-            Cancelar
-          </button>
-          <button
-            class="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500"
-            @click="confirmUserSelection"
-          >
-            Confirmar
           </button>
         </div>
       </template>
@@ -1225,6 +1140,7 @@ import UserFileUpload from "~/components/ui/UserFileUpload.vue";
 import FaceRecognition from "~/components/ui/FaceRecognition.vue";
 import { useRoute } from "#imports";
 import PipelineManager from "~/components/admin/PipelineManager.vue";
+import UserAccessManager from "~/components/ui/UserAccessManager.vue";
 
 import { useGeolocation } from "~/composables/useGeolocation";
 import { useTemporaryFileUpload } from "~/composables/useTemporaryFileUpload";
@@ -1248,7 +1164,7 @@ import {
   fetchStagesApi,
   saveStagesPreservingIdsApi,
 } from "~/composables/useStages";
-import { isApiEnabled } from "~/utils/api/index";
+import { isApiEnabled, apiFetch } from "~/utils/api/index";
 import { useProcessSubmenu } from "~/composables/useProcessMenu";
 
 import { useToast } from "~/composables/useToast";
@@ -1335,6 +1251,125 @@ const tempUploadSessionId = ref(null);
 const temporaryUploadedFiles = ref([]);
 
 const { user: currentUser, load: loadCurrentUser } = useCurrentUser();
+
+const aiProviders = ref([]);
+const processCatalog = ref(listProcesses());
+const proposalSummary = ref({
+  totalProposals: 0,
+  totalAmount: 0,
+  averageAmount: 0,
+});
+const metricsLoading = ref(false);
+const metricsReady = ref(false);
+
+const numberFormatter = new Intl.NumberFormat("pt-BR");
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  minimumFractionDigits: 2,
+});
+
+const formatNumber = (value) => {
+  const numeric = typeof value === "number" ? value : Number(value || 0);
+  return numberFormatter.format(Number.isFinite(numeric) ? numeric : 0);
+};
+
+const formatCurrency = (value) => {
+  const numeric = typeof value === "number" ? value : Number(value || 0);
+  return currencyFormatter.format(Number.isFinite(numeric) ? numeric : 0);
+};
+
+const authHeaders = () => {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("flow-auth-token");
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+};
+
+const totalUsersCount = computed(() => usersList.value.length);
+const superUsersCount = computed(
+  () => usersList.value.filter((user) => user?.superUser === true).length
+);
+
+const isFinancialProcess = (process) => {
+  if (!process) return false;
+  const type = typeof process?.type === "string"
+    ? process.type.trim().toUpperCase()
+    : "";
+  return type === "FINANCIAL" || process?.isFinanceiro === true;
+};
+
+const totalProcessesCount = computed(() => processCatalog.value.length);
+const activeProcessesCount = computed(
+  () => processCatalog.value.filter((p) => p?.active !== false).length
+);
+const financialProcessesList = computed(() =>
+  processCatalog.value.filter((process) => isFinancialProcess(process))
+);
+const financialProcessesCount = computed(
+  () => financialProcessesList.value.length
+);
+
+const totalAiProvidersCount = computed(() => aiProviders.value.length);
+const activeAiProvidersCount = computed(
+  () => aiProviders.value.filter((provider) => provider?.active).length
+);
+
+const summaryCards = computed(() => [
+  {
+    key: "users",
+    label: "Usuários cadastrados",
+    value: metricsReady.value
+      ? formatNumber(totalUsersCount.value)
+      : "—",
+    subLabel: metricsReady.value
+      ? `${formatNumber(superUsersCount.value)} super usuários`
+      : "",
+    icon: "fa-solid fa-users",
+  },
+  {
+    key: "processes",
+    label: "Processos cadastrados",
+    value: metricsReady.value
+      ? formatNumber(totalProcessesCount.value)
+      : "—",
+    subLabel: metricsReady.value
+      ? `${formatNumber(activeProcessesCount.value)} ativos • ${formatNumber(
+          financialProcessesCount.value
+        )} financeiros`
+      : "",
+    icon: "fa-solid fa-diagram-project",
+  },
+  {
+    key: "ai",
+    label: "Integrações de IA",
+    value: metricsReady.value
+      ? formatNumber(totalAiProvidersCount.value)
+      : "—",
+    subLabel: metricsReady.value
+      ? `${formatNumber(activeAiProvidersCount.value)} ativos`
+      : "",
+    icon: "fa-solid fa-robot",
+  },
+  {
+    key: "financial",
+    label: "Propostas em esteiras financeiras",
+    value: metricsReady.value
+      ? formatNumber(proposalSummary.value.totalProposals)
+      : "—",
+    subLabel:
+      metricsReady.value && proposalSummary.value.totalProposals
+        ? `${formatCurrency(
+            proposalSummary.value.totalAmount
+          )} • Ticket médio ${formatCurrency(
+            proposalSummary.value.averageAmount
+          )}`
+        : metricsReady.value
+          ? "Sem propostas registradas"
+          : "",
+    icon: "fa-solid fa-coins",
+  },
+]);
 
 const roleOptions = [
   { value: "admin", label: "Administrador" },
@@ -1435,6 +1470,137 @@ const tiposPix = [
   { value: "CHAVE_ALEATORIA", label: "Chave Aleatória" },
   { value: "OUTROS", label: "Outros" },
 ];
+
+async function loadAiProviders() {
+  if (!isApiEnabled()) {
+    aiProviders.value = [];
+    return;
+  }
+  const headers = authHeaders();
+  if (!headers.Authorization) {
+    aiProviders.value = [];
+    return;
+  }
+  try {
+    const providers = await apiFetch("/ai-providers", {
+      headers,
+      silent: true,
+    });
+    aiProviders.value = Array.isArray(providers) ? providers : [];
+  } catch (error) {
+    console.warn("[Admin] Falha ao carregar provedores de IA", error);
+    aiProviders.value = [];
+  }
+}
+
+async function loadFinancialStats() {
+  if (!isApiEnabled()) {
+    proposalSummary.value = {
+      totalProposals: 0,
+      totalAmount: 0,
+      averageAmount: 0,
+    };
+    return;
+  }
+  const headers = authHeaders();
+  if (!headers.Authorization) {
+    proposalSummary.value = {
+      totalProposals: 0,
+      totalAmount: 0,
+      averageAmount: 0,
+    };
+    return;
+  }
+
+  const financial = financialProcessesList.value;
+  if (!financial.length) {
+    proposalSummary.value = {
+      totalProposals: 0,
+      totalAmount: 0,
+      averageAmount: 0,
+    };
+    return;
+  }
+
+  let totalProposals = 0;
+  let totalAmount = 0;
+
+  for (const proc of financial) {
+    try {
+      const stats = await apiFetch(`/processes/${encodeURIComponent(proc.key)}/proposals/stats`, {
+        headers,
+        silent: true,
+      });
+      if (stats) {
+        totalProposals += Number(stats.totalProposals || 0);
+        totalAmount += Number(stats.totalAmount || 0);
+      }
+    } catch (error) {
+      console.warn(`[Admin] Falha ao obter stats do processo ${proc.key}`, error);
+    }
+  }
+
+  proposalSummary.value = {
+    totalProposals,
+    totalAmount,
+    averageAmount: totalProposals ? totalAmount / totalProposals : 0,
+  };
+}
+
+async function loadProcessCatalog() {
+  const fallback = listProcesses();
+  if (!isApiEnabled()) {
+    processCatalog.value = fallback;
+    processes.value = fallback;
+    await loadFinancialStats();
+    return;
+  }
+
+  const headers = authHeaders();
+  if (!headers.Authorization) {
+    processCatalog.value = fallback;
+    processes.value = fallback;
+    await loadFinancialStats();
+    return;
+  }
+
+  try {
+    const response = await apiFetch("/processes", {
+      headers,
+      silent: true,
+    });
+    const normalized = Array.isArray(response) ? response : [];
+    const source = normalized.length ? normalized : fallback;
+    processCatalog.value = source;
+    processes.value = source;
+
+    if (!currentProcessKey.value && source.length) {
+      currentProcessKey.value = source[0].key;
+      setLastKey(currentProcessKey.value);
+    }
+
+    await loadFinancialStats();
+  } catch (error) {
+    console.warn("[Admin] Falha ao carregar processos", error);
+    processCatalog.value = fallback;
+    processes.value = fallback;
+    await loadFinancialStats();
+  }
+}
+
+async function loadDashboardMetrics() {
+  metricsReady.value = false;
+  metricsLoading.value = true;
+  try {
+    await Promise.allSettled([
+      loadAiProviders(),
+      loadProcessCatalog(),
+    ]);
+  } finally {
+    metricsLoading.value = false;
+    metricsReady.value = true;
+  }
+}
 
 const {
   success: toastSuccess,
@@ -1572,6 +1738,7 @@ async function createProcess() {
     newProcessUsers.value = [];
     selectedProcessUsers.value = sanitizeUserSelection(allowedIds);
     toastSuccess("Processo criado");
+    await loadDashboardMetrics();
   } else {
     // rollback visual
     processes.value = processes.value.filter((p) => p.key !== key);
@@ -1819,6 +1986,7 @@ async function savePipelineModal() {
       }
       if (okSettings) toastSuccess("Esteira salva");
       else toastInfo("Etapas salvas; falha ao atualizar dados do processo");
+      await loadDashboardMetrics();
       showPipelineModal.value = false;
     } catch (e) {
       toastError("Falha ao salvar etapas. Verifique a conexão.");
@@ -1844,13 +2012,17 @@ watch(
 // Load/save pipeline config locally
 onMounted(async () => {
   loadCurrentUser();
-  // Load status list independent of process
   await loadStatusList();
-
-  // Load users list
   await loadUsersList();
+  await loadDashboardMetrics();
+
+  if (!currentProcessKey.value && processCatalog.value.length) {
+    currentProcessKey.value = processCatalog.value[0].key;
+    setLastKey(currentProcessKey.value);
+  }
 
   if (!currentProcessKey.value) return;
+
   const loaded = await fetchStagesApi(currentProcessKey.value);
   pipelineStages.value = Array.isArray(loaded)
     ? loaded.map((s) => ({
@@ -1888,6 +2060,7 @@ watch(currentProcessKey, async (k) => {
 function toggleActive(p) {
   setProcessActive(p.key, !(p.active !== false));
   processes.value = listProcesses();
+  loadDashboardMetrics();
 }
 
 async function editProcess(p) {
@@ -1975,7 +2148,10 @@ async function confirmDelete() {
 
   // Efetiva no backend e re-sincroniza silenciosamente
   const ok = await removeProcess(key);
-  if (ok) toastSuccess("Processo excluído");
+  if (ok) {
+    toastSuccess("Processo excluído");
+    await loadDashboardMetrics();
+  }
   else {
     // rollback
     processes.value = [...processes.value, p];
@@ -2012,6 +2188,7 @@ function confirmReset() {
   currentProcessKey.value = "";
   pipelineStages.value = [];
   setLastKey("");
+  loadDashboardMetrics();
   cancelReset();
 }
 

@@ -1,4 +1,5 @@
 import { ref, computed } from "vue";
+import { apiFetch, isApiEnabled } from "~/utils/api/index";
 
 interface Process {
   key: string;
@@ -61,17 +62,29 @@ export const useProcesses = () => {
     error.value = null;
 
     try {
-      // Usar a URL completa da API base configurada
-      const config = useRuntimeConfig();
-      const apiUrl = `${config.public.FLOW_API_BASE}/api/v1/processes`;
+      if (!isApiEnabled()) {
+        processes.value = [];
+        return;
+      }
 
-      console.log("🔄 Buscando processos da API:", apiUrl);
+      const token = typeof localStorage !== "undefined"
+        ? localStorage.getItem("flow-auth-token")
+        : null;
 
-      const response = await $fetch<Process[]>(apiUrl, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      console.log("🔄 Buscando processos da API: /api/v1/processes");
+
+      const response = await apiFetch<Process[]>("/api/v1/processes", {
+        headers,
+        silent: true,
       });
 
       console.log("📦 Resposta da API:", response);

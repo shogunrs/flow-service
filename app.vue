@@ -1,7 +1,8 @@
 <template>
-  <NuxtLayout name="sidebar">
+  <NuxtLayout v-if="currentLayout" :name="currentLayout">
     <NuxtPage />
   </NuxtLayout>
+  <NuxtPage v-else />
   <ToastContainer position="bottom-center" />
 
   <!-- Modal global de novo registro -->
@@ -21,9 +22,22 @@
 import ToastContainer from "~/components/ui/ToastContainer.vue";
 import NewRecordModal from "~/components/ui/NewRecordModal.vue";
 import { useNewRecordModal } from "~/composables/useNewRecordModal";
+import { computed } from "vue";
+import { useRoute } from "#imports";
 
 // Modal global de novo registro
 const { isModalOpen, modalData, closeModal, handleSave } = useNewRecordModal();
+
+const route = useRoute();
+const currentLayout = computed(() => {
+  if (route.meta?.layout === false || route.path === "/" || route.path === "/login") {
+    return null;
+  }
+  if (typeof route.meta?.layout === "string") {
+    return route.meta.layout;
+  }
+  return "sidebar";
+});
 
 // Mantém apenas Font Awesome via CDN para ícones
 useHead({

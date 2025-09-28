@@ -35,8 +35,7 @@ public class UserService {
             ROLE_MANAGER,
             ROLE_ANALYST,
             ROLE_USER,
-            ROLE_VIEWER
-    );
+            ROLE_VIEWER);
 
     public Optional<User> findByEmail(String email) {
         if (email == null) {
@@ -203,8 +202,8 @@ public class UserService {
     }
 
     public void addFileReference(String userId, String objectKey, String publicUrl, String filename,
-                                 String fileType, String contentType, long fileSize,
-                                 String uploadedFromIp, String uploadedFromLocation, boolean isMobileUpload) {
+            String fileType, String contentType, long fileSize,
+            String uploadedFromIp, String uploadedFromLocation, boolean isMobileUpload) {
         User manager = getAuthenticatedUser();
         User user = repo.findByIdAndOrganizationId(userId, manager.getOrganizationId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found in this organization"));
@@ -283,11 +282,13 @@ public class UserService {
     private User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetails)) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || !(authentication.getPrincipal() instanceof UserDetails)) {
             // ATENÇÃO: Lógica de fallback para desenvolvimento.
             // Retorna o primeiro usuário do banco de dados como o "gerente" padrão.
             return repo.findAny()
-                    .orElseThrow(() -> new IllegalStateException("Development mode fallback failed: No users found in database."));
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Development mode fallback failed: No users found in database."));
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -322,7 +323,8 @@ public class UserService {
 
     private void ensureCanManageUsers(User actor) {
         if (!canManageUsers(actor)) {
-            throw new IllegalStateException("Usuário autenticado não tem permissão para gerenciar usuários nesta organização");
+            throw new IllegalStateException(
+                    "Usuário autenticado não tem permissão para gerenciar usuários nesta organização");
         }
     }
 
@@ -384,10 +386,13 @@ public class UserService {
         }
 
         Set<String> assignable = resolveAssignableRoles(actor);
+
+        System.out.println("Assignable roles for actor: " + assignable);
         if (!assignable.containsAll(additions)) {
             Set<String> unauthorized = new HashSet<>(additions);
             unauthorized.removeAll(assignable);
-            throw new IllegalStateException("Você não possui permissão para atribuir as roles: " + String.join(", ", unauthorized));
+            throw new IllegalStateException(
+                    "Você não possui permissão para atribuir as roles: " + String.join(", ", unauthorized));
         }
     }
 
@@ -402,10 +407,24 @@ public class UserService {
         }
 
         if (!actor.isSuperUser()) {
-            throw new IllegalStateException("Somente super usuários podem alterar privilégios de super usuário");
+            boolean noSuperUserInOrg = desired
+                    && !existingSuperUser
+                    && !organizationHasSuperUser(actor.getOrganizationId());
+
+            if (!noSuperUserInOrg) {
+                throw new IllegalStateException("Somente super usuários podem alterar privilégios de super usuário");
+            }
         }
 
         return desired;
+    }
+
+    private boolean organizationHasSuperUser(String organizationId) {
+        if (organizationId == null || organizationId.isBlank()) {
+            return false;
+        }
+        return repo.findAllByOrganizationId(organizationId).stream()
+                .anyMatch(User::isSuperUser);
     }
 
     private static Set<String> normalizeRoles(Set<String> roles) {

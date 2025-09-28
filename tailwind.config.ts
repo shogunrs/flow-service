@@ -38,6 +38,46 @@ export default <Partial<Config>>{
         navy: {
           900: '#0b1220',
           950: '#070d18'
+        },
+        brand: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81'
+        }
+      },
+      backdropBlur: {
+        xs: '2px'
+      },
+      boxShadow: {
+        glow: '0 0 40px rgba(79,70,229,.35)'
+      },
+      animation: {
+        'spin-slow': 'spin 6s linear infinite',
+        'pulse-slow': 'pulse 4s ease-in-out infinite',
+        shimmer: 'shimmer 3s linear infinite',
+        float: 'float 8s ease-in-out infinite',
+        gradient: 'gradient 8s ease infinite'
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { backgroundPosition: '-1000px 0' },
+          '100%': { backgroundPosition: '1000px 0' }
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' }
+        },
+        gradient: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' }
         }
       }
     }

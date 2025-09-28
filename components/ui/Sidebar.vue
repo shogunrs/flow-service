@@ -19,10 +19,17 @@
       <div class="flex flex-col h-full">
         <!-- User Capsule -->
         <div class="px-4 pt-6 pb-5 border-b border-slate-900/70">
-          <div class="flex items-center gap-3">
+          <div
+            class="flex items-center gap-3"
+            :class="{ 'justify-center': collapsed }"
+          >
             <div
               class="relative flex-shrink-0 overflow-hidden rounded-2xl ring-2 ring-indigo-500/40 shadow-lg shadow-indigo-500/10 bg-slate-900/70"
-              :class="collapsed ? 'w-10 h-10 rounded-full cursor-pointer' : 'w-12 h-12'"
+              :class="
+                collapsed
+                  ? 'w-10 h-10 rounded-full cursor-pointer mx-auto'
+                  : 'w-12 h-12'
+              "
               @click="collapsed && toggleCollapse()"
             >
               <img
@@ -40,10 +47,15 @@
             </div>
             <div v-show="!collapsed" class="flex-1 min-w-0">
               <p class="text-sm font-semibold text-slate-100 truncate">
-                {{ currentUserDisplay.name }}
+                {{ firstName }}
               </p>
-              <p class="text-xs text-slate-400 truncate">
-                {{ currentUserDisplay.email }}
+              <p
+                class="text-xs text-indigo-200/80 font-medium uppercase tracking-wide"
+              >
+                {{ accessLabel }}
+              </p>
+              <p class="text-[11px] text-slate-400 truncate">
+                {{ currentUserEmail }}
               </p>
             </div>
             <button
@@ -68,13 +80,18 @@
               <i class="fa-solid fa-times"></i>
             </button>
           </div>
-          <div v-show="!collapsed" class="mt-4 flex items-center gap-2 text-[11px] text-slate-400">
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/70 border border-slate-800/70 uppercase tracking-wide">
+          <div
+            v-show="!collapsed"
+            class="mt-4 flex items-center gap-2 text-[11px] text-slate-400"
+          >
+            <span
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/70 border border-slate-800/70 uppercase tracking-wide"
+            >
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               Online
             </span>
-            <span v-if="currentUserRoles.length" class="truncate">
-              {{ currentUserRoles.join(' • ') }}
+            <span v-if="secondaryRoles.length" class="truncate">
+              {{ secondaryRoles.join(" • ") }}
             </span>
           </div>
         </div>
@@ -93,7 +110,9 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-4 pb-5 pt-4 border-t border-slate-900/70 backdrop-blur-sm">
+        <div
+          class="px-4 pb-5 pt-4 border-t border-slate-900/70 backdrop-blur-sm"
+        >
           <SidebarItem
             :item="settingsItem"
             :is-active="false"
@@ -128,25 +147,17 @@
     </button>
 
     <!-- Chat Modal -->
-    <ChatModal
-      v-model:show="showChatModal"
-      :messages="chatMessages"
-      :typing="chatTyping"
-      title="ConsorIA"
-      placeholder="Pergunte sobre seus consórcios, processos ou dados..."
-      size="md"
-      @send="handleChatSend"
-    />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "#imports";
 import SidebarItem from "./SidebarItem.vue";
 import ChatModal from "./ChatModal.vue";
 import { useProcesses } from "~/composables/useProcesses";
 import { useCurrentUser } from "~/composables/useCurrentUser";
+import { getApiBase } from "~/utils/api/index";
 
 // Props
 const props = defineProps({
@@ -166,6 +177,8 @@ const router = useRouter();
 // State
 const { user: userState, load: loadCurrentUser } = useCurrentUser();
 const currentUser = computed(() => userState.value || {});
+const apiBaseUrl = getApiBase()?.replace(/\/$/, "") || "";
+const needsProcessFetch = computed(() => processMenuItems.value.length === 0);
 
 const collapsed = ref(false);
 
@@ -182,7 +195,7 @@ const {
 } = useProcesses();
 
 // Load collapsed state from localStorage on mount
-onMounted(() => {
+onMounted(async () => {
   // console.log('SIDEBAR MOUNTED - Component is loading!')
   const savedState = localStorage.getItem("sidebar-collapsed");
   if (savedState !== null) {
@@ -193,7 +206,21 @@ onMounted(() => {
   // Não carregar processos automaticamente mais
   // Eles serão carregados quando clicar na Esteira
   loadCurrentUser();
+
+  if (needsProcessFetch.value) {
+    await fetchProcesses();
+  }
 });
+
+watch(
+  () => route.path,
+  async (path) => {
+    if (path && path.startsWith("/esteira")) {
+      await fetchProcesses();
+    }
+  },
+  { immediate: true }
+);
 
 // Mobile menu state
 const mobileMenuOpen = computed({
@@ -201,29 +228,89 @@ const mobileMenuOpen = computed({
   set: (value) => emit("update:modelValue", value),
 });
 
-const currentUserDisplay = computed(() => ({
-  name: currentUser.value?.name || "Usuário",
-  email: currentUser.value?.email || "sem-email",
-}));
+const roleLabelMap: Record<string, string> = {
+  super: "Super Usuário",
+  admin: "Administrador",
+  manager: "Gerente",
+  analyst: "Analista",
+  user: "Usuário",
+  viewer: "Visualizador",
+  guest: "Convidado",
+};
 
-const currentUserRoles = computed(() => {
+const normalizedRoles = computed(() => {
   const roles = Array.isArray(currentUser.value?.roles)
     ? currentUser.value.roles
     : [];
-  return roles.slice(0, 3).map((role) => role.toString());
+  return roles
+    .map((role) => (typeof role === "string" ? role.trim().toLowerCase() : ""))
+    .filter(Boolean);
 });
 
+const primaryRoleKey = computed(() => normalizedRoles.value[0] || null);
+
+const firstName = computed(() => {
+  const name = currentUser.value?.name || "Usuário";
+  const parts = name.trim().split(/\s+/);
+  if (!parts.length) return "Usuário";
+  const raw = parts[0];
+  return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "Usuário";
+});
+
+const currentUserEmail = computed(
+  () => currentUser.value?.email || "sem-email"
+);
+
+const accessLabel = computed(() => {
+  if (currentUser.value?.superUser) return roleLabelMap.super;
+  const key = primaryRoleKey.value;
+  if (!key) return "Acesso Básico";
+  return roleLabelMap[key] || key;
+});
+
+const secondaryRoles = computed(() => {
+  if (currentUser.value?.superUser) {
+    return [roleLabelMap.super];
+  }
+  return normalizedRoles.value
+    .map((key) => roleLabelMap[key] || key)
+    .slice(0, 3);
+});
+
+const resolveAvatarUrl = (source: unknown): string => {
+  if (!source || typeof source !== "string") return "";
+  const trimmed = source.trim();
+  if (!trimmed) return "";
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) {
+    return trimmed;
+  }
+  if (!apiBaseUrl) {
+    return trimmed;
+  }
+  return `${apiBaseUrl}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+};
+
 const userAvatar = computed(() => {
-  if (currentUser.value?.fotoPerfilUrl) return currentUser.value.fotoPerfilUrl;
-  if (currentUser.value?.profileImage) return currentUser.value.profileImage;
-  return null;
+  const sources = [
+    currentUser.value?.avatarUrl,
+    currentUser.value?.fotoPerfilUrl,
+    currentUser.value?.profileImage,
+  ];
+  for (const source of sources) {
+    const resolved = resolveAvatarUrl(typeof source === "string" ? source : "");
+    if (resolved) return resolved;
+  }
+  return "";
 });
 
 const userInitials = computed(() => {
   const name = currentUser.value?.name || "Usuário";
   const parts = name.trim().split(/\s+/);
   if (!parts.length) return "U";
-  const initials = parts.slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
+  const initials = parts
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
   return initials || "U";
 });
 
@@ -321,14 +408,14 @@ const settingsItem = {
 };
 
 // Methods
-function isActive(path) {
+function isActive(path: any) {
   if (path === "/") {
     return route.path === "/";
   }
   return route.path.startsWith(path);
 }
 
-async function navigateTo(item) {
+async function navigateTo(item: any) {
   // Se o item tem children e a sidebar está colapsada, expandir automaticamente
   if (item.children && item.children.length > 0 && collapsed.value) {
     collapsed.value = false;
@@ -353,8 +440,9 @@ async function handleEsteiraFetch() {
   console.log("✅ Processos atualizados:", processMenuItems.value);
 }
 
-function openMobileMenu() {
+async function openMobileMenu() {
   mobileMenuOpen.value = true;
+  await fetchProcesses();
 }
 
 function closeMobileMenu() {
@@ -366,79 +454,15 @@ function openSettings() {
 }
 
 // Chat IA functions
-function openChatModal() {
-  showChatModal.value = true;
-  // Adicionar mensagem de boas-vindas se for primeira vez
-  if (chatMessages.value.length === 0) {
-    chatMessages.value.push({
-      role: "assistant",
-      content:
-        "Olá! Sou a ConsorIA, sua assistente especializada em consórcios e gestão de processos. Posso ajudar com:\n\n• Análise de propostas e estágios\n• Informações sobre processos financeiros\n• Dúvidas sobre fluxo de trabalho\n• Interpretação de dados e estatísticas\n\nComo posso ajudá-lo hoje?",
-    });
-  }
-}
-
-async function handleChatSend(data) {
-  // Adicionar mensagem do usuário
-  chatMessages.value.push({
-    role: "user",
-    content: data.text,
-    attachments: data.attachments,
-  });
-
-  // Chamar API real de IA
-  chatTyping.value = true;
-  try {
-    // Criar contexto rico com informações do sistema
-    const currentPage = route.path;
-    let contextInfo = "";
-
-    if (currentPage.includes("/esteira")) {
-      const processKey = currentPage.split("/esteira/")[1];
-      contextInfo = processKey
-        ? `Usuário está na esteira do processo: ${processKey}. `
-        : "Usuário está visualizando uma esteira de processos. ";
-    } else if (currentPage.includes("/admin")) {
-      contextInfo = "Usuário está na área administrativa. ";
-    }
-
-    // Construir prompt contextualizado
-    const contextualPrompt = `${contextInfo}${data.text}`;
-
-    const response = await $fetch("/api/ai", {
-      method: "POST",
-      body: {
-        text: contextualPrompt,
-        attachments: data.attachments,
-        history: chatMessages.value.slice(-10).map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })), // Últimas 10 mensagens para contexto
-      },
-    });
-
-    chatMessages.value.push({
-      role: "assistant",
-      content:
-        response.text ||
-        "Desculpe, não consegui processar sua pergunta no momento.",
-    });
-  } catch (error) {
-    console.error("Erro ao chamar API de IA:", error);
-    chatMessages.value.push({
-      role: "assistant",
-      content:
-        "Ops! Estou com dificuldades técnicas no momento. Tente novamente em instantes.",
-    });
-  } finally {
-    chatTyping.value = false;
-  }
-}
 
 function logout() {
-  // Implementar logout
-  console.log("Logout clicked");
-  router.push("/login");
+  try {
+    localStorage.removeItem("flow-auth-token");
+    localStorage.removeItem("flow-auth-email");
+  } catch (error) {
+    console.warn("[Flow] Falha ao limpar tokens", error);
+  }
+  router.push("/");
 }
 
 function toggleCollapse() {

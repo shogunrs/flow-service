@@ -120,40 +120,36 @@
                   </div>
                 </button>
 
-                <!-- Claude -->
+                <!-- OpenRouter -->
                 <button
-                  @click="openProviderModal('claude')"
+                  @click="openProviderModal('openrouter')"
                   :class="[
                     'group relative p-3 rounded-lg border-2 transition-all duration-300 hover:scale-105',
-                    providers.claude.active
-                      ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/25'
-                      : 'border-slate-600/30 bg-slate-800/40 hover:border-orange-500/50',
+                    providers.openrouter.active
+                      ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/25'
+                      : 'border-slate-600/30 bg-slate-800/40 hover:border-purple-500/50',
                   ]"
-                  title="Configurar Claude"
+                  title="Configurar OpenRouter"
                 >
                   <div
-                    v-if="providers.claude.status === 'valid'"
+                    v-if="providers.openrouter.status === 'valid'"
                     class="absolute -top-1 -left-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"
                     title="Conexão Válida"
                   ></div>
                   <div
-                    v-if="providers.claude.status === 'invalid'"
+                    v-if="providers.openrouter.status === 'invalid'"
                     class="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-800"
                     title="Conexão Inválida"
                   ></div>
-                  <div>
-                    <img
-                      src="../../../assets/icons/png/claude-ai-icon.webp"
-                      class="w-6 h-6 mx-auto"
-                      alt="Claude"
-                    />
+                  <div class="w-6 h-6 mx-auto flex items-center justify-center">
+                    <i class="fa-solid fa-route text-xl text-slate-300"></i>
                   </div>
                   <div class="text-xs text-center mt-1 text-white font-medium">
-                    Claude
+                    OpenRouter
                   </div>
                   <div
-                    v-if="providers.claude.active"
-                    class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center"
+                    v-if="providers.openrouter.active"
+                    class="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full flex items-center justify-center"
                   >
                     <i class="fa-solid fa-check text-white text-[6px]"></i>
                   </div>
@@ -976,14 +972,14 @@ const providers = ref({
     status: "unknown",
     name: "Gemini",
   },
-  claude: {
+  openrouter: {
     active: false,
     apiKey: "",
-    baseUrl: "https://api.anthropic.com/v1",
+    baseUrl: "https://openrouter.ai/api/v1",
     models: [],
     selectedModel: "",
     status: "unknown",
-    name: "Claude",
+    name: "OpenRouter",
   },
   groq: {
     active: false,
@@ -1020,6 +1016,7 @@ const providerForm = ref({
   selectedModel: "",
   models: [],
 });
+const originalProviderData = ref(null);
 
 const currentProvider = computed(() => {
   return currentProviderKey.value
@@ -1073,6 +1070,7 @@ async function fetchProviders() {
             ...newProvidersState[p.id],
             ...p,
             apiKey: p.apiKey ? maskApiKey(p.apiKey) : "",
+            models: p.models || [],
           };
         }
       });
@@ -1122,6 +1120,8 @@ function maskApiKey(apiKey) {
 function openProviderModal(providerKey) {
   currentProviderKey.value = providerKey;
   const providerData = providers.value[providerKey];
+  originalProviderData.value = JSON.parse(JSON.stringify(providerData)); // Deep copy for comparison
+
   providerForm.value = {
     apiKey: providerData.apiKey,
     baseUrl: providerData.baseUrl,
@@ -1139,6 +1139,7 @@ function closeProviderModal() {
   showProviderModal.value = false;
   currentProviderKey.value = null;
   newModelName.value = "";
+  originalProviderData.value = null;
 }
 
 function addModel() {
@@ -1208,26 +1209,42 @@ async function deleteAgent(agentId) {
 
 // --- API & Shell Commands ---
 async function saveProviderSettings() {
-  if (!currentProviderKey.value) return;
+  if (!currentProviderKey.value || !originalProviderData.value) return;
   const providerKey = currentProviderKey.value;
 
-  let apiKeyToSend = newApiKey.value;
+  const payload = {};
 
-  // For Ollama, the API key is not needed and should not be sent.
-  if (providerKey === "ollama") {
-    apiKeyToSend = "";
+  // Compare and add changed fields to the payload
+  if (providerForm.value.baseUrl !== originalProviderData.value.baseUrl) {
+    payload.baseUrl = providerForm.value.baseUrl;
+  }
+  if (providerForm.value.selectedModel !== originalProviderData.value.selectedModel) {
+    payload.selectedModel = providerForm.value.selectedModel;
+  }
+  if (JSON.stringify(providerForm.value.models) !== JSON.stringify(originalProviderData.value.models)) {
+    payload.models = [...providerForm.value.models];
   }
 
-  const payload = {
-    apiKey: apiKeyToSend,
-    baseUrl: providerForm.value.baseUrl,
-    selectedModel: providerForm.value.selectedModel,
-    models: [...providerForm.value.models],
-    active: providerKey === "ollama" ? true : (!!newApiKey.value || !!providers.value[providerKey].apiKey),
-  };
+  // Only add apiKey to payload if a new one was entered
+  if (newApiKey.value) {
+    payload.apiKey = newApiKey.value;
+  }
+
+  // Check if the active status should be changed
+  const newActiveState = providerKey === "ollama" ? true : !!(payload.apiKey || providers.value[providerKey].apiKey);
+  if (newActiveState !== originalProviderData.value.active) {
+    payload.active = newActiveState;
+  }
+
+  // If no fields have changed, just close the modal
+  if (Object.keys(payload).length === 0) {
+    toast.info("Nenhuma alteração detectada.");
+    closeProviderModal();
+    return;
+  }
 
   try {
-    console.log(`Calling API: PUT ${apiBaseUrl}/ai-providers/${providerKey}`);
+    console.log(`Calling API: PUT ${apiBaseUrl}/ai-providers/${providerKey} with partial payload:`, payload);
     const updatedProvider = await $fetch(
       `${apiBaseUrl}/ai-providers/${providerKey}`,
       {
@@ -1236,8 +1253,9 @@ async function saveProviderSettings() {
       }
     );
 
+    // Update local state with the response from the backend
     const originalApiKey = providers.value[providerKey].apiKey;
-    const finalApiKey = apiKeyToSend ? maskApiKey(apiKeyToSend) : originalApiKey;
+    const finalApiKey = payload.apiKey ? maskApiKey(payload.apiKey) : originalApiKey;
 
     providers.value[providerKey] = {
       ...providers.value[providerKey],

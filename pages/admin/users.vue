@@ -123,13 +123,44 @@
     </main>
 
     <!-- Modal: User Management -->
-    <BaseModal
+  <BaseModal
       v-model="showUserModal"
       :title="editingUser ? 'Editar Usuário' : 'Novo Usuário'"
       size="lg"
       :z-index="70"
     >
       <div class="space-y-8 max-h-[75vh] md:max-h-[82vh] overflow-y-auto pr-1">
+        <div class="rounded-lg border border-slate-800/80 bg-slate-900/70 px-4 py-3 flex items-center gap-4">
+          <div
+            class="relative flex-shrink-0 overflow-hidden bg-slate-800/80 border border-slate-700/70"
+            :class="actorAvatar ? 'rounded-full w-12 h-12' : 'rounded-2xl w-12 h-12 flex items-center justify-center'"
+          >
+            <img
+              v-if="actorAvatar"
+              :src="actorAvatar"
+              alt="Avatar do usuário atual"
+              class="w-full h-full object-cover"
+            />
+            <span
+              v-else
+              class="text-sm font-semibold text-indigo-200"
+            >
+              {{ actorInitials }}
+            </span>
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-slate-100 truncate">
+              {{ actorName }}
+            </p>
+            <p class="text-xs text-indigo-200/80 font-medium uppercase tracking-wide">
+              {{ actorRoleLabel }}
+            </p>
+            <p class="text-[11px] text-slate-400 truncate">
+              {{ actorEmail }}
+            </p>
+          </div>
+        </div>
+
         <!-- ========== SEÇÃO 1: DADOS PESSOAIS ========== -->
         <div class="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/85 p-5">
           <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/12 via-slate-900/0 to-slate-900/0 pointer-events-none"></div>
@@ -1254,23 +1285,75 @@ const imageLoading = ref(false);
 const imageError = ref(false);
 const imageUploaded = ref(false);
 
-const profilePreview = computed(() => {
-  const img = userForm.value.profileImage;
-  if (!img) return "";
-
-  if (typeof img === "string") {
-    return resolveStorageUrl(img);
+const resolveProfileSource = (source) => {
+  if (!source) return "";
+  if (typeof source === "string") {
+    return resolveStorageUrl(source);
   }
-
-  if (typeof img === "object" && img !== null) {
+  if (typeof source === "object") {
     const candidate =
-      img.previewUrl ||
-      img.url ||
-      img.secure_url ||
-      img.publicUrl ||
-      img.thumbnailUrl ||
+      source.previewUrl ||
+      source.url ||
+      source.secure_url ||
+      source.publicUrl ||
+      source.thumbnailUrl ||
       "";
     return resolveStorageUrl(candidate);
+  }
+  return "";
+};
+
+const actorAvatar = computed(() => {
+  const actor = currentUser.value || {};
+  return resolveProfileSource(
+    actor.avatarUrl || actor.fotoPerfilUrl || actor.profileImage || ""
+  );
+});
+
+const actorName = computed(() => currentUser.value?.name || "Usuário atual");
+const actorEmail = computed(() => currentUser.value?.email || "sem-email");
+
+const actorInitials = computed(() => {
+  const name = actorName.value;
+  const parts = name.trim().split(/\s+/);
+  if (!parts.length) return "U";
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "U";
+});
+
+const actorRoleLabel = computed(() => {
+  if (currentUser.value?.superUser) {
+    return "Super Usuário";
+  }
+  const roles = Array.isArray(currentUser.value?.roles)
+    ? currentUser.value.roles
+    : [];
+  const roleMap = {
+    admin: "Administrador",
+    manager: "Gerente",
+    analyst: "Analista",
+    user: "Usuário",
+    viewer: "Visualizador",
+  };
+  const key = roles.find((role) => typeof role === "string" && role.trim());
+  if (!key) return "Acesso Básico";
+  const normalized = key.trim().toLowerCase();
+  return roleMap[normalized] || normalized;
+});
+
+const profilePreview = computed(() => {
+  const fromForm = resolveProfileSource(userForm.value.profileImage);
+  if (fromForm) return fromForm;
+
+  if (
+    editingUser.value &&
+    currentUser.value?.id &&
+    userForm.value.id &&
+    currentUser.value.id === userForm.value.id
+  ) {
+    return actorAvatar.value;
   }
 
   return "";
@@ -1599,6 +1682,7 @@ async function loadUsersList() {
 }
 
 async function openNewUserModal() {
+  await loadCurrentUser();
   // Capturar localização ao criar novo usuário
   let location = null;
   try {
@@ -1693,6 +1777,7 @@ function applyOcrSuggestion() {
 }
 
 async function editUser(user) {
+  await loadCurrentUser();
   userForm.value = {
     id: user.id,
     name: user.name,
