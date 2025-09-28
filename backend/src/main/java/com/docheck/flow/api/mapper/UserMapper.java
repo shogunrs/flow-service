@@ -76,6 +76,7 @@ public final class UserMapper {
                 .id(userId)
                 .name(dto.getName())
                 .email(Optional.ofNullable(dto.getEmail()).map(String::trim).orElse(null))
+                .rawPassword(dto.getPassword())
                 .roles(copyRoles(dto.getRoles()))
                 .superUser(dto.getSuperUser())
                 .cpf(dto.getCpf())
