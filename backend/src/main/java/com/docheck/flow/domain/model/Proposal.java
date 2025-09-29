@@ -1,7 +1,9 @@
 package com.docheck.flow.domain.model;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Proposal {
     private String id;
@@ -17,6 +19,13 @@ public class Proposal {
     private Map<String, Object> details;
     // answers per stageId
     private Map<String, Map<String, Object>> forms;
+
+    // Controle de acesso
+    private String createdBy;
+    private String organizationId;
+    private Boolean isPublic;
+    private Set<String> visibleToUsers;
+    private List<ExternalNotification> externalNotifications;
 
     public Proposal() {}
 
@@ -36,6 +45,35 @@ public class Proposal {
         this.updatedAt = updatedAt;
         this.details = details;
         this.forms = forms;
+        // Valores padrão para controle de acesso
+        this.isPublic = true; // Por padrão, público para backward compatibility
+        this.visibleToUsers = Set.of();
+        this.externalNotifications = List.of();
+    }
+
+    // Construtor completo incluindo campos de acesso
+    public Proposal(String id, String processExternalId, String name, Double amount, String stageId, String status,
+                    boolean archived, Instant stageEnteredAt, Instant createdAt, Instant updatedAt,
+                    Map<String, Object> details, Map<String, Map<String, Object>> forms,
+                    String createdBy, String organizationId, Boolean isPublic,
+                    Set<String> visibleToUsers, List<ExternalNotification> externalNotifications) {
+        this.id = id;
+        this.processExternalId = processExternalId;
+        this.name = name;
+        this.amount = amount;
+        this.stageId = stageId;
+        this.status = status;
+        this.archived = archived;
+        this.stageEnteredAt = stageEnteredAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.details = details;
+        this.forms = forms;
+        this.createdBy = createdBy;
+        this.organizationId = organizationId;
+        this.isPublic = isPublic;
+        this.visibleToUsers = visibleToUsers;
+        this.externalNotifications = externalNotifications;
     }
 
     public String getId() { return id; }
@@ -62,4 +100,17 @@ public class Proposal {
     public void setDetails(Map<String, Object> details) { this.details = details; }
     public Map<String, Map<String, Object>> getForms() { return forms; }
     public void setForms(Map<String, Map<String, Object>> forms) { this.forms = forms; }
+
+    // Getters e setters para controle de acesso
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+    public String getOrganizationId() { return organizationId; }
+    public void setOrganizationId(String organizationId) { this.organizationId = organizationId; }
+    public Boolean getIsPublic() { return isPublic; }
+    public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
+    public boolean isPublic() { return isPublic != null ? isPublic : true; }
+    public Set<String> getVisibleToUsers() { return visibleToUsers; }
+    public void setVisibleToUsers(Set<String> visibleToUsers) { this.visibleToUsers = visibleToUsers; }
+    public List<ExternalNotification> getExternalNotifications() { return externalNotifications; }
+    public void setExternalNotifications(List<ExternalNotification> externalNotifications) { this.externalNotifications = externalNotifications; }
 }

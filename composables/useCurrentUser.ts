@@ -7,6 +7,7 @@ export type CurrentUser = {
   name?: string
   email?: string
   superUser?: boolean
+  organizationId?: string
   fotoPerfilUrl?: string | null
   profileImage?: string | null
   avatarUrl?: string | null
@@ -18,6 +19,7 @@ const defaultUser: CurrentUser = {
   name: 'Guest',
   email: '',
   superUser: false,
+  organizationId: undefined,
   fotoPerfilUrl: null,
   profileImage: null,
   avatarUrl: null,
@@ -39,6 +41,7 @@ function mergeUser(partial: Partial<CurrentUser>): CurrentUser {
     name: partial.name ?? state.value.name ?? defaultUser.name,
     email: partial.email ?? state.value.email ?? defaultUser.email,
     superUser: partial.superUser ?? state.value.superUser ?? defaultUser.superUser,
+    organizationId: partial.organizationId ?? state.value.organizationId ?? defaultUser.organizationId,
     roles: normalizeRoles(partial.roles ?? state.value.roles ?? defaultUser.roles),
     fotoPerfilUrl:
       partial.fotoPerfilUrl ?? state.value.fotoPerfilUrl ?? defaultUser.fotoPerfilUrl,
@@ -82,6 +85,7 @@ async function fetchRemoteUser(): Promise<void> {
       email: match.email,
       roles: Array.isArray(match.roles) ? match.roles : [],
       superUser: match.superUser === true,
+      organizationId: match.organizationId,
       fotoPerfilUrl: match.fotoPerfilUrl ?? match.profileImage ?? null,
       profileImage: match.profileImage ?? match.fotoPerfilUrl ?? null,
       avatarUrl: match.fotoPerfilUrl ?? match.profileImage ?? null,

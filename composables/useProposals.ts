@@ -2,6 +2,14 @@ import { ref } from 'vue'
 import { sanitizeProcessKey } from '~/utils/strings/sanitize'
 import { isApiEnabled, apiFetch } from '~/utils/api/index'
 
+export type ExternalNotification = {
+  name: string
+  email: string
+  phone?: string
+  emailEnabled: boolean
+  whatsappEnabled: boolean
+}
+
 export type Proposal = {
   id: number | string
   name: string
@@ -11,6 +19,12 @@ export type Proposal = {
   isArchived: boolean
   stageEnteredAt: string
   details?: any
+  // Controle de acesso
+  createdBy?: string
+  organizationId?: string
+  isPublic?: boolean
+  visibleToUsers?: string[]
+  externalNotifications?: ExternalNotification[]
 }
 
 const PROPOSALS_KEY = (k: string) => `pipeline_proposals__${k}`
@@ -61,7 +75,13 @@ export async function fetchProposalsApi(processKey: string): Promise<Proposal[]>
       status: x.status || 'Pendente',
       isArchived: !!x.archived,
       stageEnteredAt: x.stageEnteredAt,
-      details: x.details || {}
+      details: x.details || {},
+      // Campos de controle de acesso
+      createdBy: x.createdBy,
+      organizationId: x.organizationId,
+      isPublic: x.isPublic,
+      visibleToUsers: x.visibleToUsers || [],
+      externalNotifications: x.externalNotifications || []
     }))
   } catch { return [] }
 }
@@ -78,7 +98,21 @@ export async function createProposalApi(processKey: string, payload: Partial<Pro
     if (payload.details && Object.keys(payload.details).length > 0) {
       body.details = payload.details
     }
-    const x = await apiFetch<any>(`/api/v1/processes/${encodeURIComponent(processKey)}/proposals`, { method: 'POST', body })
+    // Campos de controle de acesso
+    if (typeof payload.isPublic === 'boolean') body.isPublic = payload.isPublic
+    if (payload.visibleToUsers) body.visibleToUsers = payload.visibleToUsers
+    if (payload.externalNotifications) body.externalNotifications = payload.externalNotifications
+
+    // Headers para identificação do usuário
+    const headers: Record<string, string> = {}
+    if (payload.createdBy) headers['X-User-ID'] = payload.createdBy
+    if (payload.organizationId) headers['X-Organization-ID'] = payload.organizationId
+
+    const x = await apiFetch<any>(`/api/v1/processes/${encodeURIComponent(processKey)}/proposals`, {
+      method: 'POST',
+      body,
+      headers
+    })
     return {
       id: x.id,
       name: x.name,
@@ -87,7 +121,12 @@ export async function createProposalApi(processKey: string, payload: Partial<Pro
       status: x.status || 'Pendente',
       isArchived: !!x.archived,
       stageEnteredAt: x.stageEnteredAt,
-      details: x.details || {}
+      details: x.details || {},
+      createdBy: x.createdBy,
+      organizationId: x.organizationId,
+      isPublic: x.isPublic,
+      visibleToUsers: x.visibleToUsers || [],
+      externalNotifications: x.externalNotifications || []
     }
   } catch { return null }
 }
@@ -143,6 +182,7 @@ export async function deleteProposalApi(processKey: string, proposalId: string):
 // Novo composable reativo usando useFetch com refs mutáveis
 export function useProposalsReactive(processKey: string) {
   const { public: { FLOW_API_BASE } } = useRuntimeConfig()
+  const { user: currentUser } = useCurrentUser()
   const apiBase = FLOW_API_BASE
 
   // Ref mutável para manipulações locais
@@ -158,7 +198,18 @@ export function useProposalsReactive(processKey: string) {
 
     loading.value = true
     try {
-      const arr = await $fetch<any[]>(`${apiBase}/api/v1/processes/${encodeURIComponent(processKey)}/proposals`)
+      // Adicionar headers de usuário para filtragem de acesso
+      const headers: Record<string, string> = {}
+      if (currentUser.value?.id) {
+        headers['X-User-ID'] = currentUser.value.id
+      }
+      if (currentUser.value?.organizationId) {
+        headers['X-Organization-ID'] = currentUser.value.organizationId
+      }
+
+      const arr = await $fetch<any[]>(`${apiBase}/api/v1/processes/${encodeURIComponent(processKey)}/proposals`, {
+        headers
+      })
       proposals.value = (arr || []).map(x => ({
         id: x.id,
         name: x.name,
@@ -167,7 +218,13 @@ export function useProposalsReactive(processKey: string) {
         status: x.status || 'Pendente',
         isArchived: !!x.archived,
         stageEnteredAt: x.stageEnteredAt,
-        details: x.details || {}
+        details: x.details || {},
+        // Campos de controle de acesso
+        createdBy: x.createdBy,
+        organizationId: x.organizationId,
+        isPublic: x.isPublic,
+        visibleToUsers: x.visibleToUsers || [],
+        externalNotifications: x.externalNotifications || []
       }))
     } catch (error) {
       console.error('Erro ao carregar propostas:', error)

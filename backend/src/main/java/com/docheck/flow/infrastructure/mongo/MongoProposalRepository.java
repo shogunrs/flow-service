@@ -17,7 +17,8 @@ public class MongoProposalRepository implements ProposalRepository {
     private static Proposal toDomain(ProposalDocument d) {
         if (d == null) return null;
         return new Proposal(d.id, d.processExternalId, d.name, d.amount, d.stageId, d.status, d.archived,
-                d.stageEnteredAt, d.createdAt, d.updatedAt, d.details, d.forms);
+                d.stageEnteredAt, d.createdAt, d.updatedAt, d.details, d.forms,
+                d.createdBy, d.organizationId, d.isPublic, d.visibleToUsers, d.externalNotifications);
     }
     private static ProposalDocument toDoc(Proposal p) {
         ProposalDocument d = new ProposalDocument();
@@ -33,6 +34,12 @@ public class MongoProposalRepository implements ProposalRepository {
         d.updatedAt = p.getUpdatedAt();
         d.details = p.getDetails();
         d.forms = p.getForms();
+        // Campos de controle de acesso
+        d.createdBy = p.getCreatedBy();
+        d.organizationId = p.getOrganizationId();
+        d.isPublic = p.getIsPublic();
+        d.visibleToUsers = p.getVisibleToUsers();
+        d.externalNotifications = p.getExternalNotifications();
         return d;
     }
 

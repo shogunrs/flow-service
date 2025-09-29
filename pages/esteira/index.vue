@@ -188,7 +188,7 @@
               <div
                 v-for="p in filteredByStage(stage.id)"
                 :key="p.id"
-                class="bg-slate-700 rounded-lg p-3 shadow-sm cursor-move border-l-4 hover:bg-slate-600/50 transition-colors"
+                class="group relative bg-slate-700 rounded-lg p-3 shadow-sm cursor-move border-l-4 hover:bg-slate-600/50 transition-colors"
                 :class="[
                   draggedId === p.id ? 'opacity-60' : '',
                   stageBorderClass(p.stageId),
@@ -198,8 +198,20 @@
                 @click="openCardForm(p)"
                 @dragend="onDragEnd"
               >
+                <!-- Três pontos para acesso (aparecem no hover) -->
+                <div class="absolute top-1 right-1 z-10">
+                  <button
+                    v-if="canEditAccess(p, currentUser)"
+                    class="opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity duration-200 text-slate-400 hover:text-white text-xs p-1 rounded"
+                    title="Editar controle de acesso"
+                    @click.stop="openEditAccessModal(p)"
+                  >
+                    <i class="fa-solid fa-ellipsis text-[10px]"></i>
+                  </button>
+                </div>
+
                 <!-- Nome do cliente -->
-                <div class="mb-3">
+                <div class="mb-3 pr-4">
                   <div class="font-medium leading-tight text-sm text-white">
                     {{ p.name }}
                   </div>
@@ -259,8 +271,20 @@
         <!-- Mobile: cards -->
         <div class="sm:hidden">
           <ul class="divide-y divide-slate-700">
-            <li v-for="p in sortedFilteredProposals" :key="p.id" class="p-4">
-              <div class="space-y-3">
+            <li v-for="p in sortedFilteredProposals" :key="p.id" class="group relative p-4">
+              <!-- Três pontos para acesso mobile (aparecem no hover) -->
+              <div class="absolute top-3 right-3 z-10">
+                <button
+                  v-if="canEditAccess(p, currentUser)"
+                  class="opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity duration-200 text-slate-400 hover:text-white text-sm p-1 rounded"
+                  title="Editar controle de acesso"
+                  @click.stop="openEditAccessModal(p)"
+                >
+                  <i class="fa-solid fa-ellipsis text-[11px]"></i>
+                </button>
+              </div>
+
+              <div class="space-y-3 pr-6">
                 <!-- Nome e valor -->
                 <div>
                   <div class="font-medium text-sm text-white">{{ p.name }}</div>
@@ -316,7 +340,7 @@
               <tr
                 v-for="p in sortedFilteredProposals"
                 :key="p.id"
-                class="border-b border-slate-700 hover:bg-slate-700/50"
+                class="group border-b border-slate-700 hover:bg-slate-700/50"
               >
                 <td class="px-3 sm:px-6 py-2 sm:py-3">{{ p.name }}</td>
                 <td
@@ -344,6 +368,16 @@
                   <div
                     class="flex items-center gap-2 justify-end text-slate-300"
                   >
+                    <!-- Controle de acesso -->
+                    <button
+                      v-if="canEditAccess(p, currentUser)"
+                      class="opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity duration-200 text-slate-400 hover:text-white"
+                      title="Editar controle de acesso"
+                      @click="openEditAccessModal(p)"
+                    >
+                      <i class="fa-solid fa-ellipsis text-sm"></i>
+                    </button>
+
                     <button
                       class="hover:text-white"
                       title="Ver/Editar"
@@ -1071,6 +1105,15 @@
       @download-file="onDownloadFile"
     />
 
+    <!-- Edit Access Modal -->
+    <EditAccessModal
+      v-model="isEditAccessModalOpen"
+      :proposal="editingProposal"
+      :available-users="organizationUsers"
+      @save="handleAccessSave"
+      @close="closeEditAccessModal"
+    />
+
     <!-- Quick Status Change Dropdown with Glassmorphism -->
     <Teleport to="body">
       <Transition
@@ -1183,6 +1226,7 @@ import PessoaFisicaInput from "~/components/ui/PessoaFisicaInput.vue";
 import BaseModal from "~/components/ui/BaseModal.vue";
 import FormField from "~/components/ui/FormField.vue";
 import ProcessFilesApprovalView from "~/components/ui/ProcessFilesApprovalView.vue";
+import EditAccessModal from "~/components/ui/EditAccessModal.vue";
 import { isApiEnabled } from "~/utils/api/index";
 import { saveStagesPreservingIdsApi } from "~/composables/useStages";
 import { useToast } from "~/composables/useToast";
@@ -1191,6 +1235,9 @@ import { uploadFileViaPresign } from "~/composables/useFiles";
 import { useNewRecordModal } from "~/composables/useNewRecordModal";
 import { useProcessFiles } from "~/composables/useProcessFiles";
 import { useProposalFiles } from "~/composables/useProposalFiles";
+import { useOrganizationUsers } from "~/composables/useOrganizationUsers";
+import { useProposalAccess } from "~/composables/useProposalAccess";
+import { useEditAccess } from "~/composables/useEditAccess";
 import {
   fetchStatuses,
   fetchDetailedStatuses,
@@ -1302,6 +1349,40 @@ const loadProcessInfo = async () => {
 // Modal global de novo registro
 const { openModal: openGlobalModal } = useNewRecordModal();
 const { user: currentUser, load: loadCurrentUser } = useCurrentUser();
+const { users: organizationUsers, fetchUsers: fetchOrganizationUsers } = useOrganizationUsers();
+const { filterVisibleProposals, canEditProposal, getAccessInfo } = useProposalAccess();
+const {
+  isEditAccessModalOpen,
+  editingProposal,
+  openEditAccessModal,
+  closeEditAccessModal,
+  saveAccessChanges,
+  updateLocalProposal,
+  getAccessIcon,
+  canEditAccess
+} = useEditAccess();
+
+// Função para salvar alterações de acesso
+const handleAccessSave = async (data) => {
+  try {
+    const result = await saveAccessChanges(pipelineKey.value, data);
+
+    if (result) {
+      // Atualizar a proposta local na lista
+      allProposals.value = updateLocalProposal(allProposals.value, result.proposalId, result.updates);
+      saveProposals(pipelineKey.value, allProposals.value);
+
+      // Fechar o modal
+      closeEditAccessModal();
+
+      // Atualizar as estatísticas se necessário
+      refreshData();
+    }
+  } catch (error) {
+    console.error('Erro ao salvar alterações de acesso:', error);
+  }
+};
+
 // Modal de pesquisa (acionado pelo item da sidebar)
 const showSearchModal = ref(false);
 const searchText = ref("");
@@ -1459,10 +1540,25 @@ watch(
 
 // Propostas por processo usando useFetch com reatividade automática
 const {
-  proposals,
+  proposals: allProposals,
   loading: proposalsLoading,
   refresh: refreshProposals,
 } = useProposalsReactive(pipelineKey.value);
+
+// Filtrar propostas baseado nas permissões do usuário atual
+const proposals = computed(() => {
+  if (!currentUser.value || !allProposals.value) {
+    return allProposals.value || [];
+  }
+
+  // Se API não estiver habilitada, retorna todas (backward compatibility)
+  if (!isApiEnabled()) {
+    return allProposals.value;
+  }
+
+  // Filtrar propostas que o usuário pode ver
+  return filterVisibleProposals(allProposals.value, currentUser.value);
+});
 
 // Função para atualizar dados após operações (estatísticas + propostas)
 const refreshData = () => {
@@ -1476,7 +1572,7 @@ const refreshData = () => {
 
 // Watcher para atualizar estatísticas automaticamente quando propostas mudarem
 watch(
-  () => proposals.value,
+  () => allProposals.value,
   () => {
     // Debounce para evitar muitas atualizações desnecessárias das estatísticas
     if (refreshTimeout) clearTimeout(refreshTimeout);
@@ -1493,11 +1589,11 @@ watch(
   () => pipelineKey.value,
   (k) => {
     const loaded = loadProposals(k);
-    proposals.value = Array.isArray(loaded) ? loaded : [];
+    allProposals.value = Array.isArray(loaded) ? loaded : [];
     if (isApiEnabled()) {
       fetchProposalsApi(k)
         .then((arr) => {
-          if (Array.isArray(arr)) proposals.value = arr;
+          if (Array.isArray(arr)) allProposals.value = arr;
         })
         .catch(() => {});
     }
@@ -1505,7 +1601,7 @@ watch(
 );
 const persistProposals = () => {
   try {
-    saveProposals(pipelineKey.value, proposals.value);
+    saveProposals(pipelineKey.value, allProposals.value);
   } catch (_) {}
 };
 
@@ -1540,7 +1636,7 @@ function ensureStagesCoverProposals() {
 
 // Recalcula colunas apenas quando o conjunto de stageIds muda
 watch(
-  () => proposals.value.map((p) => p.stageId).join("|"),
+  () => allProposals.value.map((p) => p.stageId).join("|"),
   () => ensureStagesCoverProposals()
 );
 
@@ -1591,7 +1687,11 @@ const sortProposals = (proposals) => {
 ]; */
 
 const filteredProposals = computed(() => {
-  return proposals.value.filter((p) => {
+  // Primeiro, aplicar filtro de permissões de acesso
+  let visibleProposals = filterVisibleProposals(proposals.value, currentUser.value || {});
+
+  // Depois aplicar outros filtros
+  return visibleProposals.filter((p) => {
     const nameMatch = p.name
       .toLowerCase()
       .includes(filterText.value.toLowerCase());
@@ -1682,12 +1782,12 @@ async function confirmDeleteProposal() {
   const p = deleteProposalTarget.value;
   if (!p) return cancelDeleteProposal();
   // optimistic UI update
-  const prev = proposals.value.slice();
-  proposals.value = proposals.value.filter((x) => x.id !== p.id);
+  const prev = allProposals.value.slice();
+  allProposals.value = allProposals.value.filter((x) => x.id !== p.id);
   try {
     if (isApiEnabled()) {
       const ok = await deleteProposalApi(pipelineKey.value, String(p.id));
-      if (!ok) proposals.value = prev;
+      if (!ok) allProposals.value = prev;
       else refreshData(); // Atualizar estatísticas após delete bem-sucedido
     } else {
       persistProposals();
@@ -2079,7 +2179,7 @@ const onDrop = (stageId) => {
   // (column drop is handled in capture phase)
   if (isDraggingStage.value) return;
   if (!draggedId.value) return;
-  const idx = proposals.value.findIndex((p) => p.id === draggedId.value);
+  const idx = allProposals.value.findIndex((p) => p.id === draggedId.value);
   if (idx === -1) return onDragEnd();
 
   const stage = stages.value.find((s) => s.id === stageId);
@@ -2089,20 +2189,20 @@ const onDrop = (stageId) => {
   const newStatus =
     stage.defaultStatus && stage.defaultStatus.trim() !== ""
       ? stage.defaultStatus
-      : proposals.value[idx].status || "Offline";
+      : allProposals.value[idx].status || "Offline";
 
   const updated = {
-    ...proposals.value[idx],
+    ...allProposals.value[idx],
     stageId,
     status: newStatus,
     stageEnteredAt: new Date().toISOString(),
   };
-  const next = proposals.value.slice();
+  const next = allProposals.value.slice();
   next[idx] = updated;
-  proposals.value = next;
+  allProposals.value = next;
   if (isApiEnabled()) {
     const pid = String(updated.id);
-    const prev = proposals.value[idx];
+    const prev = allProposals.value[idx];
     updateProposalApi(pipelineKey.value, pid, {
       stageId: stageId,
       status: newStatus,
@@ -2113,9 +2213,9 @@ const onDrop = (stageId) => {
       })
       .catch(() => {
         // rollback on failure
-        const arr = proposals.value.slice();
+        const arr = allProposals.value.slice();
         arr[idx] = { ...prev };
-        proposals.value = arr;
+        allProposals.value = arr;
       });
   } else {
     persistProposals();
@@ -2301,6 +2401,9 @@ const openGlobalNewRecordModal = async () => {
     await loadLeadOptions(true);
   }
 
+  // Carregar usuários da organização para controle de acesso
+  await fetchOrganizationUsers();
+
   // Abrir modal global
   openGlobalModal({
     stages: stages.value,
@@ -2308,6 +2411,8 @@ const openGlobalNewRecordModal = async () => {
     pipelineKey: pipelineKey.value,
     isFinancial: isFinancialProcess.value,
     leadOptions: isLeadQualificationProcess.value ? leadOptions.value : [],
+    showAccessControl: true, // Habilitar controle de acesso
+    availableUsers: organizationUsers.value, // Usuários disponíveis
     onSave: (recordData) => {
       handleGlobalModalSave(recordData);
     },
@@ -2388,11 +2493,17 @@ const handleGlobalModalSave = (recordData) => {
     stageValues: recordData.fieldValues || {},
     files: recordData.fieldFiles || {},
     details: recordData.leadId ? { leadId: recordData.leadId } : undefined,
+    // Campos de controle de acesso
+    createdBy: currentUser.value?.id,
+    organizationId: currentUser.value?.organizationId,
+    isPublic: recordData.isPublic,
+    visibleToUsers: recordData.visibleToUsers || [],
+    externalNotifications: recordData.externalNotifications || [],
   };
 
   // Adicionar à lista local
-  proposals.value.push(newProposal);
-  saveProposals(pipelineKey.value, proposals.value);
+  allProposals.value.push(newProposal);
+  saveProposals(pipelineKey.value, allProposals.value);
 
   // Salvar via API se habilitado
   if (isApiEnabled()) {
@@ -2401,6 +2512,12 @@ const handleGlobalModalSave = (recordData) => {
       amount: recordData.amount,
       stageId: recordData.stageId,
       status: recordData.status,
+      // Campos de controle de acesso
+      createdBy: currentUser.value?.id,
+      organizationId: currentUser.value?.organizationId,
+      isPublic: recordData.isPublic,
+      visibleToUsers: recordData.visibleToUsers || [],
+      externalNotifications: recordData.externalNotifications || [],
     };
     if (recordData.leadId) {
       payload.details = { leadId: recordData.leadId };
@@ -2410,11 +2527,11 @@ const handleGlobalModalSave = (recordData) => {
       .then(async (created) => {
         if (created?.id) {
           const createdId = String(created.id);
-          const localIndex = proposals.value.findIndex((p) => p.id === newId);
+          const localIndex = allProposals.value.findIndex((p) => p.id === newId);
           if (localIndex >= 0) {
-            proposals.value[localIndex].id = createdId;
-            proposals.value[localIndex].details = created.details || proposals.value[localIndex].details;
-            saveProposals(pipelineKey.value, proposals.value);
+            allProposals.value[localIndex].id = createdId;
+            allProposals.value[localIndex].details = created.details || allProposals.value[localIndex].details;
+            saveProposals(pipelineKey.value, allProposals.value);
             refreshData(); // Atualizar estatísticas após criar proposta
           }
 
@@ -2444,6 +2561,7 @@ const handleGlobalModalSave = (recordData) => {
     success("Registro criado com sucesso!");
   }
 };
+
 
 const closeNewProposalModal = () => {
   showNewModal.value = false;

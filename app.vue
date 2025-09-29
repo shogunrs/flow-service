@@ -13,6 +13,8 @@
     :pipeline-key="modalData.pipelineKey"
     :is-financial-process="modalData.isFinancial"
     :lead-options="modalData.leadOptions"
+    :show-access-control="modalData.showAccessControl"
+    :available-users="modalData.availableUsers"
     @save="handleSave"
     @close="closeModal"
   />

@@ -1,0 +1,1 @@
+import{_ as o}from"./DMU8Ws14.js";import{c as s,o as a,Q as r,b as e,aj as n}from"./qcAyaCsh.js";import"./CV9EyYCX.js";const c={class:"min-h-screen"},d={__name:"default",setup(_){return(t,i)=>(a(),s("div",c,[r(t.$slots,"default"),e(o),e(n,{position:"bottom-center"})]))}};export{d as default};

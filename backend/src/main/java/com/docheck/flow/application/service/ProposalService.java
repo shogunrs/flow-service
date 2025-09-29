@@ -88,6 +88,12 @@ public class ProposalService {
     }
 
     @Transactional
+    public Proposal save(Proposal proposal) {
+        proposal.setUpdatedAt(Instant.now());
+        return repo.save(proposal);
+    }
+
+    @Transactional
     public void delete(String processKey, String proposalId) {
         repo.deleteByIdAndProcessKey(proposalId, processKey);
         try { publisher.publish("proposal.deleted", java.util.Map.of("processKey", processKey, "proposalId", proposalId)); } catch (Exception ignored) {}
