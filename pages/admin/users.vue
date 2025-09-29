@@ -8,7 +8,7 @@
     >
       <div class="absolute inset-0 bg-white/[0.02] backdrop-blur-3xl"></div>
       <div class="relative flex items-center justify-between">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
           <div class="relative group">
             <div
               class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"
@@ -140,16 +140,16 @@
       size="lg"
       :z-index="70"
     >
-      <div class="space-y-8 max-h-[75vh] md:max-h-[82vh] overflow-y-auto pr-1">
+      <div class="space-y-7 max-h-[75vh] md:max-h-[82vh] overflow-y-auto pr-1">
         <div
-          class="rounded-lg border border-slate-800/80 bg-slate-900/70 px-4 py-3 flex items-center gap-4"
+          class="rounded-lg border border-slate-800/80 bg-slate-900/70 px-3 py-2 flex items-center gap-3"
         >
           <div
             class="relative flex-shrink-0 overflow-hidden bg-slate-800/80 border border-slate-700/70"
             :class="
               actorAvatar
-                ? 'rounded-full w-12 h-12'
-                : 'rounded-2xl w-12 h-12 flex items-center justify-center'
+                ? 'rounded-full w-11 h-11'
+                : 'rounded-xl w-11 h-11 flex items-center justify-center'
             "
           >
             <img
@@ -200,7 +200,7 @@
             </div>
 
             <!-- Dados básicos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
               <div class="md:col-span-2">
                 <label
                   class="text-[11px] font-medium text-slate-300 uppercase tracking-wide"
@@ -301,7 +301,7 @@
             </div>
 
             <div
-              class="grid grid-cols-1 md:grid-cols-[auto,1fr] items-start gap-6 mb-4"
+              class="grid grid-cols-1 md:grid-cols-[auto,1fr] items-start gap-6 mb-3"
             >
               <div class="flex flex-col items-center gap-3 mx-auto md:mx-0">
                 <div class="relative group">
@@ -397,7 +397,7 @@
               v-if="
                 userForm.nomeCompleto && userForm.nomeCompleto !== userForm.name
               "
-              class="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200"
+              class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200"
             >
               <div class="flex items-center gap-2">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -430,7 +430,7 @@
             </div>
 
             <!-- Dados de Documentos -->
-            <div class="border-t border-slate-700/50 pt-4 mb-4">
+            <div class="border-t border-slate-700/50 pt-3 mb-3">
               <h4 class="text-sm font-medium text-slate-300 mb-3">
                 Documentos
               </h4>
@@ -461,7 +461,7 @@
               </div>
             </div>
 
-            <div class="border-t border-slate-700/50 pt-4 mb-4">
+            <div class="border-t border-slate-700/50 pt-3 mb-3">
               <h4 class="text-sm font-medium text-slate-300 mb-3">
                 Dados bancários
               </h4>
@@ -552,7 +552,7 @@
             </div>
 
             <!-- Endereço -->
-            <div class="border-t border-slate-700/50 pt-4 mb-4">
+            <div class="border-t border-slate-700/50 pt-3 mb-3">
               <h4 class="text-sm font-medium text-slate-300 mb-3">
                 Endereço Residencial
               </h4>
@@ -666,11 +666,11 @@
             </div>
 
             <!-- Upload de Documentos Pessoais -->
-            <div class="border-t border-slate-700/50 pt-4 mb-4">
+            <div class="border-t border-slate-700/50 pt-3 mb-3">
               <h4 class="text-sm font-medium text-slate-300 mb-3">
                 Documentos Pessoais
               </h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <UserFileUpload
                   label="Documento de identidade (RG/CNH/Passaporte)"
                   accept="image/*,application/pdf"
@@ -711,7 +711,7 @@
               </div>
             </div>
 
-            <div class="border-t border-slate-700/50 pt-4 mb-4">
+            <div class="border-t border-slate-700/50 pt-3 mb-3">
               <div
                 class="flex flex-wrap items-center justify-between gap-3 mb-3"
               >
@@ -795,7 +795,7 @@
             </div>
 
             <!-- Acesso ao Sistema -->
-            <div class="border-t border-slate-700/50 pt-4">
+            <div class="border-t border-slate-700/50 pt-3">
               <div class="flex items-center justify-between mb-3">
                 <h4 class="text-sm font-medium text-slate-300">
                   Acesso ao Sistema
@@ -838,7 +838,7 @@
                   </div>
                 </button>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label class="text-[12px] text-slate-300">
                     Senha
@@ -912,7 +912,7 @@
             </div>
 
             <!-- Permissões -->
-            <div class="border-t border-slate-700/50 pt-4">
+            <div class="border-t border-slate-700/50 pt-3">
               <h4 class="text-sm font-medium text-slate-300 mb-3">
                 Permissões
               </h4>
@@ -980,7 +980,7 @@
               class="absolute inset-0 bg-gradient-to-br from-sky-500/12 via-slate-900/0 to-slate-900/0 pointer-events-none"
             ></div>
             <div class="relative">
-              <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center justify-between mb-3">
                 <div>
                   <h3
                     class="text-sm font-semibold text-white flex items-center gap-2"
@@ -995,7 +995,7 @@
               </div>
 
               <!-- Informações da Empresa -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label class="text-[12px] text-slate-300">Razão Social</label>
                   <input
@@ -1041,7 +1041,7 @@
               </div>
 
               <!-- Endereço da Empresa -->
-              <div class="border-t border-slate-700/50 pt-4 mb-4">
+              <div class="border-t border-slate-700/50 pt-3 mb-3">
                 <h4 class="text-sm font-medium text-slate-300 mb-3">
                   Endereço da Empresa
                 </h4>
@@ -1171,11 +1171,11 @@
               </div>
 
               <!-- Documentos da Empresa -->
-              <div class="border-t border-slate-700/50 pt-4">
+              <div class="border-t border-slate-700/50 pt-3">
                 <h4 class="text-sm font-medium text-slate-300 mb-3">
                   Documentos da Empresa
                 </h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <UserFileUpload
                       label="Cartão CNPJ"
@@ -1231,7 +1231,7 @@
               class="absolute inset-0 bg-gradient-to-br from-purple-500/12 via-slate-900/0 to-slate-900/0 pointer-events-none"
             ></div>
             <div class="relative">
-              <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center justify-between mb-3">
                 <div>
                   <h3
                     class="text-sm font-semibold text-white flex items-center gap-2"
@@ -1250,7 +1250,7 @@
               <div
                 v-for="(socio, index) in socios"
                 :key="index"
-                class="border border-slate-700/50 rounded-lg p-4 mb-4"
+                class="border border-slate-700/50 rounded-lg p-4 mb-3"
               >
                 <h4
                   class="text-md font-medium text-slate-300 mb-3 flex items-center justify-between"
@@ -1269,7 +1269,7 @@
                 </h4>
 
                 <!-- Dados pessoais do sócio -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <div class="md:col-span-2">
                     <label class="text-[12px] text-slate-300"
                       >Nome Completo *</label
@@ -1325,11 +1325,11 @@
                 </div>
 
                 <!-- Endereço do sócio -->
-                <div class="border-t border-slate-700/50 pt-4 mb-4">
+                <div class="border-t border-slate-700/50 pt-3 mb-3">
                   <h5 class="text-sm font-medium text-slate-300 mb-3">
                     Endereço do Sócio
                   </h5>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div class="md:col-span-2">
                       <label class="text-[12px] text-slate-300"
                         >Endereço Completo</label
@@ -1353,11 +1353,11 @@
                 </div>
 
                 <!-- Documentos do sócio -->
-                <div class="border-t border-slate-700/50 pt-4">
+                <div class="border-t border-slate-700/50 pt-3">
                   <h5 class="text-sm font-medium text-slate-300 mb-3">
                     Documentos do Sócio
                   </h5>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <UserFileUpload
                         :label="`Documento de Identidade - Sócio ${index + 2}`"
