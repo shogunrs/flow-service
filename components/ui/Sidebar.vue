@@ -354,6 +354,12 @@ const menuItems = computed(() => [
     description: "Gerencie leads e qualificações",
   },
   {
+    label: "Meu Perfil",
+    path: "/profile",
+    icon: "fa-solid fa-user",
+    description: "Editar informações do perfil",
+  },
+  {
     label: "Configurações",
     path: "/admin",
     icon: "fa-solid fa-cog",
